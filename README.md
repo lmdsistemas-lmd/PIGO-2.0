@@ -1,8 +1,4 @@
-Viewed companies.json:1-17
 
-Aqui está um resumo completo (prompt) do estado atual do seu projeto, organizado por módulos, para que você possa usar como referência ou para me situar em futuras conversas:
-
----
 
 ### 🚀 Resumo do Projeto: Dashboard - Painel LMD
 
