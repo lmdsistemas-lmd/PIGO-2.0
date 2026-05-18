@@ -1,0 +1,9 @@
+{
+    "cnpj": "46512675000110",
+    "type": "FINANCEIRO",
+    "content": {
+        "inadimplencia_total": 255191.44
+    },
+    "received_at": "2026-05-06T16:45:25.120388",
+    "agent_timestamp": "2026-05-06T16:45:23.522729"
+}

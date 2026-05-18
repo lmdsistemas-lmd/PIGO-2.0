@@ -1,0 +1,1531 @@
+{
+    "cnpj": "46512675000110",
+    "type": "VENDAS",
+    "content": {
+        "vendas_diarias": [
+            {
+                "data": "2025-05-06",
+                "faturamento": 22132.63,
+                "pedidos": 12
+            },
+            {
+                "data": "2025-05-07",
+                "faturamento": 16664.31,
+                "pedidos": 15
+            },
+            {
+                "data": "2025-05-08",
+                "faturamento": 20705.17,
+                "pedidos": 22
+            },
+            {
+                "data": "2025-05-09",
+                "faturamento": 11813.48,
+                "pedidos": 20
+            },
+            {
+                "data": "2025-05-10",
+                "faturamento": 8966.39,
+                "pedidos": 10
+            },
+            {
+                "data": "2025-05-12",
+                "faturamento": 13716.67,
+                "pedidos": 22
+            },
+            {
+                "data": "2025-05-13",
+                "faturamento": 7433.34,
+                "pedidos": 19
+            },
+            {
+                "data": "2025-05-14",
+                "faturamento": 78812.16,
+                "pedidos": 39
+            },
+            {
+                "data": "2025-05-15",
+                "faturamento": 24093.69,
+                "pedidos": 38
+            },
+            {
+                "data": "2025-05-16",
+                "faturamento": 20835.95,
+                "pedidos": 14
+            },
+            {
+                "data": "2025-05-17",
+                "faturamento": 26224.04,
+                "pedidos": 19
+            },
+            {
+                "data": "2025-05-19",
+                "faturamento": 27577.56,
+                "pedidos": 24
+            },
+            {
+                "data": "2025-05-20",
+                "faturamento": 5970.43,
+                "pedidos": 16
+            },
+            {
+                "data": "2025-05-21",
+                "faturamento": 9184.68,
+                "pedidos": 14
+            },
+            {
+                "data": "2025-05-22",
+                "faturamento": 10584.33,
+                "pedidos": 16
+            },
+            {
+                "data": "2025-05-23",
+                "faturamento": 4379.75,
+                "pedidos": 12
+            },
+            {
+                "data": "2025-05-24",
+                "faturamento": 9114.66,
+                "pedidos": 15
+            },
+            {
+                "data": "2025-05-26",
+                "faturamento": 6910.97,
+                "pedidos": 14
+            },
+            {
+                "data": "2025-05-27",
+                "faturamento": 3888.29,
+                "pedidos": 17
+            },
+            {
+                "data": "2025-05-28",
+                "faturamento": 10326.54,
+                "pedidos": 13
+            },
+            {
+                "data": "2025-05-29",
+                "faturamento": 10116.92,
+                "pedidos": 13
+            },
+            {
+                "data": "2025-05-30",
+                "faturamento": 14041.36,
+                "pedidos": 19
+            },
+            {
+                "data": "2025-05-31",
+                "faturamento": 15210.36,
+                "pedidos": 11
+            },
+            {
+                "data": "2025-06-02",
+                "faturamento": 7797.63,
+                "pedidos": 14
+            },
+            {
+                "data": "2025-06-03",
+                "faturamento": 8046.6,
+                "pedidos": 16
+            },
+            {
+                "data": "2025-06-04",
+                "faturamento": 4557.38,
+                "pedidos": 18
+            },
+            {
+                "data": "2025-06-05",
+                "faturamento": 23576.84,
+                "pedidos": 22
+            },
+            {
+                "data": "2025-06-06",
+                "faturamento": 20953.32,
+                "pedidos": 13
+            },
+            {
+                "data": "2025-06-07",
+                "faturamento": 23794.24,
+                "pedidos": 14
+            },
+            {
+                "data": "2025-06-09",
+                "faturamento": 20698.58,
+                "pedidos": 21
+            },
+            {
+                "data": "2025-06-10",
+                "faturamento": 19958.23,
+                "pedidos": 11
+            },
+            {
+                "data": "2025-06-11",
+                "faturamento": 17808.58,
+                "pedidos": 16
+            },
+            {
+                "data": "2025-06-12",
+                "faturamento": 14383.03,
+                "pedidos": 18
+            },
+            {
+                "data": "2025-06-13",
+                "faturamento": 7642.36,
+                "pedidos": 13
+            },
+            {
+                "data": "2025-06-14",
+                "faturamento": 18737.01,
+                "pedidos": 16
+            },
+            {
+                "data": "2025-06-16",
+                "faturamento": 12816.79,
+                "pedidos": 25
+            },
+            {
+                "data": "2025-06-17",
+                "faturamento": 8192.79,
+                "pedidos": 19
+            },
+            {
+                "data": "2025-06-18",
+                "faturamento": 14141.12,
+                "pedidos": 21
+            },
+            {
+                "data": "2025-06-19",
+                "faturamento": 9228.14,
+                "pedidos": 4
+            },
+            {
+                "data": "2025-06-20",
+                "faturamento": 30628.68,
+                "pedidos": 18
+            },
+            {
+                "data": "2025-06-21",
+                "faturamento": 8147.09,
+                "pedidos": 11
+            },
+            {
+                "data": "2025-06-23",
+                "faturamento": 29672.49,
+                "pedidos": 22
+            },
+            {
+                "data": "2025-06-24",
+                "faturamento": 5680.8,
+                "pedidos": 16
+            },
+            {
+                "data": "2025-06-25",
+                "faturamento": 5151.95,
+                "pedidos": 10
+            },
+            {
+                "data": "2025-06-26",
+                "faturamento": 10478.85,
+                "pedidos": 21
+            },
+            {
+                "data": "2025-06-27",
+                "faturamento": 2991.24,
+                "pedidos": 12
+            },
+            {
+                "data": "2025-06-28",
+                "faturamento": 22817.05,
+                "pedidos": 11
+            },
+            {
+                "data": "2025-06-30",
+                "faturamento": 12344.6,
+                "pedidos": 21
+            },
+            {
+                "data": "2025-07-01",
+                "faturamento": 18519.52,
+                "pedidos": 23
+            },
+            {
+                "data": "2025-07-02",
+                "faturamento": 16285.33,
+                "pedidos": 19
+            },
+            {
+                "data": "2025-07-03",
+                "faturamento": 11868.37,
+                "pedidos": 14
+            },
+            {
+                "data": "2025-07-04",
+                "faturamento": 11547.62,
+                "pedidos": 14
+            },
+            {
+                "data": "2025-07-05",
+                "faturamento": 14160.02,
+                "pedidos": 10
+            },
+            {
+                "data": "2025-07-07",
+                "faturamento": 37834.3,
+                "pedidos": 38
+            },
+            {
+                "data": "2025-07-08",
+                "faturamento": 11596.21,
+                "pedidos": 25
+            },
+            {
+                "data": "2025-07-09",
+                "faturamento": 10591.82,
+                "pedidos": 19
+            },
+            {
+                "data": "2025-07-10",
+                "faturamento": 12577.62,
+                "pedidos": 18
+            },
+            {
+                "data": "2025-07-11",
+                "faturamento": 24417.12,
+                "pedidos": 19
+            },
+            {
+                "data": "2025-07-12",
+                "faturamento": 19501.84,
+                "pedidos": 19
+            },
+            {
+                "data": "2025-07-14",
+                "faturamento": 24382.13,
+                "pedidos": 19
+            },
+            {
+                "data": "2025-07-15",
+                "faturamento": 13276.85,
+                "pedidos": 19
+            },
+            {
+                "data": "2025-07-16",
+                "faturamento": 28452.11,
+                "pedidos": 18
+            },
+            {
+                "data": "2025-07-17",
+                "faturamento": 24082.21,
+                "pedidos": 21
+            },
+            {
+                "data": "2025-07-18",
+                "faturamento": 3816.76,
+                "pedidos": 16
+            },
+            {
+                "data": "2025-07-19",
+                "faturamento": 4811.12,
+                "pedidos": 17
+            },
+            {
+                "data": "2025-07-21",
+                "faturamento": 37963.38,
+                "pedidos": 24
+            },
+            {
+                "data": "2025-07-22",
+                "faturamento": 13486.77,
+                "pedidos": 20
+            },
+            {
+                "data": "2025-07-23",
+                "faturamento": 34357.75,
+                "pedidos": 24
+            },
+            {
+                "data": "2025-07-24",
+                "faturamento": 14833.96,
+                "pedidos": 15
+            },
+            {
+                "data": "2025-07-25",
+                "faturamento": 41063.88,
+                "pedidos": 26
+            },
+            {
+                "data": "2025-07-26",
+                "faturamento": 5549.93,
+                "pedidos": 7
+            },
+            {
+                "data": "2025-07-28",
+                "faturamento": 26738.43,
+                "pedidos": 21
+            },
+            {
+                "data": "2025-07-29",
+                "faturamento": 21468.59,
+                "pedidos": 20
+            },
+            {
+                "data": "2025-07-30",
+                "faturamento": 20417.5,
+                "pedidos": 23
+            },
+            {
+                "data": "2025-07-31",
+                "faturamento": 14682.56,
+                "pedidos": 22
+            },
+            {
+                "data": "2025-08-01",
+                "faturamento": 9831.07,
+                "pedidos": 16
+            },
+            {
+                "data": "2025-08-02",
+                "faturamento": 2615.29,
+                "pedidos": 5
+            },
+            {
+                "data": "2025-08-04",
+                "faturamento": 18229.96,
+                "pedidos": 31
+            },
+            {
+                "data": "2025-08-05",
+                "faturamento": 6619.89,
+                "pedidos": 16
+            },
+            {
+                "data": "2025-08-06",
+                "faturamento": 7210.67,
+                "pedidos": 14
+            },
+            {
+                "data": "2025-08-07",
+                "faturamento": 25327.85,
+                "pedidos": 27
+            },
+            {
+                "data": "2025-08-08",
+                "faturamento": 19468.32,
+                "pedidos": 17
+            },
+            {
+                "data": "2025-08-09",
+                "faturamento": 5905.19,
+                "pedidos": 10
+            },
+            {
+                "data": "2025-08-11",
+                "faturamento": 16866.83,
+                "pedidos": 22
+            },
+            {
+                "data": "2025-08-12",
+                "faturamento": 14744.89,
+                "pedidos": 21
+            },
+            {
+                "data": "2025-08-13",
+                "faturamento": 5720.64,
+                "pedidos": 19
+            },
+            {
+                "data": "2025-08-14",
+                "faturamento": 21416.96,
+                "pedidos": 18
+            },
+            {
+                "data": "2025-08-15",
+                "faturamento": 7983.0,
+                "pedidos": 18
+            },
+            {
+                "data": "2025-08-16",
+                "faturamento": 4477.99,
+                "pedidos": 9
+            },
+            {
+                "data": "2025-08-18",
+                "faturamento": 13471.32,
+                "pedidos": 18
+            },
+            {
+                "data": "2025-08-19",
+                "faturamento": 30448.75,
+                "pedidos": 31
+            },
+            {
+                "data": "2025-08-20",
+                "faturamento": 13067.16,
+                "pedidos": 28
+            },
+            {
+                "data": "2025-08-21",
+                "faturamento": 13581.65,
+                "pedidos": 16
+            },
+            {
+                "data": "2025-08-22",
+                "faturamento": 22775.12,
+                "pedidos": 15
+            },
+            {
+                "data": "2025-08-23",
+                "faturamento": 15216.58,
+                "pedidos": 9
+            },
+            {
+                "data": "2025-08-25",
+                "faturamento": 14617.47,
+                "pedidos": 21
+            },
+            {
+                "data": "2025-08-26",
+                "faturamento": 26062.03,
+                "pedidos": 24
+            },
+            {
+                "data": "2025-08-27",
+                "faturamento": 6496.52,
+                "pedidos": 12
+            },
+            {
+                "data": "2025-08-28",
+                "faturamento": 9354.38,
+                "pedidos": 24
+            },
+            {
+                "data": "2025-08-29",
+                "faturamento": 23893.15,
+                "pedidos": 32
+            },
+            {
+                "data": "2025-08-30",
+                "faturamento": 20319.91,
+                "pedidos": 12
+            },
+            {
+                "data": "2025-08-31",
+                "faturamento": 8823.34,
+                "pedidos": 1
+            },
+            {
+                "data": "2025-09-01",
+                "faturamento": 9144.08,
+                "pedidos": 18
+            },
+            {
+                "data": "2025-09-02",
+                "faturamento": 15168.79,
+                "pedidos": 24
+            },
+            {
+                "data": "2025-09-03",
+                "faturamento": 14030.28,
+                "pedidos": 15
+            },
+            {
+                "data": "2025-09-04",
+                "faturamento": 15885.69,
+                "pedidos": 20
+            },
+            {
+                "data": "2025-09-05",
+                "faturamento": 9289.79,
+                "pedidos": 21
+            },
+            {
+                "data": "2025-09-06",
+                "faturamento": 14401.2,
+                "pedidos": 11
+            },
+            {
+                "data": "2025-09-08",
+                "faturamento": 14022.88,
+                "pedidos": 20
+            },
+            {
+                "data": "2025-09-09",
+                "faturamento": 25391.86,
+                "pedidos": 23
+            },
+            {
+                "data": "2025-09-10",
+                "faturamento": 17208.62,
+                "pedidos": 24
+            },
+            {
+                "data": "2025-09-11",
+                "faturamento": 11285.69,
+                "pedidos": 16
+            },
+            {
+                "data": "2025-09-12",
+                "faturamento": 6343.49,
+                "pedidos": 15
+            },
+            {
+                "data": "2025-09-13",
+                "faturamento": 3894.84,
+                "pedidos": 16
+            },
+            {
+                "data": "2025-09-15",
+                "faturamento": 22820.56,
+                "pedidos": 25
+            },
+            {
+                "data": "2025-09-16",
+                "faturamento": 19346.06,
+                "pedidos": 20
+            },
+            {
+                "data": "2025-09-17",
+                "faturamento": 7472.81,
+                "pedidos": 14
+            },
+            {
+                "data": "2025-09-18",
+                "faturamento": 14925.83,
+                "pedidos": 20
+            },
+            {
+                "data": "2025-09-19",
+                "faturamento": 10739.95,
+                "pedidos": 16
+            },
+            {
+                "data": "2025-09-20",
+                "faturamento": 14333.96,
+                "pedidos": 8
+            },
+            {
+                "data": "2025-09-22",
+                "faturamento": 20810.15,
+                "pedidos": 20
+            },
+            {
+                "data": "2025-09-23",
+                "faturamento": 10949.33,
+                "pedidos": 17
+            },
+            {
+                "data": "2025-09-24",
+                "faturamento": 14867.58,
+                "pedidos": 15
+            },
+            {
+                "data": "2025-09-25",
+                "faturamento": 10818.44,
+                "pedidos": 15
+            },
+            {
+                "data": "2025-09-26",
+                "faturamento": 11074.59,
+                "pedidos": 22
+            },
+            {
+                "data": "2025-09-27",
+                "faturamento": 4936.42,
+                "pedidos": 6
+            },
+            {
+                "data": "2025-09-29",
+                "faturamento": 17009.17,
+                "pedidos": 28
+            },
+            {
+                "data": "2025-09-30",
+                "faturamento": 13447.39,
+                "pedidos": 23
+            },
+            {
+                "data": "2025-10-01",
+                "faturamento": 14564.03,
+                "pedidos": 18
+            },
+            {
+                "data": "2025-10-02",
+                "faturamento": 4755.22,
+                "pedidos": 17
+            },
+            {
+                "data": "2025-10-03",
+                "faturamento": 2694.67,
+                "pedidos": 12
+            },
+            {
+                "data": "2025-10-04",
+                "faturamento": 15775.28,
+                "pedidos": 12
+            },
+            {
+                "data": "2025-10-06",
+                "faturamento": 10825.31,
+                "pedidos": 21
+            },
+            {
+                "data": "2025-10-07",
+                "faturamento": 21636.33,
+                "pedidos": 13
+            },
+            {
+                "data": "2025-10-08",
+                "faturamento": 18273.93,
+                "pedidos": 15
+            },
+            {
+                "data": "2025-10-09",
+                "faturamento": 15689.03,
+                "pedidos": 24
+            },
+            {
+                "data": "2025-10-10",
+                "faturamento": 20158.41,
+                "pedidos": 17
+            },
+            {
+                "data": "2025-10-11",
+                "faturamento": 25123.02,
+                "pedidos": 12
+            },
+            {
+                "data": "2025-10-13",
+                "faturamento": 38195.97,
+                "pedidos": 23
+            },
+            {
+                "data": "2025-10-14",
+                "faturamento": 106703.69,
+                "pedidos": 59
+            },
+            {
+                "data": "2025-10-15",
+                "faturamento": 41973.44,
+                "pedidos": 44
+            },
+            {
+                "data": "2025-10-16",
+                "faturamento": 35809.4,
+                "pedidos": 34
+            },
+            {
+                "data": "2025-10-17",
+                "faturamento": 52571.41,
+                "pedidos": 44
+            },
+            {
+                "data": "2025-10-18",
+                "faturamento": 23466.82,
+                "pedidos": 26
+            },
+            {
+                "data": "2025-10-20",
+                "faturamento": 31640.38,
+                "pedidos": 29
+            },
+            {
+                "data": "2025-10-21",
+                "faturamento": 23742.31,
+                "pedidos": 15
+            },
+            {
+                "data": "2025-10-22",
+                "faturamento": 12335.83,
+                "pedidos": 17
+            },
+            {
+                "data": "2025-10-23",
+                "faturamento": 18844.35,
+                "pedidos": 20
+            },
+            {
+                "data": "2025-10-24",
+                "faturamento": 28111.53,
+                "pedidos": 23
+            },
+            {
+                "data": "2025-10-25",
+                "faturamento": 4563.55,
+                "pedidos": 15
+            },
+            {
+                "data": "2025-10-27",
+                "faturamento": 17557.45,
+                "pedidos": 23
+            },
+            {
+                "data": "2025-10-28",
+                "faturamento": 26510.45,
+                "pedidos": 26
+            },
+            {
+                "data": "2025-10-29",
+                "faturamento": 2882.27,
+                "pedidos": 13
+            },
+            {
+                "data": "2025-10-30",
+                "faturamento": 4979.3,
+                "pedidos": 10
+            },
+            {
+                "data": "2025-10-31",
+                "faturamento": 39841.4,
+                "pedidos": 25
+            },
+            {
+                "data": "2025-11-01",
+                "faturamento": 3956.68,
+                "pedidos": 11
+            },
+            {
+                "data": "2025-11-03",
+                "faturamento": 25454.31,
+                "pedidos": 33
+            },
+            {
+                "data": "2025-11-04",
+                "faturamento": 19170.37,
+                "pedidos": 17
+            },
+            {
+                "data": "2025-11-05",
+                "faturamento": 18098.96,
+                "pedidos": 26
+            },
+            {
+                "data": "2025-11-06",
+                "faturamento": 8069.23,
+                "pedidos": 20
+            },
+            {
+                "data": "2025-11-07",
+                "faturamento": 25533.9,
+                "pedidos": 24
+            },
+            {
+                "data": "2025-11-08",
+                "faturamento": 18179.3,
+                "pedidos": 10
+            },
+            {
+                "data": "2025-11-10",
+                "faturamento": 12280.51,
+                "pedidos": 21
+            },
+            {
+                "data": "2025-11-11",
+                "faturamento": 26812.79,
+                "pedidos": 35
+            },
+            {
+                "data": "2025-11-12",
+                "faturamento": 26851.58,
+                "pedidos": 20
+            },
+            {
+                "data": "2025-11-13",
+                "faturamento": 39541.66,
+                "pedidos": 24
+            },
+            {
+                "data": "2025-11-14",
+                "faturamento": 3049.42,
+                "pedidos": 16
+            },
+            {
+                "data": "2025-11-17",
+                "faturamento": 37745.11,
+                "pedidos": 27
+            },
+            {
+                "data": "2025-11-18",
+                "faturamento": 32360.0,
+                "pedidos": 22
+            },
+            {
+                "data": "2025-11-19",
+                "faturamento": 42273.08,
+                "pedidos": 24
+            },
+            {
+                "data": "2025-11-21",
+                "faturamento": 31171.94,
+                "pedidos": 32
+            },
+            {
+                "data": "2025-11-22",
+                "faturamento": 12804.96,
+                "pedidos": 8
+            },
+            {
+                "data": "2025-11-24",
+                "faturamento": 48948.53,
+                "pedidos": 27
+            },
+            {
+                "data": "2025-11-25",
+                "faturamento": 26547.17,
+                "pedidos": 22
+            },
+            {
+                "data": "2025-11-26",
+                "faturamento": 18016.92,
+                "pedidos": 23
+            },
+            {
+                "data": "2025-11-27",
+                "faturamento": 48793.95,
+                "pedidos": 25
+            },
+            {
+                "data": "2025-11-28",
+                "faturamento": 39186.94,
+                "pedidos": 27
+            },
+            {
+                "data": "2025-11-29",
+                "faturamento": 19290.47,
+                "pedidos": 24
+            },
+            {
+                "data": "2025-12-01",
+                "faturamento": 16796.6,
+                "pedidos": 16
+            },
+            {
+                "data": "2025-12-02",
+                "faturamento": 18694.63,
+                "pedidos": 24
+            },
+            {
+                "data": "2025-12-03",
+                "faturamento": 8278.42,
+                "pedidos": 24
+            },
+            {
+                "data": "2025-12-04",
+                "faturamento": 10141.12,
+                "pedidos": 23
+            },
+            {
+                "data": "2025-12-05",
+                "faturamento": 15513.96,
+                "pedidos": 18
+            },
+            {
+                "data": "2025-12-06",
+                "faturamento": 2521.46,
+                "pedidos": 8
+            },
+            {
+                "data": "2025-12-08",
+                "faturamento": 34664.6,
+                "pedidos": 28
+            },
+            {
+                "data": "2025-12-09",
+                "faturamento": 11273.09,
+                "pedidos": 21
+            },
+            {
+                "data": "2025-12-10",
+                "faturamento": 6736.99,
+                "pedidos": 20
+            },
+            {
+                "data": "2025-12-11",
+                "faturamento": 17486.41,
+                "pedidos": 16
+            },
+            {
+                "data": "2025-12-12",
+                "faturamento": 11810.02,
+                "pedidos": 15
+            },
+            {
+                "data": "2025-12-13",
+                "faturamento": 32554.15,
+                "pedidos": 20
+            },
+            {
+                "data": "2025-12-15",
+                "faturamento": 16989.41,
+                "pedidos": 24
+            },
+            {
+                "data": "2025-12-16",
+                "faturamento": 21409.15,
+                "pedidos": 19
+            },
+            {
+                "data": "2025-12-17",
+                "faturamento": 5333.85,
+                "pedidos": 20
+            },
+            {
+                "data": "2025-12-18",
+                "faturamento": 12850.77,
+                "pedidos": 16
+            },
+            {
+                "data": "2025-12-19",
+                "faturamento": 31502.69,
+                "pedidos": 19
+            },
+            {
+                "data": "2025-12-20",
+                "faturamento": 7209.94,
+                "pedidos": 11
+            },
+            {
+                "data": "2025-12-22",
+                "faturamento": 37987.88,
+                "pedidos": 22
+            },
+            {
+                "data": "2025-12-23",
+                "faturamento": 17543.12,
+                "pedidos": 20
+            },
+            {
+                "data": "2025-12-24",
+                "faturamento": 10078.15,
+                "pedidos": 6
+            },
+            {
+                "data": "2025-12-26",
+                "faturamento": 45049.62,
+                "pedidos": 25
+            },
+            {
+                "data": "2025-12-27",
+                "faturamento": 7244.73,
+                "pedidos": 8
+            },
+            {
+                "data": "2025-12-29",
+                "faturamento": 14781.08,
+                "pedidos": 23
+            },
+            {
+                "data": "2025-12-30",
+                "faturamento": 10539.99,
+                "pedidos": 24
+            },
+            {
+                "data": "2025-12-31",
+                "faturamento": 8033.55,
+                "pedidos": 9
+            },
+            {
+                "data": "2026-01-02",
+                "faturamento": 11956.35,
+                "pedidos": 23
+            },
+            {
+                "data": "2026-01-03",
+                "faturamento": 14016.79,
+                "pedidos": 13
+            },
+            {
+                "data": "2026-01-05",
+                "faturamento": 30710.77,
+                "pedidos": 29
+            },
+            {
+                "data": "2026-01-06",
+                "faturamento": 18879.81,
+                "pedidos": 22
+            },
+            {
+                "data": "2026-01-07",
+                "faturamento": 43162.87,
+                "pedidos": 36
+            },
+            {
+                "data": "2026-01-08",
+                "faturamento": 14792.13,
+                "pedidos": 26
+            },
+            {
+                "data": "2026-01-09",
+                "faturamento": 48384.28,
+                "pedidos": 29
+            },
+            {
+                "data": "2026-01-10",
+                "faturamento": 17642.61,
+                "pedidos": 14
+            },
+            {
+                "data": "2026-01-12",
+                "faturamento": 16881.39,
+                "pedidos": 23
+            },
+            {
+                "data": "2026-01-13",
+                "faturamento": 13513.89,
+                "pedidos": 24
+            },
+            {
+                "data": "2026-01-14",
+                "faturamento": 18712.13,
+                "pedidos": 22
+            },
+            {
+                "data": "2026-01-15",
+                "faturamento": 9759.37,
+                "pedidos": 18
+            },
+            {
+                "data": "2026-01-16",
+                "faturamento": 28845.62,
+                "pedidos": 17
+            },
+            {
+                "data": "2026-01-17",
+                "faturamento": 3025.48,
+                "pedidos": 10
+            },
+            {
+                "data": "2026-01-19",
+                "faturamento": 41827.27,
+                "pedidos": 29
+            },
+            {
+                "data": "2026-01-20",
+                "faturamento": 18341.91,
+                "pedidos": 21
+            },
+            {
+                "data": "2026-01-21",
+                "faturamento": 21937.21,
+                "pedidos": 20
+            },
+            {
+                "data": "2026-01-22",
+                "faturamento": 16094.96,
+                "pedidos": 17
+            },
+            {
+                "data": "2026-01-23",
+                "faturamento": 29526.99,
+                "pedidos": 20
+            },
+            {
+                "data": "2026-01-24",
+                "faturamento": 7235.9,
+                "pedidos": 7
+            },
+            {
+                "data": "2026-01-26",
+                "faturamento": 19386.37,
+                "pedidos": 22
+            },
+            {
+                "data": "2026-01-27",
+                "faturamento": 14782.22,
+                "pedidos": 15
+            },
+            {
+                "data": "2026-01-28",
+                "faturamento": 25158.14,
+                "pedidos": 18
+            },
+            {
+                "data": "2026-01-29",
+                "faturamento": 19951.8,
+                "pedidos": 27
+            },
+            {
+                "data": "2026-01-30",
+                "faturamento": 20273.41,
+                "pedidos": 15
+            },
+            {
+                "data": "2026-01-31",
+                "faturamento": 29362.32,
+                "pedidos": 18
+            },
+            {
+                "data": "2026-02-02",
+                "faturamento": 14277.2,
+                "pedidos": 23
+            },
+            {
+                "data": "2026-02-03",
+                "faturamento": 25367.93,
+                "pedidos": 18
+            },
+            {
+                "data": "2026-02-04",
+                "faturamento": 23808.97,
+                "pedidos": 21
+            },
+            {
+                "data": "2026-02-05",
+                "faturamento": 38840.52,
+                "pedidos": 19
+            },
+            {
+                "data": "2026-02-06",
+                "faturamento": 36659.89,
+                "pedidos": 27
+            },
+            {
+                "data": "2026-02-07",
+                "faturamento": 2590.44,
+                "pedidos": 14
+            },
+            {
+                "data": "2026-02-09",
+                "faturamento": 16900.66,
+                "pedidos": 21
+            },
+            {
+                "data": "2026-02-10",
+                "faturamento": 17308.32,
+                "pedidos": 22
+            },
+            {
+                "data": "2026-02-11",
+                "faturamento": 5945.24,
+                "pedidos": 13
+            },
+            {
+                "data": "2026-02-12",
+                "faturamento": 21994.53,
+                "pedidos": 22
+            },
+            {
+                "data": "2026-02-13",
+                "faturamento": 27840.06,
+                "pedidos": 28
+            },
+            {
+                "data": "2026-02-14",
+                "faturamento": 9656.62,
+                "pedidos": 14
+            },
+            {
+                "data": "2026-02-16",
+                "faturamento": 3806.05,
+                "pedidos": 11
+            },
+            {
+                "data": "2026-02-18",
+                "faturamento": 19620.32,
+                "pedidos": 28
+            },
+            {
+                "data": "2026-02-19",
+                "faturamento": 32159.09,
+                "pedidos": 21
+            },
+            {
+                "data": "2026-02-20",
+                "faturamento": 30641.04,
+                "pedidos": 21
+            },
+            {
+                "data": "2026-02-21",
+                "faturamento": 18843.34,
+                "pedidos": 16
+            },
+            {
+                "data": "2026-02-23",
+                "faturamento": 77392.63,
+                "pedidos": 19
+            },
+            {
+                "data": "2026-02-24",
+                "faturamento": 16399.5,
+                "pedidos": 13
+            },
+            {
+                "data": "2026-02-25",
+                "faturamento": 27513.73,
+                "pedidos": 24
+            },
+            {
+                "data": "2026-02-26",
+                "faturamento": 37555.08,
+                "pedidos": 19
+            },
+            {
+                "data": "2026-02-27",
+                "faturamento": 13668.68,
+                "pedidos": 20
+            },
+            {
+                "data": "2026-02-28",
+                "faturamento": 10789.84,
+                "pedidos": 10
+            },
+            {
+                "data": "2026-03-02",
+                "faturamento": 16605.63,
+                "pedidos": 22
+            },
+            {
+                "data": "2026-03-03",
+                "faturamento": 37373.65,
+                "pedidos": 35
+            },
+            {
+                "data": "2026-03-04",
+                "faturamento": 19528.22,
+                "pedidos": 12
+            },
+            {
+                "data": "2026-03-05",
+                "faturamento": 17359.33,
+                "pedidos": 21
+            },
+            {
+                "data": "2026-03-06",
+                "faturamento": 27171.58,
+                "pedidos": 18
+            },
+            {
+                "data": "2026-03-07",
+                "faturamento": 27599.0,
+                "pedidos": 11
+            },
+            {
+                "data": "2026-03-09",
+                "faturamento": 12709.5,
+                "pedidos": 19
+            },
+            {
+                "data": "2026-03-10",
+                "faturamento": 13124.65,
+                "pedidos": 18
+            },
+            {
+                "data": "2026-03-11",
+                "faturamento": 21414.48,
+                "pedidos": 19
+            },
+            {
+                "data": "2026-03-12",
+                "faturamento": 30802.48,
+                "pedidos": 30
+            },
+            {
+                "data": "2026-03-13",
+                "faturamento": 23149.5,
+                "pedidos": 22
+            },
+            {
+                "data": "2026-03-14",
+                "faturamento": 15198.86,
+                "pedidos": 15
+            },
+            {
+                "data": "2026-03-16",
+                "faturamento": 30810.24,
+                "pedidos": 30
+            },
+            {
+                "data": "2026-03-17",
+                "faturamento": 11942.32,
+                "pedidos": 20
+            },
+            {
+                "data": "2026-03-18",
+                "faturamento": 27942.76,
+                "pedidos": 19
+            },
+            {
+                "data": "2026-03-19",
+                "faturamento": 20860.1,
+                "pedidos": 17
+            },
+            {
+                "data": "2026-03-20",
+                "faturamento": 14102.39,
+                "pedidos": 19
+            },
+            {
+                "data": "2026-03-21",
+                "faturamento": 12005.46,
+                "pedidos": 15
+            },
+            {
+                "data": "2026-03-23",
+                "faturamento": 9361.32,
+                "pedidos": 23
+            },
+            {
+                "data": "2026-03-24",
+                "faturamento": 9980.28,
+                "pedidos": 22
+            },
+            {
+                "data": "2026-03-25",
+                "faturamento": 15500.4,
+                "pedidos": 25
+            },
+            {
+                "data": "2026-03-26",
+                "faturamento": 18005.32,
+                "pedidos": 18
+            },
+            {
+                "data": "2026-03-27",
+                "faturamento": 11688.96,
+                "pedidos": 19
+            },
+            {
+                "data": "2026-03-28",
+                "faturamento": 15238.35,
+                "pedidos": 13
+            },
+            {
+                "data": "2026-03-30",
+                "faturamento": 22049.94,
+                "pedidos": 23
+            },
+            {
+                "data": "2026-03-31",
+                "faturamento": 29905.17,
+                "pedidos": 24
+            },
+            {
+                "data": "2026-04-01",
+                "faturamento": 11391.38,
+                "pedidos": 21
+            },
+            {
+                "data": "2026-04-02",
+                "faturamento": 12367.3,
+                "pedidos": 18
+            },
+            {
+                "data": "2026-04-04",
+                "faturamento": 1922.67,
+                "pedidos": 12
+            },
+            {
+                "data": "2026-04-06",
+                "faturamento": 50114.77,
+                "pedidos": 28
+            },
+            {
+                "data": "2026-04-07",
+                "faturamento": 20379.7,
+                "pedidos": 22
+            },
+            {
+                "data": "2026-04-08",
+                "faturamento": 30200.29,
+                "pedidos": 19
+            },
+            {
+                "data": "2026-04-09",
+                "faturamento": 19766.55,
+                "pedidos": 22
+            },
+            {
+                "data": "2026-04-10",
+                "faturamento": 16538.39,
+                "pedidos": 23
+            },
+            {
+                "data": "2026-04-11",
+                "faturamento": 11909.03,
+                "pedidos": 19
+            },
+            {
+                "data": "2026-04-13",
+                "faturamento": 25335.02,
+                "pedidos": 20
+            },
+            {
+                "data": "2026-04-14",
+                "faturamento": 17902.19,
+                "pedidos": 20
+            },
+            {
+                "data": "2026-04-15",
+                "faturamento": 12884.2,
+                "pedidos": 12
+            },
+            {
+                "data": "2026-04-16",
+                "faturamento": 12015.72,
+                "pedidos": 25
+            },
+            {
+                "data": "2026-04-17",
+                "faturamento": 30341.28,
+                "pedidos": 19
+            },
+            {
+                "data": "2026-04-18",
+                "faturamento": 25401.12,
+                "pedidos": 12
+            },
+            {
+                "data": "2026-04-20",
+                "faturamento": 13607.4,
+                "pedidos": 19
+            },
+            {
+                "data": "2026-04-22",
+                "faturamento": 9811.43,
+                "pedidos": 18
+            },
+            {
+                "data": "2026-04-23",
+                "faturamento": 14623.71,
+                "pedidos": 21
+            },
+            {
+                "data": "2026-04-24",
+                "faturamento": 12817.38,
+                "pedidos": 16
+            },
+            {
+                "data": "2026-04-25",
+                "faturamento": 6289.97,
+                "pedidos": 8
+            },
+            {
+                "data": "2026-04-27",
+                "faturamento": 20035.62,
+                "pedidos": 22
+            },
+            {
+                "data": "2026-04-28",
+                "faturamento": 16915.38,
+                "pedidos": 21
+            },
+            {
+                "data": "2026-04-29",
+                "faturamento": 51042.03,
+                "pedidos": 32
+            },
+            {
+                "data": "2026-04-30",
+                "faturamento": 33038.19,
+                "pedidos": 33
+            },
+            {
+                "data": "2026-05-06",
+                "faturamento": 1826.55,
+                "pedidos": 2
+            }
+        ],
+        "periodo_historico": "2025-05-06 ate hoje"
+    },
+    "received_at": "2026-05-06T16:45:24.908773",
+    "agent_timestamp": "2026-05-06T16:45:23.276849"
+}

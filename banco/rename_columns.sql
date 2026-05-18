@@ -1,0 +1,9 @@
+ALTER TABLE tenants RENAME COLUMN "razaoSocial" TO razao_social;
+ALTER TABLE tenants RENAME COLUMN "nomeFantasia" TO nome_fantasia;
+ALTER TABLE tenants RENAME COLUMN "planId" TO plan_id;
+ALTER TABLE tenants RENAME COLUMN "dataVencimento" TO data_vencimento;
+ALTER TABLE tenants RENAME COLUMN "dataCadastro" TO data_cadastro;
+ALTER TABLE tenants RENAME COLUMN "apiToken" TO api_token;
+ALTER TABLE tenants RENAME COLUMN "logoUrl" TO logo_url;
+ALTER TABLE tenants RENAME COLUMN "lastSync" TO last_sync;
+ALTER TABLE tenants RENAME COLUMN "resellerId" TO reseller_id;

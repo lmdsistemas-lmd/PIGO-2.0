@@ -1,0 +1,56 @@
+{
+    "cnpj": "46512675000110",
+    "type": "USUARIOS",
+    "content": [
+        {
+            "usu_login": "1",
+            "usu_nome": "SUPORTE",
+            "usu_senha": "GINA62",
+            "usu_administrador": "S"
+        },
+        {
+            "usu_login": "4",
+            "usu_nome": "MARIANE",
+            "usu_senha": "4",
+            "usu_administrador": "S"
+        },
+        {
+            "usu_login": "3",
+            "usu_nome": "HUGO",
+            "usu_senha": "3",
+            "usu_administrador": "N"
+        },
+        {
+            "usu_login": "2",
+            "usu_nome": "RAYSSA",
+            "usu_senha": "250691",
+            "usu_administrador": "S"
+        },
+        {
+            "usu_login": "5",
+            "usu_nome": "DEBORA",
+            "usu_senha": "5",
+            "usu_administrador": "N"
+        },
+        {
+            "usu_login": "6",
+            "usu_nome": "LUCAS",
+            "usu_senha": "6",
+            "usu_administrador": "N"
+        },
+        {
+            "usu_login": "7",
+            "usu_nome": "MARILIA",
+            "usu_senha": "7",
+            "usu_administrador": "N"
+        },
+        {
+            "usu_login": "8",
+            "usu_nome": "ROGERIA",
+            "usu_senha": "8",
+            "usu_administrador": "N"
+        }
+    ],
+    "received_at": "2026-05-06T16:45:25.428998",
+    "agent_timestamp": "2026-05-06T16:45:23.728831"
+}
