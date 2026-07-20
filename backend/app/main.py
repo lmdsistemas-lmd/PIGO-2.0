@@ -31,6 +31,7 @@ from app.database.erp_connection import current_cnpj, current_tenant_id
 from app.core.security import decode_access_token
 from app.middlewares.license import license_middleware
 from app.middlewares.request_logging import request_logging_middleware
+from app.middlewares.license_control_auth import is_license_control_integration_path
 from fastapi import Request
 
 logging.basicConfig(
@@ -54,7 +55,10 @@ async def multi_company_middleware(request: Request, call_next):
     
     print(f"[Middleware] Chamado para URL: {request.url.path}")
 
-    if auth_header.startswith("Bearer "):
+    if (
+        auth_header.startswith("Bearer ")
+        and not is_license_control_integration_path(request.url.path)
+    ):
         try:
             token = auth_header.replace("Bearer ", "").strip()
             

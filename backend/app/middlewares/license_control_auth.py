@@ -1,15 +1,27 @@
 import hmac
 import logging
 
-from fastapi import Header, HTTPException, status
+from fastapi import Header, HTTPException, Request, status
 
 from app.core import config
 
 
 logger = logging.getLogger(__name__)
 
+INTERNAL_LICENSE_CONTROL_PATHS = frozenset(
+    {
+        "/api/internal/license-control/tenants/sync",
+        "/api/internal/license-control/sync-tenant",
+    }
+)
+
+
+def is_license_control_integration_path(path: str) -> bool:
+    return path.rstrip("/") in INTERNAL_LICENSE_CONTROL_PATHS
+
 
 def validate_license_control_token(
+    request: Request,
     authorization: str | None = Header(default=None),
     x_integration_source: str | None = Header(default=None, alias="X-Integration-Source"),
 ) -> None:
@@ -42,3 +54,6 @@ def validate_license_control_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Origem da integracao invalida.",
         )
+
+    request.state.auth_type = "integration"
+    request.state.integration_source = "license-control"

@@ -1,5 +1,6 @@
 import json
 import ipaddress
+import logging
 import re
 import time
 from typing import Any
@@ -12,7 +13,19 @@ from app.repositories.license_control_repository import LicenseControlRepository
 from app.schemas.license_control_sync import LicenseControlTenant
 
 
+logger = logging.getLogger(__name__)
+
 ACTIVE_STATUSES = {"active", "valid", "trial"}
+ALLOWED_STATUSES = ACTIVE_STATUSES | {
+    "inactive",
+    "blocked",
+    "suspended",
+    "expired",
+    "revoked",
+    "cancelled",
+    "canceled",
+    "unknown",
+}
 
 
 def normalize_cnpj(value: str) -> str:
@@ -22,17 +35,94 @@ def normalize_cnpj(value: str) -> str:
     return normalized
 
 
-def _error(index: int, item: Any, message: str) -> dict[str, Any]:
-    reference = None
-    if isinstance(item, dict):
-        reference = item.get("company_id") or item.get("tenant_id")
-    return {"index": index, "reference": reference, "message": message}
+def _mask_cnpj(value: Any) -> str | None:
+    digits = re.sub(r"\D", "", str(value or ""))
+    if len(digits) != 14:
+        return None
+    return f"{digits[:2]}.***.***/****-{digits[-2:]}"
+
+
+def _identity(item: Any) -> tuple[str | None, str | None, str | None]:
+    if not isinstance(item, dict):
+        return None, None, None
+    return (
+        str(item.get("tenant_id") or "").strip() or None,
+        str(item.get("company_id") or "").strip() or None,
+        _mask_cnpj(item.get("cnpj")),
+    )
+
+
+def _error(
+    index: int,
+    item: Any,
+    *,
+    field: str,
+    code: str,
+    message: str,
+    trace_id: str | None,
+) -> dict[str, Any]:
+    tenant_id, company_id, masked_cnpj = _identity(item)
+    error = {
+        "index": index,
+        "tenant_id": tenant_id,
+        "company_id": company_id,
+        "field": field,
+        "code": code,
+        "message": message,
+        "trace_id": trace_id,
+    }
+    logger.warning(
+        "license_control.sync.record_rejected trace_id=%s tenant_id=%s "
+        "company_id=%s cnpj=%s field=%s code=%s message=%s",
+        trace_id,
+        tenant_id,
+        company_id,
+        masked_cnpj,
+        field,
+        code,
+        message,
+    )
+    return error
+
+
+def _validation_error(
+    index: int,
+    item: Any,
+    exc: ValidationError,
+    trace_id: str | None,
+) -> dict[str, Any]:
+    issue = exc.errors()[0]
+    field = str(issue.get("loc", ("payload",))[-1])
+    issue_type = str(issue.get("type") or "")
+
+    if issue_type == "missing":
+        code = f"MISSING_{field.upper()}"
+        message = f"Campo obrigatorio ausente: {field}."
+    elif field in {"updated_at", "validade"}:
+        code = f"INVALID_{field.upper()}"
+        message = f"Data invalida no campo {field}."
+    elif field in {"tenant_id", "company_id", "empresa", "produto", "status"}:
+        code = f"EMPTY_{field.upper()}"
+        message = f"Campo obrigatorio vazio: {field}."
+    else:
+        code = "INVALID_PAYLOAD"
+        message = f"Valor invalido no campo {field}."
+
+    return _error(
+        index,
+        item,
+        field=field,
+        code=code,
+        message=message,
+        trace_id=trace_id,
+    )
 
 
 def sync_license_control_batch(
     db: Session,
     raw_items: list[Any],
     ip_address: str | None,
+    trace_id: str | None = None,
 ) -> dict[str, Any]:
     started_at = time.perf_counter()
     repository = LicenseControlRepository(db)
@@ -53,12 +143,53 @@ def sync_license_control_batch(
     for index, raw_item in enumerate(raw_items):
         try:
             item = LicenseControlTenant.model_validate(raw_item)
+        except ValidationError as exc:
+            errors.append(_validation_error(index, raw_item, exc, trace_id))
+            continue
+
+        try:
             cnpj = normalize_cnpj(item.cnpj)
-        except (ValidationError, ValueError) as exc:
-            errors.append(_error(index, raw_item, str(exc)))
+        except ValueError:
+            errors.append(
+                _error(
+                    index,
+                    raw_item,
+                    field="cnpj",
+                    code="INVALID_CNPJ",
+                    message="CNPJ invalido.",
+                    trace_id=trace_id,
+                )
+            )
             continue
 
         status_value = item.status.strip().lower()
+        if status_value not in ALLOWED_STATUSES:
+            errors.append(
+                _error(
+                    index,
+                    raw_item,
+                    field="status",
+                    code="INVALID_STATUS",
+                    message="Status de licenca nao reconhecido.",
+                    trace_id=trace_id,
+                )
+            )
+            continue
+
+        normalized_product = re.sub(r"[^A-Z0-9]", "", item.produto.upper())
+        if normalized_product != "PIGO":
+            errors.append(
+                _error(
+                    index,
+                    raw_item,
+                    field="produto",
+                    code="INVALID_PRODUCT",
+                    message="Produto diferente de PIGO.",
+                    trace_id=trace_id,
+                )
+            )
+            continue
+
         enabled = item.ativo and status_value in ACTIVE_STATUSES
         values = {
             "external_tenant_id": item.tenant_id,
@@ -94,9 +225,29 @@ def sync_license_control_batch(
                 company = repository.find_company(item.company_id, cnpj)
 
                 if tenant and tenant["external_tenant_id"] not in (None, item.tenant_id):
-                    raise ValueError("CNPJ ja vinculado a outro tenant externo")
+                    errors.append(
+                        _error(
+                            index,
+                            raw_item,
+                            field="tenant_id",
+                            code="TENANT_CNPJ_CONFLICT",
+                            message="CNPJ ja vinculado a outro tenant externo.",
+                            trace_id=trace_id,
+                        )
+                    )
+                    continue
                 if company and company["external_company_id"] not in (None, item.company_id):
-                    raise ValueError("CNPJ ja vinculado a outra empresa externa")
+                    errors.append(
+                        _error(
+                            index,
+                            raw_item,
+                            field="company_id",
+                            code="COMPANY_CNPJ_CONFLICT",
+                            message="CNPJ ja vinculado a outra empresa externa.",
+                            trace_id=trace_id,
+                        )
+                    )
+                    continue
 
                 repository.upsert_company(values, company["id"] if company else None)
                 repository.upsert_tenant(values, tenant["id"] if tenant else None)
@@ -106,11 +257,33 @@ def sync_license_control_batch(
             metrics[action] += 1
             if not enabled and (not tenant or bool(tenant["has_pigo_access"])):
                 metrics["disabled"] += 1
-        except (IntegrityError, ValueError) as exc:
-            errors.append(_error(index, raw_item, str(exc).splitlines()[0][:300]))
-        except Exception:
+        except IntegrityError:
             errors.append(
-                _error(index, raw_item, "Falha interna ao persistir o registro.")
+                _error(
+                    index,
+                    raw_item,
+                    field="identifiers",
+                    code="IDENTIFIER_CONFLICT",
+                    message="Conflito entre tenant_id, company_id e CNPJ.",
+                    trace_id=trace_id,
+                )
+            )
+        except Exception:
+            logger.exception(
+                "license_control.sync.persistence_error trace_id=%s tenant_id=%s company_id=%s",
+                trace_id,
+                item.tenant_id,
+                item.company_id,
+            )
+            errors.append(
+                _error(
+                    index,
+                    raw_item,
+                    field="record",
+                    code="PERSISTENCE_ERROR",
+                    message="Falha interna ao persistir o registro.",
+                    trace_id=trace_id,
+                )
             )
 
     duration = round((time.perf_counter() - started_at) * 1000)

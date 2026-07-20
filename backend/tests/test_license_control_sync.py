@@ -134,6 +134,57 @@ class LicenseControlServiceTests(unittest.TestCase):
         invalid = self.sync([canonical_payload(cnpj="123")])
         self.assertTrue(valid["success"])
         self.assertEqual(len(invalid["errors"]), 1)
+        self.assertEqual(invalid["errors"][0]["field"], "cnpj")
+        self.assertEqual(invalid["errors"][0]["code"], "INVALID_CNPJ")
+
+    def test_validation_errors_are_detailed(self):
+        cases = [
+            ({k: v for k, v in canonical_payload().items() if k != "tenant_id"}, "tenant_id", "MISSING_TENANT_ID"),
+            ({k: v for k, v in canonical_payload().items() if k != "company_id"}, "company_id", "MISSING_COMPANY_ID"),
+            (canonical_payload(empresa="  "), "empresa", "EMPTY_EMPRESA"),
+            (canonical_payload(cnpj="123"), "cnpj", "INVALID_CNPJ"),
+            (canonical_payload(updated_at="not-a-date"), "updated_at", "INVALID_UPDATED_AT"),
+            (canonical_payload(validade="not-a-date"), "validade", "INVALID_VALIDADE"),
+            (canonical_payload(status="unexpected"), "status", "INVALID_STATUS"),
+            (canonical_payload(produto="OUTRO"), "produto", "INVALID_PRODUCT"),
+        ]
+
+        for payload, field, code in cases:
+            with self.subTest(field=field, code=code):
+                result = self.sync([payload])
+                self.assertFalse(result["success"])
+                self.assertEqual(result["errors"][0]["field"], field)
+                self.assertEqual(result["errors"][0]["code"], code)
+                self.assertNotIn("token", str(result["errors"]).lower())
+
+    def test_tenant_cnpj_conflict_is_detailed(self):
+        self.sync([canonical_payload()])
+        result = self.sync(
+            [canonical_payload(tenant_id="different-tenant", company_id="different-company")]
+        )
+        error = result["errors"][0]
+        self.assertEqual(error["field"], "tenant_id")
+        self.assertEqual(error["code"], "TENANT_CNPJ_CONFLICT")
+
+    def test_company_cnpj_conflict_is_detailed(self):
+        self.sync([canonical_payload()])
+        result = self.sync([canonical_payload(company_id="different-company")])
+        error = result["errors"][0]
+        self.assertEqual(error["field"], "company_id")
+        self.assertEqual(error["code"], "COMPANY_CNPJ_CONFLICT")
+
+    def test_product_name_accepts_punctuation_without_changing_contract(self):
+        result = self.sync([canonical_payload(produto="P.I.G.O")])
+        self.assertTrue(result["success"])
+
+    def test_partial_errors_do_not_block_valid_records(self):
+        result = self.sync(
+            [canonical_payload(), canonical_payload(tenant_id="bad", cnpj="123")]
+        )
+        self.assertEqual(result["received"], 2)
+        self.assertEqual(result["created"], 1)
+        self.assertEqual(len(result["errors"]), 1)
+        self.assertFalse(result["success"])
 
     def test_response_has_all_metrics(self):
         result = self.sync([canonical_payload()])
@@ -217,6 +268,117 @@ class LicenseControlRouteTests(unittest.TestCase):
                 json=canonical_payload(),
             )
         self.assertNotIn("wrong-secret-value", "\n".join(captured.output))
+
+    @patch("app.routes.internal_license_control.sync_license_control_batch")
+    def test_integration_token_bypasses_dashboard_jwt_logging(self, sync_mock):
+        sync_mock.return_value = {
+            "success": True, "received": 1, "created": 1, "updated": 0,
+            "disabled": 0, "ignored": 0, "errors": [],
+            "processing_time": 1, "action": "created",
+        }
+        headers = {"Authorization": "Bearer test-shared-token"}
+        with (
+            patch(
+                "app.middlewares.request_logging.decode_access_token",
+                side_effect=AssertionError("JWT comum nao deve ser chamado"),
+            ),
+            patch(
+                "app.main.decode_access_token",
+                side_effect=AssertionError("JWT comum nao deve ser chamado"),
+            ),
+            self.assertLogs("pigo.request", level=logging.INFO) as captured,
+        ):
+            response = self.client.post(
+                "/api/internal/license-control/tenants/sync",
+                headers=headers,
+                json=canonical_payload(),
+            )
+
+        logs = "\n".join(captured.output)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("auth_type=integration", logs)
+        self.assertIn("integration_source=license-control", logs)
+        self.assertNotIn("sub=invalid-token", logs)
+        self.assertNotIn("test-shared-token", logs)
+
+    @patch("app.routes.internal_license_control.sync_license_control_batch")
+    def test_invalid_payload_returns_top_level_detailed_400(self, sync_mock):
+        sync_mock.return_value = {
+            "success": False,
+            "received": 1,
+            "created": 0,
+            "updated": 0,
+            "disabled": 0,
+            "ignored": 0,
+            "errors": [
+                {
+                    "tenant_id": "tenant-test-001",
+                    "company_id": "company-test-001",
+                    "field": "cnpj",
+                    "code": "INVALID_CNPJ",
+                    "message": "CNPJ invalido.",
+                    "trace_id": "trace-test",
+                }
+            ],
+            "processing_time": 1,
+        }
+        response = self.client.post(
+            "/api/internal/license-control/tenants/sync",
+            headers={"Authorization": "Bearer test-shared-token"},
+            json=canonical_payload(cnpj="123"),
+        )
+        body = response.json()
+        self.assertEqual(response.status_code, 400)
+        self.assertNotIn("detail", body)
+        self.assertEqual(body["errors"][0]["code"], "INVALID_CNPJ")
+
+    @patch("app.routes.internal_license_control.sync_license_control_batch")
+    def test_partial_batch_keeps_processing_and_returns_200(self, sync_mock):
+        sync_mock.return_value = {
+            "success": False,
+            "received": 2,
+            "created": 1,
+            "updated": 0,
+            "disabled": 0,
+            "ignored": 0,
+            "errors": [
+                {
+                    "tenant_id": "bad",
+                    "company_id": "bad",
+                    "field": "cnpj",
+                    "code": "INVALID_CNPJ",
+                    "message": "CNPJ invalido.",
+                }
+            ],
+            "processing_time": 1,
+        }
+        response = self.client.post(
+            "/api/internal/license-control/tenants/sync",
+            headers={"Authorization": "Bearer test-shared-token"},
+            json={"tenants": [canonical_payload(), canonical_payload(cnpj="123")]},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["created"], 1)
+
+    @patch("app.routes.internal_license_control.sync_license_control_batch")
+    def test_legacy_route_uses_same_integration_token(self, sync_mock):
+        sync_mock.return_value = {
+            "success": True, "received": 1, "created": 1, "updated": 0,
+            "disabled": 0, "ignored": 0, "errors": [],
+            "processing_time": 1, "action": "created",
+        }
+        invalid = self.client.post(
+            "/api/internal/license-control/sync-tenant",
+            headers={"Authorization": "Bearer wrong"},
+            json=canonical_payload(),
+        )
+        valid = self.client.post(
+            "/api/internal/license-control/sync-tenant",
+            headers={"Authorization": "Bearer test-shared-token"},
+            json=canonical_payload(),
+        )
+        self.assertEqual(invalid.status_code, 401)
+        self.assertEqual(valid.status_code, 200)
 
 
 if __name__ == "__main__":
