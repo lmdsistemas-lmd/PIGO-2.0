@@ -1,12 +1,15 @@
 @echo off
+setlocal
 cd /d %~dp0
 title LMD Dashboard Sync Agent
+set PYTHONUTF8=1
+set PYTHONIOENCODING=utf-8
 echo ==========================================
 echo   LMD DASHBOARD - AGENTE DE SINCRONISMO
 echo ==========================================
 echo.
 
-if not exist venv (
+if not exist venv\Scripts\python.exe (
     echo Criando ambiente virtual...
     python -m venv venv
 )
@@ -15,7 +18,7 @@ echo Ativando ambiente virtual...
 call venv\Scripts\activate
 
 echo Instalando/Atualizando dependencias...
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 
 if not exist .env (
     echo ERRO: Arquivo .env nao encontrado!

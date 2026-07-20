@@ -1,163 +1,234 @@
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
 from app.core.security import create_access_token, decode_access_token
-from app.database.erp_connection import get_erp_db
 from app.database.connection import get_db
-from app.services.auth_service import autenticar_usuario_erp
-from sqlalchemy import func
-from datetime import datetime
-import logging
-
-logger = logging.getLogger(__name__)
+from app.models.saas import SyncErpUser, Tenant
+from app.services.audit_service import write_audit_log
+from app.services.tenant_access_service import get_tenant_by_cnpj, validate_tenant_access
 
 
-router = APIRouter(prefix="/auth", tags=["Autenticação"])
+router = APIRouter(prefix="/auth", tags=["Autenticacao"])
+
+
+def _client_ip(request: Request) -> str | None:
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        return forwarded_for.split(",", 1)[0].strip()
+    return request.client.host if request.client else None
+
+
+def _only_digits(value: str) -> str:
+    return "".join(ch for ch in str(value or "") if ch.isdigit())
+
+
+def _is_admin_flag(value) -> bool:
+    return str(value or "").strip().upper() in {"S", "SIM", "TRUE", "1", "Y"}
+
+
+def _password_matches(stored_password, typed_password: str) -> bool:
+    if stored_password is None:
+        return False
+    return str(stored_password).strip().upper() == str(typed_password or "").strip().upper()
+
+
+def _tenant_display_name(tenant: Tenant) -> str:
+    return tenant.nome_fantasia or tenant.razao_social or tenant.cnpj
+
+
+def _find_synced_erp_user(db: Session, tenant: Tenant, login_value: str):
+    erp_user = (
+        db.query(SyncErpUser)
+        .filter(
+            SyncErpUser.tenant_id == tenant.id,
+            func.upper(SyncErpUser.usu_login) == login_value.upper(),
+        )
+        .first()
+    )
+    if erp_user:
+        return {
+            "id": erp_user.usu_login,
+            "login": erp_user.usu_login,
+            "nome": erp_user.usu_nome or erp_user.usu_login,
+            "senha": erp_user.usu_senha,
+            "administrador": erp_user.usu_administrador,
+            "source": "sync_erp_users",
+        }
+
+    exists = db.execute(
+        text(
+            """
+            SELECT to_regclass('public."TB_USUARIO"') IS NOT NULL
+            """
+        )
+    ).scalar()
+    if not exists:
+        return None
+
+    row = (
+        db.execute(
+            text(
+                """
+                SELECT *
+                FROM public."TB_USUARIO"
+                WHERE tenant_id = :tenant_id
+                  AND UPPER(TRIM(COALESCE("USU_LOGIN", ''))) = UPPER(:login)
+                LIMIT 1
+                """
+            ),
+            {"tenant_id": str(tenant.id), "login": login_value},
+        )
+        .mappings()
+        .first()
+    )
+    if not row:
+        return None
+
+    return {
+        "id": row.get("USU_ID") or row.get("USU_LOGIN"),
+        "login": row.get("USU_LOGIN"),
+        "nome": row.get("USU_NOME") or row.get("USU_LOGIN"),
+        "senha": row.get("USU_SENHA"),
+        "administrador": row.get("USU_ADMINISTRADOR") or row.get("USU_ADM") or "S",
+        "source": "TB_USUARIO",
+    }
 
 
 @router.post("/login")
-def login(payload: dict, db: Session = Depends(get_db)):
-    try:
-        import re
-        from app.models.saas import Tenant, SyncErpUser
-        
-        cnpj_value = re.sub(r"\D", "", str(payload.get("cnpj", "")))
-        login_value = str(payload.get("login", "")).strip()
-        senha_value = str(payload.get("senha", "")).strip()
+def login(payload: dict, request: Request, db: Session = Depends(get_db)):
+    cnpj_value = _only_digits(payload.get("cnpj") or payload.get("license_cnpj") or "")
+    login_value = str(payload.get("login") or payload.get("email") or "").strip()
+    password = str(payload.get("senha") or payload.get("password") or "").strip()
 
-        if not cnpj_value or not login_value or not senha_value:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="CNPJ, Login e senha são obrigatórios"
-            )
-
-        # 1. Busca o Tenant no PostgreSQL
-        tenant = db.query(Tenant).filter(Tenant.cnpj == cnpj_value).first()
-        if not tenant:
-             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Empresa não cadastrada no sistema SaaS."
-            )
-
-        # 2. Validação de Licença
-        if tenant.status != "ATIVO":
-             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Sua conta está inativa ou bloqueada."
-            )
-
-        from datetime import datetime, timezone
-        if tenant.data_vencimento < datetime.now(timezone.utc):
-
-             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Sua licença expirou. Entre em contato com o suporte."
-            )
-
-        # 3. Busca o usuário sincronizado na tabela sync_erp_users
-        erp_user = db.query(SyncErpUser).filter(
-            SyncErpUser.tenant_id == tenant.id,
-            func.upper(SyncErpUser.usu_login) == login_value.upper()
-        ).first()
-
-        user = None
-        if erp_user:
-            # Valida admin e senha (comparação simples como no ERP original)
-            if erp_user.usu_administrador.upper() != "S":
-                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Este usuário não tem permissão de administrador no ERP."
-                )
-            
-            if erp_user.usu_senha.upper() != senha_value.upper():
-                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Senha incorreta."
-                )
-
-            user = {
-                "id": 0,
-                "login": erp_user.usu_login,
-                "nome": erp_user.usu_nome,
-                "perfil": "Administrador ERP"
-            }
-
-        # Fallback de segurança apenas para CNPJ de teste ou se for o primeiro acesso
-        if not user and login_value.lower() == "admin" and senha_value == "admin":
-            user = {
-                "id": 0,
-                "login": "admin",
-                "nome": "Admin (Acesso Emergencial)",
-                "perfil": "Administrador ERP"
-            }
-
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Usuário ou senha inválidos no ERP."
-            )
-
-        empresa_nome = tenant.razao_social
-
-        access_token = create_access_token({
-            "sub": str(user["id"]),
-            "login": user["login"],
-            "nome": user["nome"],
-            "perfil": user["perfil"],
-            "cnpj": cnpj_value,
-            "empresa": empresa_nome
-        })
-
-        return {
-            "access_token": access_token,
-            "token_type": "bearer",
-            "user": {**user, "empresa": empresa_nome},
-        }
-    except HTTPException as he:
-        raise he
-    except Exception as e:
-        logger.error(f"Erro no login: {str(e)}")
+    if not cnpj_value or not login_value or not password:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro no servidor: {str(e)}"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="CNPJ, login e senha do ERP sao obrigatorios",
         )
 
+    tenant = get_tenant_by_cnpj(db, cnpj_value)
+    if not tenant:
+        write_audit_log(
+            db,
+            action="auth.login_failed_tenant_not_found",
+            ip_address=_client_ip(request),
+            user_agent=request.headers.get("user-agent"),
+            metadata={"login": login_value, "cnpj": cnpj_value, "source": "license_control"},
+        )
+        db.commit()
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Empresa nao sincronizada pelo License Control")
+
+    access_ok, access_message = validate_tenant_access(tenant)
+    if not access_ok:
+        write_audit_log(
+            db,
+            action="auth.login_blocked_by_license_control",
+            ip_address=_client_ip(request),
+            user_agent=request.headers.get("user-agent"),
+            metadata={
+                "login": login_value,
+                "cnpj": cnpj_value,
+                "tenant_id": str(tenant.id),
+                "status": tenant.status,
+                "license_status": tenant.license_status,
+                "has_pigo_access": tenant.has_pigo_access,
+                "reason": access_message,
+            },
+        )
+        db.commit()
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=access_message)
+
+    erp_user = _find_synced_erp_user(db, tenant, login_value)
+    if not erp_user or not _password_matches(erp_user["senha"], password):
+        write_audit_log(
+            db,
+            action="auth.erp_login_failed",
+            ip_address=_client_ip(request),
+            user_agent=request.headers.get("user-agent"),
+            metadata={"login": login_value, "cnpj": cnpj_value},
+        )
+        db.commit()
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuario ou senha invalidos no ERP")
+
+    if not _is_admin_flag(erp_user["administrador"]):
+        write_audit_log(
+            db,
+            action="auth.erp_login_blocked_not_admin",
+            ip_address=_client_ip(request),
+            user_agent=request.headers.get("user-agent"),
+            metadata={"login": login_value, "cnpj": cnpj_value},
+        )
+        db.commit()
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Usuario sem permissao administrativa no ERP")
+
+    write_audit_log(
+        db,
+        action="auth.erp_login_success",
+        company_id=None,
+        ip_address=_client_ip(request),
+        user_agent=request.headers.get("user-agent"),
+        metadata={
+            "login": erp_user["login"],
+            "cnpj": cnpj_value,
+            "tenant_id": str(tenant.id),
+            "source": erp_user["source"],
+        },
+    )
+    db.commit()
+
+    access_token = create_access_token(
+        {
+            "sub": str(erp_user["id"]),
+            "login": erp_user["login"],
+            "nome": erp_user["nome"],
+            "perfil": "Administrador ERP",
+            "role": "erp-admin",
+            "cnpj": cnpj_value,
+            "tenant_id": str(tenant.id),
+            "empresa": _tenant_display_name(tenant),
+        }
+    )
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": str(erp_user["id"]),
+            "login": erp_user["login"],
+            "nome": erp_user["nome"],
+            "perfil": "Administrador ERP",
+            "cnpj": cnpj_value,
+            "empresa": _tenant_display_name(tenant),
+        },
+    }
 
 
 @router.get("/me")
 def me(authorization: str = Header(default="")):
     if not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token não informado"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token nao informado")
 
     token = authorization.replace("Bearer ", "").strip()
     payload = decode_access_token(token)
 
     return {
-        "id": int(payload["sub"]),
-        "login": payload["login"],
-        "nome": payload["nome"],
-        "perfil": payload["perfil"],
-        "cnpj": payload.get("cnpj", ""),
-        "empresa": payload.get("empresa", "Dashboard")
+        "id": payload["sub"],
+        "login": payload.get("login"),
+        "nome": payload.get("nome"),
+        "perfil": payload.get("perfil") or payload.get("role"),
+        "cnpj": payload.get("cnpj"),
+        "tenant_id": payload.get("tenant_id"),
+        "empresa": payload.get("empresa", "P.I.G.O Dashboard"),
     }
 
 
 def get_current_user(authorization: str = Header(default="")):
     if not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token não informado"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token nao informado")
 
     token = authorization.replace("Bearer ", "").strip()
     try:
-        payload = decode_access_token(token)
-        return payload
+        return decode_access_token(token)
     except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Sessão inválida ou expirada"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Sessao invalida ou expirada")

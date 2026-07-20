@@ -111,7 +111,7 @@ export default function DashboardConsolidado({ onToggleSidebar, isMobileOrTablet
         if (filters.start) params.set("start", filters.start);
         if (filters.end) params.set("end", filters.end);
 
-        const response = await api.get(`/api/dashboard/consolidado?${params.toString()}`);
+        const response = await api.get(`/dashboard/consolidado?${params.toString()}`);
         setData(response.data);
       } catch (err) {
         setError("Erro ao carregar dados consolidados.");

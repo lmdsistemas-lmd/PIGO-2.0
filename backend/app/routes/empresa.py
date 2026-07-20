@@ -2,11 +2,15 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database.erp_connection import get_erp_db
+from app.routes.auth import get_current_user
 from app.services.empresa_service import listar_empresas_erp
 
 router = APIRouter(prefix="/empresas", tags=["Empresas"])
 
 
 @router.get("")
-def listar_empresas(db: Session = Depends(get_erp_db)):
+def listar_empresas(
+    db: Session = Depends(get_erp_db),
+    current_user: dict = Depends(get_current_user),
+):
     return listar_empresas_erp(db)

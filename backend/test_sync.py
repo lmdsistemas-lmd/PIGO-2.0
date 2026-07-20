@@ -2,7 +2,7 @@ import requests
 import json
 from datetime import datetime
 
-url = "http://localhost:8000/api/sync"
+url = "http://127.0.0.1:4000/api/sync"
 payload = {
     "cnpj": "12345678000100",
     "type": "VENDAS",

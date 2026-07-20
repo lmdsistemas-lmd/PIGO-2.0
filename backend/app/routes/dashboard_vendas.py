@@ -3,7 +3,7 @@ from app.schemas.dashboard_vendas import DashboardVendasResponse
 from app.services.dashboard_vendas_service import DashboardVendasService
 from app.routes.auth import get_current_user
 
-router = APIRouter(prefix="/api/dashboard", tags=["Dashboard Vendas"])
+router = APIRouter(prefix="/dashboard", tags=["Dashboard Vendas"])
 
 
 @router.get("/vendas", response_model=DashboardVendasResponse)

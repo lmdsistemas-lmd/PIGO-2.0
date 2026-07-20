@@ -1,88 +1,64 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy import text
-from sqlalchemy.orm import Session
 
-from app.database.erp_connection import get_erp_db
+from app.routes.auth import get_current_user
+from app.services.erp_query_service import ERPQueryService
+
 
 router = APIRouter(prefix="/indicadores", tags=["Indicadores"])
 
 
 @router.get("/resumo")
-def resumo_funcionarios(
-    erp_db: Session = Depends(get_erp_db)
-):
-    query = text(
+def resumo_funcionarios(current_user: dict = Depends(get_current_user)):
+    rows = ERPQueryService().fetch_all(
         """
         SELECT
-            c.COL_PESSOA,
-            c.COL_STATUS,
-            c.COL_SALARIO_VALOR,
-            c.COL_DATA_AFASTAMENTO
-        FROM TB_COLABORADOR c
+            C.COL_PESSOA,
+            C.COL_STATUS,
+            C.COL_SALARIO_VALOR,
+            C.COL_DATA_AFASTAMENTO
+        FROM TB_COLABORADOR C
         """
     )
 
-    colaboradores = erp_db.execute(query).fetchall()
-
-    total_funcionarios = len(colaboradores)
     total_ativos = 0
     total_afastados = 0
     salarios = []
-
-    for colaborador in colaboradores:
-        status = colaborador[1]
-        salario = colaborador[2]
-        data_afastamento = colaborador[3]
-
-        if status is not None:
-            status_str = str(status).strip().upper()
-            if status_str in ["A", "ATIVO", "1", "S"]:
-                total_ativos += 1
-
-        if data_afastamento is not None:
+    for row in rows:
+        status = str(row.get("COL_STATUS") or "").strip().upper()
+        if status in {"A", "ATIVO", "1", "S"}:
+            total_ativos += 1
+        if row.get("COL_DATA_AFASTAMENTO") is not None:
             total_afastados += 1
-
-        if salario is not None:
+        if row.get("COL_SALARIO_VALOR") is not None:
             try:
-                salarios.append(float(salario))
+                salarios.append(float(row.get("COL_SALARIO_VALOR")))
             except (TypeError, ValueError):
                 pass
 
-    media_salarial = round(sum(salarios) / len(salarios), 2) if salarios else 0
-
     return {
-        "total_funcionarios": total_funcionarios,
+        "total_funcionarios": len(rows),
         "total_ativos": total_ativos,
         "total_afastados": total_afastados,
-        "media_salarial": media_salarial,
+        "media_salarial": round(sum(salarios) / len(salarios), 2) if salarios else 0,
     }
 
 
 @router.get("/por-status")
-def funcionarios_por_status(
-    erp_db: Session = Depends(get_erp_db)
-):
-    query = text(
+def funcionarios_por_status(current_user: dict = Depends(get_current_user)):
+    rows = ERPQueryService().fetch_all(
         """
         SELECT
-            c.COL_STATUS,
-            COUNT(*) AS total
-        FROM TB_COLABORADOR c
-        GROUP BY c.COL_STATUS
-        ORDER BY total DESC
+            C.COL_STATUS,
+            COUNT(*) AS TOTAL
+        FROM TB_COLABORADOR C
+        GROUP BY C.COL_STATUS
+        ORDER BY TOTAL DESC
         """
     )
-
-    rows = erp_db.execute(query).fetchall()
-
-    resultado = []
-
-    for row in rows:
-        resultado.append(
-            {
-                "status": str(row[0]).strip() if row[0] is not None else "Não informado",
-                "total_funcionarios": int(row[1] or 0),
-            }
-        )
-
-    return resultado
+    return [
+        {
+            "status": str(row.get("COL_STATUS")).strip() if row.get("COL_STATUS") is not None else "Nao informado",
+            "total_funcionarios": int(row.get("TOTAL") or 0),
+        }
+        for row in rows
+    ]

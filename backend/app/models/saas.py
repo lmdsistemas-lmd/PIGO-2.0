@@ -8,6 +8,7 @@ class Tenant(Base):
     __tablename__ = "tenants"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    external_tenant_id = Column(String(100), unique=True)
     cnpj = Column(String(14), unique=True, nullable=False)
     razao_social = Column(String(255), nullable=False)
     nome_fantasia = Column(String(255))
@@ -20,12 +21,23 @@ class Tenant(Base):
     data_vencimento = Column(DateTime(timezone=True), nullable=False)
     data_cadastro = Column(DateTime(timezone=True), server_default=func.now())
     api_token = Column(UUID(as_uuid=True), unique=True, default=uuid.uuid4)
+    api_token_active = Column(Boolean, nullable=False, default=True)
+    api_token_created_at = Column(DateTime(timezone=True))
+    api_token_last_used_at = Column(DateTime(timezone=True))
+    license_status = Column(String(30), default="unknown")
+    has_pigo_access = Column(Boolean, nullable=False, default=False)
+    license_expires_at = Column(DateTime(timezone=True))
+    license_control_id = Column(String(100))
+    license_source_updated_at = Column(DateTime(timezone=True))
+    product_slug = Column(String(100), default="p-i-g-o-dashboard")
+    environment = Column(String(50), default="production")
     logo_url = Column(Text)
     last_sync = Column(DateTime(timezone=True))
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     reseller_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
 
-class User(Base):
-    __tablename__ = "users"
+class LegacyUser(Base):
+    __tablename__ = "legacy_users"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True)
@@ -37,7 +49,7 @@ class User(Base):
     status = Column(String(20), default="ATIVO")
     data_vencimento = Column(DateTime(timezone=True))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    reseller_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    reseller_id = Column(UUID(as_uuid=True), ForeignKey("legacy_users.id"), nullable=True)
 
 class Plan(Base):
     __tablename__ = "plans"

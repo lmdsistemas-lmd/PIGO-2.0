@@ -1,25 +1,84 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import text
-from sqlalchemy.orm import Session
-
-from app.database.erp_connection import get_erp_db
+from app.services.erp_query_service import ERPQueryService
 
 router = APIRouter(prefix="/funcionarios", tags=["Funcionários"])
+logger = logging.getLogger(__name__)
 
 
+def _normalizar_funcionario_erp(row: dict[str, Any]) -> dict[str, Any]:
+    pes_id = row.get("COL_PESSOA") or row.get("PES_ID")
+    nome = str(row.get("PES_RSOCIAL_NOME") or row.get("PES_FANTASIA_APELIDO") or "").strip()
+
+    return {
+        "pes_id": pes_id,
+        "col_pessoa": pes_id,
+        "usuario_id": None,
+        "login": None,
+        "nome": nome or "Funcionario sem nome",
+        "cpf": row.get("PES_CNPJ_CPF"),
+        "email": row.get("PES_EMAIL"),
+        "telefone": row.get("PES_TELEFONE"),
+        "celular": row.get("PES_CELULAR"),
+        "cargo_oficial": str(row.get("COL_FUNCAO") or row.get("PES_PROFISSAO") or "").strip() or "Nao informado",
+        "status": str(row.get("COL_STATUS") or row.get("PES_STATUS") or "Sem status").strip() or "Sem status",
+        "salario": float(row["COL_SALARIO_VALOR"]) if row.get("COL_SALARIO_VALOR") is not None else None,
+        "data_admissao": str(row.get("COL_DATA_ADMISSAO")) if row.get("COL_DATA_ADMISSAO") else None,
+        "data_afastamento": str(row.get("COL_DATA_AFASTAMENTO")) if row.get("COL_DATA_AFASTAMENTO") else None,
+        "departamento_id": None,
+        "departamento_nome": None,
+        "vendedor": str(row.get("PES_VENDEDOR") or "").strip().upper() == "S",
+        "origem": "colaborador",
+    }
+
+
+def _normalizar_usuario_erp(row: dict[str, Any]) -> dict[str, Any]:
+    usuario_id = row.get("USU_ID")
+    nome = str(row.get("USU_NOME") or row.get("USU_LOGIN") or "").strip()
+    administrador = str(row.get("USU_ADMINISTRADOR") or "").strip().upper()
+
+    return {
+        "pes_id": usuario_id,
+        "col_pessoa": usuario_id,
+        "usuario_id": usuario_id,
+        "login": row.get("USU_LOGIN"),
+        "nome": nome or "Usuario sem nome",
+        "cpf": None,
+        "email": None,
+        "telefone": None,
+        "celular": None,
+        "cargo_oficial": "Administrador ERP" if administrador in {"S", "SIM", "1", "TRUE", "T"} else "Usuario ERP",
+        "status": "Ativo",
+        "salario": None,
+        "data_admissao": None,
+        "data_afastamento": None,
+        "departamento_id": None,
+        "departamento_nome": None,
+        "vendedor": False,
+        "origem": "usuario_erp",
+    }
+
+
+@router.get("")
 @router.get("/")
 def listar_funcionarios(
     nome: str = "",
     status_filtro: str = Query(default="", alias="status"),
     cargo: str = "",
-    erp_db: Session = Depends(get_erp_db),
+    empresa_id: int | None = Query(default=None),
 ):
-    query_erp = text(
-        """
+    erp = ERPQueryService()
+    logger.info(
+        "Listando funcionarios endpoint=/funcionarios empresa_id=%s filtros=%s",
+        empresa_id,
+        {"nome": nome, "status": status_filtro, "cargo": cargo},
+    )
+
+    query_erp = """
         SELECT
             c.COL_PESSOA,
             c.COL_FUNCAO,
@@ -38,50 +97,68 @@ def listar_funcionarios(
           ON p.PES_ID = c.COL_PESSOA
         ORDER BY p.PES_RSOCIAL_NOME
         """
+
+    colaboradores = erp.fetch_all(query_erp)
+    logger.info(
+        "Consulta funcionarios por TB_COLABORADOR retornou %s registros",
+        len(colaboradores),
     )
 
-    colaboradores = erp_db.execute(query_erp).fetchall()
-    print(f"[DEBUG] Total de colaboradores encontrados no banco: {len(colaboradores)}")
-    resultado = []
+    resultado = [_normalizar_funcionario_erp(row) for row in colaboradores]
 
-    for colaborador in colaboradores:
-        pes_id = colaborador[0]
-        cargo_erp = str(colaborador[1]) if colaborador[1] is not None else ""
-        status_erp = str(colaborador[2]) if colaborador[2] is not None else ""
-        nome_erp = str(colaborador[6]) if colaborador[6] is not None else ""
-
-        if nome and nome.lower() not in nome_erp.lower():
-            continue
-
-        if cargo and cargo.lower() not in cargo_erp.lower():
-            continue
-
-        if status_filtro and status_filtro.lower() not in status_erp.lower():
-            continue
-
-        resultado.append(
-            {
-                "pes_id": pes_id,
-                "col_pessoa": pes_id,
-                "nome": nome_erp,
-                "cpf": colaborador[7],
-                "email": colaborador[8],
-                "telefone": colaborador[9],
-                "celular": colaborador[10],
-                "cargo_oficial": cargo_erp,
-                "status": status_erp,
-                "salario": float(colaborador[3]) if colaborador[3] is not None else None,
-                "data_admissao": str(colaborador[4]) if colaborador[4] else None,
-                "data_afastamento": str(colaborador[5]) if colaborador[5] else None,
-                "departamento_id": None,
-                "departamento_nome": None,
-                "vendedor": str(colaborador[11]).strip().upper() == "S"
-                if colaborador[11] is not None
-                else False,
-            }
+    if not resultado:
+        query_usuarios = """
+            SELECT
+                u.USU_ID,
+                u.USU_LOGIN,
+                u.USU_NOME,
+                u.USU_ADMINISTRADOR,
+                COUNT(a.AUD_ID_REGISTRO) AS TOTAL_ACOES
+            FROM TB_USUARIO u
+            LEFT JOIN TB_AUDITORIA a
+              ON a.AUD_USUARIO = u.USU_ID
+             AND a.tenant_id = u.tenant_id
+            GROUP BY
+                u.USU_ID,
+                u.USU_LOGIN,
+                u.USU_NOME,
+                u.USU_ADMINISTRADOR
+            ORDER BY u.USU_NOME
+        """
+        usuarios = erp.fetch_all(query_usuarios)
+        logger.info(
+            "Fallback funcionarios por TB_USUARIO/TB_AUDITORIA retornou %s registros",
+            len(usuarios),
         )
+        resultado = [_normalizar_usuario_erp(row) for row in usuarios]
 
-    return resultado
+    filtrado = []
+    nome_limpo = (nome or "").strip().lower()
+    cargo_limpo = (cargo or "").strip().lower()
+    status_limpo = (status_filtro or "").strip().lower()
+
+    for funcionario in resultado:
+        nome_erp = str(funcionario.get("nome") or "")
+        cargo_erp = str(funcionario.get("cargo_oficial") or "")
+        status_erp = str(funcionario.get("status") or "")
+
+        if nome_limpo and nome_limpo not in nome_erp.lower():
+            continue
+
+        if cargo_limpo and cargo_limpo not in cargo_erp.lower():
+            continue
+
+        if status_limpo and status_limpo not in status_erp.lower():
+            continue
+
+        filtrado.append(funcionario)
+
+    logger.info(
+        "Endpoint /funcionarios retornando %s registros. estrutura=%s",
+        len(filtrado),
+        list(filtrado[0].keys()) if filtrado else [],
+    )
+    return filtrado
 
 
 @router.get("/{pes_id}/auditoria")
@@ -91,8 +168,150 @@ def listar_auditoria_funcionario(
     data_inicial: str = Query(default=""),
     data_final: str = Query(default=""),
     limit: int = Query(default=100, ge=1, le=5000),
-    erp_db: Session = Depends(get_erp_db),
+    empresa_id: int | None = Query(default=None),
 ):
+    logger.info(
+        "Endpoint /funcionarios/%s/auditoria chamado. params=%s",
+        pes_id,
+        {
+            "tipo": tipo,
+            "data_inicial": data_inicial,
+            "data_final": data_final,
+            "limit": limit,
+            "empresa_id": empresa_id,
+        },
+    )
+
+    service = ERPQueryService()
+    col_pessoa = pes_id
+    limit = min(max(int(limit), 1), 5000)
+
+    usuario = service.fetch_one(
+        """
+        SELECT
+            U.USU_ID,
+            U.USU_LOGIN,
+            U.USU_NOME,
+            U.USU_ADMINISTRADOR
+        FROM TB_USUARIO U
+        WHERE CAST(U.USU_ID AS VARCHAR(30)) = :funcionario_id
+        """,
+        {"funcionario_id": str(col_pessoa)},
+    )
+
+    if not usuario:
+        raise HTTPException(
+            status_code=404,
+            detail="Funcionario nao encontrado no ERP sincronizado.",
+        )
+
+    filtros = ["CAST(A.AUD_USUARIO AS VARCHAR(30)) = :funcionario_id"]
+    params: dict[str, Any] = {"funcionario_id": str(col_pessoa)}
+
+    tipo_limpo = (tipo or "").strip()
+    if tipo_limpo:
+        filtros.append(
+            """
+            (
+                UPPER(COALESCE(A.AUD_TABELA_DESC, '')) LIKE :tipo_like
+                OR UPPER(COALESCE(A.AUD_TABELA, '')) LIKE :tipo_like
+                OR UPPER(COALESCE(A.AUD_DESC_REGISTRO, '')) LIKE :tipo_like
+                OR UPPER(COALESCE(A.AUD_ACAO, '')) = :tipo_acao
+            )
+            """
+        )
+        params["tipo_like"] = f"%{tipo_limpo.upper()}%"
+        params["tipo_acao"] = tipo_limpo.upper()[:1]
+
+    data_inicial_limpa = (data_inicial or "").strip()
+    if data_inicial_limpa:
+        filtros.append("CAST(A.AUD_DT_LANCAMENTO AS DATE) >= CAST(:data_inicial AS DATE)")
+        params["data_inicial"] = data_inicial_limpa
+
+    data_final_limpa = (data_final or "").strip()
+    if data_final_limpa:
+        filtros.append("CAST(A.AUD_DT_LANCAMENTO AS DATE) <= CAST(:data_final AS DATE)")
+        params["data_final"] = data_final_limpa
+
+    if empresa_id is not None:
+        filtros.append("CAST(A.AUD_EMPRESA AS VARCHAR(30)) = :empresa_id")
+        params["empresa_id"] = str(empresa_id)
+
+    where_sql = " AND ".join(filtros)
+    sql_auditoria = f"""
+        SELECT FIRST {limit}
+            A.AUD_USUARIO,
+            A.AUD_ACAO,
+            A.AUD_TABELA_DESC,
+            A.AUD_DESC_REGISTRO,
+            A.AUD_DT_ACAO,
+            A.AUD_DT_LANCAMENTO,
+            A.AUD_SEQUENCIA,
+            A.AUD_ID_REGISTRO,
+            A.AUD_TABELA
+        FROM TB_AUDITORIA A
+        WHERE {where_sql}
+        ORDER BY A.AUD_DT_LANCAMENTO DESC, A.AUD_SEQUENCIA DESC
+    """
+
+    logger.info(
+        "SQL auditoria funcionario preparado. funcionario_id=%s sql=%s params=%s",
+        col_pessoa,
+        sql_auditoria,
+        params,
+    )
+    registros = service.fetch_all(sql_auditoria, params)
+
+    def traduzir_acao(sigla: str | None) -> str:
+        valor = str(sigla or "").strip().upper()
+        mapa = {
+            "I": "Inclusão",
+            "A": "Alteração",
+            "E": "Exclusão",
+            "C": "Cancelamento",
+        }
+        return mapa.get(valor, valor or "Não informado")
+
+    resultado = []
+    for registro in registros:
+        resultado.append(
+            {
+                "aud_usuario": registro.get("AUD_USUARIO"),
+                "acao_sigla": registro.get("AUD_ACAO"),
+                "acao": traduzir_acao(registro.get("AUD_ACAO")),
+                "tabela_desc": registro.get("AUD_TABELA_DESC"),
+                "campo_desc": None,
+                "descricao_registro": registro.get("AUD_DESC_REGISTRO"),
+                "data_hora": str(registro.get("AUD_DT_ACAO")) if registro.get("AUD_DT_ACAO") else None,
+                "data_lancamento": str(registro.get("AUD_DT_LANCAMENTO")) if registro.get("AUD_DT_LANCAMENTO") else None,
+                "aud_sequencia": registro.get("AUD_SEQUENCIA"),
+                "aud_id_registro": registro.get("AUD_ID_REGISTRO"),
+                "aud_tabela": registro.get("AUD_TABELA"),
+                "aud_vendedor": None,
+                "valor_antigo": None,
+                "valor_novo": None,
+            }
+        )
+
+    logger.info(
+        "Endpoint /funcionarios/%s/auditoria retornando %s registros. estrutura=%s",
+        col_pessoa,
+        len(resultado),
+        list(resultado[0].keys()) if resultado else [],
+    )
+
+    return {
+        "pes_id": col_pessoa,
+        "col_pessoa": col_pessoa,
+        "usuario_ids_relacionados": [str(col_pessoa)],
+        "tipo_filtro": tipo_limpo if tipo_limpo else None,
+        "data_inicial": data_inicial_limpa if data_inicial_limpa else None,
+        "data_final": data_final_limpa if data_final_limpa else None,
+        "limit": limit,
+        "total": len(resultado),
+        "registros": resultado,
+    }
+
     col_pessoa = pes_id
 
     query_colaborador = text(
@@ -256,8 +475,114 @@ def listar_auditoria_funcionario(
 @router.get("/{pes_id}")
 def detalhar_funcionario(
     pes_id: int,
-    erp_db: Session = Depends(get_erp_db),
+    empresa_id: int | None = Query(default=None),
 ):
+    logger.info(
+        "Endpoint /funcionarios/%s chamado. params=%s",
+        pes_id,
+        {"empresa_id": empresa_id},
+    )
+
+    service = ERPQueryService()
+    col_pessoa = pes_id
+
+    usuario = service.fetch_one(
+        """
+        SELECT
+            U.USU_ID,
+            U.USU_LOGIN,
+            U.USU_NOME,
+            U.USU_ADMINISTRADOR
+        FROM TB_USUARIO U
+        WHERE CAST(U.USU_ID AS VARCHAR(30)) = :funcionario_id
+        """,
+        {"funcionario_id": str(col_pessoa)},
+    )
+
+    if usuario:
+        detalhe = _normalizar_usuario_erp(usuario)
+        detalhe.update(
+            {
+                "departamento_id": None,
+                "departamento_nome": None,
+                "data_admissao_oficial": None,
+                "salario_oficial": None,
+                "status_oficial": detalhe.get("status"),
+                "erp_colaborador": None,
+                "erp_pessoa": None,
+                "erp_usuario": {
+                    "USU_ID": usuario.get("USU_ID"),
+                    "USU_LOGIN": usuario.get("USU_LOGIN"),
+                    "USU_NOME": usuario.get("USU_NOME"),
+                    "USU_ADMINISTRADOR": usuario.get("USU_ADMINISTRADOR"),
+                },
+            }
+        )
+        logger.info(
+            "Endpoint /funcionarios/%s retornando usuario ERP sincronizado. estrutura=%s",
+            col_pessoa,
+            list(detalhe.keys()),
+        )
+        return detalhe
+
+    colaborador = service.fetch_one(
+        """
+        SELECT
+            C.COL_PESSOA,
+            C.COL_EMPRESA,
+            C.COL_STATUS,
+            P.PES_ID,
+            P.PES_RSOCIAL_NOME,
+            P.PES_FANTASIA_APELIDO,
+            P.PES_EMAIL,
+            P.PES_TELEFONE,
+            P.PES_CELULAR,
+            P.PES_VENDEDOR
+        FROM TB_COLABORADOR C
+        LEFT JOIN TB_PESSOA P
+          ON P.PES_ID = C.COL_PESSOA
+        WHERE CAST(C.COL_PESSOA AS VARCHAR(30)) = :funcionario_id
+        """,
+        {"funcionario_id": str(col_pessoa)},
+    )
+
+    if not colaborador:
+        raise HTTPException(
+            status_code=404,
+            detail="Funcionario nao encontrado no ERP sincronizado.",
+        )
+
+    detalhe = _normalizar_funcionario_erp(colaborador)
+    detalhe.update(
+        {
+            "data_admissao_oficial": detalhe.get("data_admissao"),
+            "salario_oficial": detalhe.get("salario"),
+            "status_oficial": detalhe.get("status"),
+            "erp_colaborador": {
+                "COL_PESSOA": colaborador.get("COL_PESSOA"),
+                "COL_EMPRESA": colaborador.get("COL_EMPRESA"),
+                "COL_STATUS": colaborador.get("COL_STATUS"),
+            },
+            "erp_pessoa": {
+                "PES_ID": colaborador.get("PES_ID"),
+                "PES_RSOCIAL_NOME": colaborador.get("PES_RSOCIAL_NOME"),
+                "PES_FANTASIA_APELIDO": colaborador.get("PES_FANTASIA_APELIDO"),
+                "PES_EMAIL": colaborador.get("PES_EMAIL"),
+                "PES_TELEFONE": colaborador.get("PES_TELEFONE"),
+                "PES_CELULAR": colaborador.get("PES_CELULAR"),
+                "PES_VENDEDOR": colaborador.get("PES_VENDEDOR"),
+            },
+            "erp_usuario": None,
+        }
+    )
+
+    logger.info(
+        "Endpoint /funcionarios/%s retornando colaborador ERP sincronizado. estrutura=%s",
+        col_pessoa,
+        list(detalhe.keys()),
+    )
+    return detalhe
+
     col_pessoa = pes_id
 
     query_erp = text(

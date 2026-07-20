@@ -9,10 +9,14 @@ fdb==2.0.4
 greenlet==3.3.2
 h11==0.16.0
 idna==3.11
+httpx==0.28.1
+pg8000==1.31.5
 pillow==12.1.1
 pydantic==2.12.5
 pydantic_core==2.41.5
+PyJWT==2.10.1
 PyMySQL==1.1.2
+requests==2.32.5
 reportlab==4.4.10
 SQLAlchemy==2.0.48
 starlette==0.52.1

@@ -178,7 +178,7 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
         }
 
         const response = await api.get(
-          `/api/dashboard/financeiro?${params.toString()}`
+          `/dashboard/financeiro?${params.toString()}`
         );
 
         const data = response.data;

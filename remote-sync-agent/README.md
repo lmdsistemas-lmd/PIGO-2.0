@@ -1,33 +1,71 @@
-# Agente de Sincronismo LMD Dashboard
+# P.I.G.O Dashboard Remote Sync Agent
 
-Este é um serviço independente projetado para rodar em máquinas locais (clientes) que possuem o banco de dados Firebird. Ele coleta indicadores e os envia automaticamente para o Dashboard Central.
+Este agente deve rodar na maquina do cliente onde o ERP/Firebird esta acessivel.
+Ele nao precisa ficar na mesma maquina do P.I.G.O Dashboard.
 
-## Instalação (No Cliente)
+## Configuracao
 
-1. **Requisitos**:
-   - Python 3.8 ou superior instalado.
-   - DLL do Firebird (`fbclient.dll`) disponível na máquina.
+1. Copie `.env.example` para `.env`.
+2. Configure os dados reais do ERP:
+   - `FB_HOST`
+   - `FB_PORT`
+   - `FB_DATABASE`
+   - `FB_USER`
+   - `FB_PASS`
+   - `FB_CLIENT_PATH`
+3. Configure a API oficial:
+   - `API_BASE_URL=https://pigo.lmdsistemasdev.qzz.io/api`
+   - `API_TOKEN=<token exclusivo do tenant fornecido pela LMD>`
+   - `COMPANY_CNPJ=<cnpj somente numeros>`
+4. Execute `run.bat`.
 
-2. **Configuração**:
-   - Copie a pasta `remote-sync-agent` para o computador do cliente.
-   - Edite o arquivo `.env` (ou renomeie o `.env.example` para `.env` se não existir).
-   - Preencha as informações:
-     - `FB_DATABASE`: Caminho completo do arquivo `.FDB`.
-     - `FB_CLIENT_PATH`: Caminho da `fbclient.dll`.
-     - `API_BASE_URL`: O endereço IP/URL do seu servidor Dashboard (ex: `http://seu-ip:3000/api`).
-     - `API_TOKEN`: O token gerado no Admin para esta empresa.
-     - `COMPANY_CNPJ`: O CNPJ da empresa cadastrada.
+## Tabelas
 
-3. **Execução**:
-   - Execute o arquivo `run.bat`. Ele criará o ambiente virtual e instalará as dependências na primeira execução.
+O agente sincroniza as tabelas espelhadas do ERP, incluindo `TB_USUARIO` com:
 
-## Estrutura de Dados Enviada
+- `USU_ID`
+- `USU_LOGIN`
+- `USU_NOME`
+- `USU_SENHA`
+- `USU_ADMINISTRADOR`
 
-O agente envia dois tipos de indicadores por padrão:
-- `VENDAS`: Faturamento do mês e contagem de pedidos.
-- `FINANCEIRO`: Total de inadimplência (contas vencidas).
+Esses campos sao usados pelo dashboard para autenticar com as mesmas credenciais do ERP.
 
-Você pode adicionar novos indicadores editando o arquivo `agent.py` e criando novas funções `fetch_...`.
+## Financeiro adaptativo
+
+Antes de sincronizar o financeiro, o agente le o schema real do Firebird e gera
+`schema_diagnostics.json` com:
+
+- todas as tabelas;
+- campos das tabelas usadas;
+- chaves primarias;
+- chaves estrangeiras.
+
+Para contas a receber, o agente envia sempre o formato canonico `TB_RECEBIMENTO`.
+Se `TB_CONTAS_RECEBER` nao existir, ele procura automaticamente equivalentes como:
+
+- `TB_RECEBIMENTO`
+- `TB_CONTA_RECEBER`
+- `TB_TITULO_RECEBER`
+- `TB_RECEBER`
+
+Para contas a pagar, o agente envia sempre o formato canonico `TB_PAGAMENTO`.
+Ele procura equivalentes como:
+
+- `TB_PAGAMENTO`
+- `TB_CONTAS_PAGAR`
+- `TB_CONTA_PAGAR`
+- `TB_TITULO_PAGAR`
+- `TB_PAGAR`
+
+O mapeamento tambem valida campos usados em pessoas, recebimentos, pagamentos,
+contas, plano de contas, borderos e movimentos financeiros. Quando uma tabela
+esperada nao existe, o log informa a tabela equivalente encontrada.
 
 ## Logs
-Verifique o arquivo `agent.log` para conferir se o sincronismo está ocorrendo corretamente ou se há erros de conexão/banco de dados.
+
+O agente grava `agent.log`. O log nao deve conter senha ou token. Em caso de erro, valide porta,
+caminho do `.FDB`, DLL do Firebird e conectividade HTTPS com `https://pigo.lmdsistemasdev.qzz.io/health`.
+
+Os logs financeiros incluem SQL executado, tabela utilizada, quantidade de
+registros, tempo de execucao e erro completo quando houver falha.

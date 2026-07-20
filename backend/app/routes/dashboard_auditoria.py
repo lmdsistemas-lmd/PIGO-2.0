@@ -6,7 +6,7 @@ from app.schemas.dashboard_auditoria import (
 )
 from app.services.dashboard_auditoria_service import DashboardAuditoriaService
 
-router = APIRouter(prefix="/api/dashboard", tags=["Dashboard Auditoria"])
+router = APIRouter(prefix="/dashboard", tags=["Dashboard Auditoria"])
 
 
 @router.get("/auditoria", response_model=DashboardAuditoriaResponse)

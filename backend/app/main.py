@@ -1,4 +1,5 @@
 from pathlib import Path
+import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,25 +17,40 @@ from app.routes.dashboard_financeiro import router as dashboard_financeiro_route
 from app.routes.dashboard_vendas import router as dashboard_vendas_router
 from app.routes.relatorio import router as relatorio_router
 from app.routes.auth import router as auth_router
+from app.routes.license import router as license_router
+from app.routes.me import router as me_router
 from app.routes.empresa import router as empresa_router
 from app.routes.departamentos import router as departamentos_router
 from app.routes.cargos import router as cargos_router
 from app.routes.dashboard_consolidado import router as dashboard_consolidado_router
 from app.routes.dashboard_estoque import router as dashboard_estoque_router
 from app.routes.sync import router as sync_router
-from app.database.erp_connection import current_cnpj
+from app.routes.internal_license_control import router as internal_license_control_router
+from app.core.config import BACKEND_CORS_ORIGINS
+from app.database.erp_connection import current_cnpj, current_tenant_id
 from app.core.security import decode_access_token
+from app.middlewares.license import license_middleware
+from app.middlewares.request_logging import request_logging_middleware
 from fastapi import Request
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
 
 app = FastAPI(
     title="Dashboard App API",
     version="1.0.0"
 )
 
+app.middleware("http")(request_logging_middleware)
+app.middleware("http")(license_middleware)
+
 @app.middleware("http")
 async def multi_company_middleware(request: Request, call_next):
     auth_header = request.headers.get("Authorization", "")
     cnpj = "default"
+    tenant_id = None
     
     print(f"[Middleware] Chamado para URL: {request.url.path}")
 
@@ -52,6 +68,7 @@ async def multi_company_middleware(request: Request, call_next):
                 payload = decode_access_token(token)
                 if payload and "cnpj" in payload:
                     cnpj = str(payload["cnpj"])
+                    tenant_id = payload.get("tenant_id")
                     print(f"[Middleware] Token OK! CNPJ: {cnpj}")
                 else:
                     print("[Middleware] Token sem CNPJ no payload.")
@@ -62,37 +79,42 @@ async def multi_company_middleware(request: Request, call_next):
             
     # Seta o CNPJ no contexto da requisição atual
     token_var = current_cnpj.set(cnpj)
+    tenant_token_var = current_tenant_id.set(tenant_id)
     try:
         response = await call_next(request)
         return response
     finally:
         current_cnpj.reset(token_var)
+        current_tenant_id.reset(tenant_token_var)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=BACKEND_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(home_router)
-app.include_router(funcionarios_router)
-app.include_router(erp_test_router)
-app.include_router(erp_pessoas_router)
-app.include_router(erp_colaboradores_router)
-app.include_router(indicadores_router)
-app.include_router(performance_router)
-app.include_router(dashboard_financeiro_router)
-app.include_router(dashboard_vendas_router)
-app.include_router(relatorio_router)
-app.include_router(auth_router)
-app.include_router(empresa_router)
-app.include_router(departamentos_router)
-app.include_router(cargos_router)
-app.include_router(dashboard_consolidado_router)
-app.include_router(dashboard_estoque_router)
+app.include_router(home_router, prefix="/api")
+app.include_router(funcionarios_router, prefix="/api")
+app.include_router(erp_test_router, prefix="/api")
+app.include_router(erp_pessoas_router, prefix="/api")
+app.include_router(erp_colaboradores_router, prefix="/api")
+app.include_router(indicadores_router, prefix="/api")
+app.include_router(performance_router, prefix="/api")
+app.include_router(dashboard_financeiro_router, prefix="/api")
+app.include_router(dashboard_vendas_router, prefix="/api")
+app.include_router(relatorio_router, prefix="/api")
+app.include_router(auth_router, prefix="/api")
+app.include_router(license_router, prefix="/api")
+app.include_router(me_router, prefix="/api")
+app.include_router(empresa_router, prefix="/api")
+app.include_router(departamentos_router, prefix="/api")
+app.include_router(cargos_router, prefix="/api")
+app.include_router(dashboard_consolidado_router, prefix="/api")
+app.include_router(dashboard_estoque_router, prefix="/api")
 app.include_router(sync_router, prefix="/api")
+app.include_router(internal_license_control_router, prefix="/api")
 
 
 @app.get("/health", tags=["Sistema"])
@@ -116,7 +138,10 @@ def serve_frontend_root():
     index_file = FRONTEND_DIST_DIR / "index.html"
 
     if index_file.exists():
-        return FileResponse(index_file)
+        return FileResponse(
+            index_file,
+            headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
+        )
 
     return JSONResponse(
         status_code=503,
@@ -136,6 +161,7 @@ def serve_frontend_spa(full_path: str):
         "assets",
         "health",
         "auth",
+        "license",
         "funcionarios",
         "erp_test",
         "erp_pessoas",
@@ -161,7 +187,10 @@ def serve_frontend_spa(full_path: str):
     index_file = FRONTEND_DIST_DIR / "index.html"
 
     if index_file.exists():
-        return FileResponse(index_file)
+        return FileResponse(
+            index_file,
+            headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
+        )
 
     return JSONResponse(
         status_code=503,

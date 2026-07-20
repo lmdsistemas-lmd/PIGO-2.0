@@ -1,13 +1,15 @@
-from sqlalchemy import text
-from sqlalchemy.orm import Session
+from app.services.erp_query_service import ERPQueryService
 
 
 class PerformanceRepository:
-    def __init__(self, erp_db: Session):
-        self.erp_db = erp_db
+    def __init__(self, erp_db=None):
+        self.erp = ERPQueryService()
+
+    def _fetch_all(self, sql: str, params: dict):
+        return self.erp.fetch_all(sql, params)
 
     def buscar_resumo(self, where_sql: str, params: dict):
-        query = text(f"""
+        sql = f"""
             SELECT
                 COUNT(*) AS total,
                 SUM(CASE WHEN a.AUD_ACAO = 'I' THEN 1 ELSE 0 END) AS inclusoes,
@@ -18,11 +20,20 @@ class PerformanceRepository:
             LEFT JOIN TB_USUARIO u
               ON u.USU_ID = a.AUD_USUARIO
             WHERE {where_sql}
-        """)
-        return self.erp_db.execute(query, params).fetchone()
+        """
+        row = self.erp.fetch_one(sql, params)
+        if not row:
+            return None
+        return (
+            row.get("TOTAL"),
+            row.get("INCLUSOES"),
+            row.get("ALTERACOES"),
+            row.get("EXCLUSOES"),
+            row.get("CANCELAMENTOS"),
+        )
 
     def buscar_acoes_por_dia(self, where_sql: str, params: dict):
-        query = text(f"""
+        sql = f"""
             SELECT
                 CAST(a.AUD_DT_LANCAMENTO AS DATE) AS data_ref,
                 COUNT(*) AS total
@@ -32,11 +43,11 @@ class PerformanceRepository:
             WHERE {where_sql}
             GROUP BY CAST(a.AUD_DT_LANCAMENTO AS DATE)
             ORDER BY CAST(a.AUD_DT_LANCAMENTO AS DATE)
-        """)
-        return self.erp_db.execute(query, params).fetchall()
+        """
+        return [(row.get("DATA_REF"), row.get("TOTAL")) for row in self._fetch_all(sql, params)]
 
     def buscar_acoes_por_horario(self, where_sql: str, params: dict):
-        query = text(f"""
+        sql = f"""
             SELECT
                 EXTRACT(HOUR FROM CAST(a.AUD_DT_LANCAMENTO AS TIMESTAMP)) AS hora_ref,
                 COUNT(*) AS total
@@ -46,11 +57,11 @@ class PerformanceRepository:
             WHERE {where_sql}
             GROUP BY EXTRACT(HOUR FROM CAST(a.AUD_DT_LANCAMENTO AS TIMESTAMP))
             ORDER BY EXTRACT(HOUR FROM CAST(a.AUD_DT_LANCAMENTO AS TIMESTAMP))
-        """)
-        return self.erp_db.execute(query, params).fetchall()
+        """
+        return [(row.get("HORA_REF"), row.get("TOTAL")) for row in self._fetch_all(sql, params)]
 
     def buscar_tabela_mais_movimentada(self, where_sql: str, params: dict):
-        query = text(f"""
+        sql = f"""
             SELECT FIRST 1
                 COALESCE(TRIM(a.AUD_TABELA_DESC), TRIM(a.AUD_TABELA), '-') AS tabela_desc,
                 COUNT(*) AS total
@@ -60,11 +71,14 @@ class PerformanceRepository:
             WHERE {where_sql}
             GROUP BY COALESCE(TRIM(a.AUD_TABELA_DESC), TRIM(a.AUD_TABELA), '-')
             ORDER BY COUNT(*) DESC
-        """)
-        return self.erp_db.execute(query, params).fetchone()
+        """
+        row = self.erp.fetch_one(sql, params)
+        if not row:
+            return None
+        return (row.get("TABELA_DESC"), row.get("TOTAL"))
 
     def buscar_resumo_por_funcionario(self, where_sql: str, params: dict):
-        query = text(f"""
+        sql = f"""
             SELECT
                 COALESCE(TRIM(u.USU_NOME), 'Sem nome') AS funcionario,
                 COALESCE(TRIM(u.USU_LOGIN), '') AS usuario_login,
@@ -81,11 +95,22 @@ class PerformanceRepository:
                 COALESCE(TRIM(u.USU_NOME), 'Sem nome'),
                 COALESCE(TRIM(u.USU_LOGIN), '')
             ORDER BY COUNT(*) DESC
-        """)
-        return self.erp_db.execute(query, params).fetchall()
+        """
+        return [
+            (
+                row.get("FUNCIONARIO"),
+                row.get("USUARIO_LOGIN"),
+                row.get("TOTAL"),
+                row.get("INCLUSOES"),
+                row.get("ALTERACOES"),
+                row.get("EXCLUSOES"),
+                row.get("CANCELAMENTOS"),
+            )
+            for row in self._fetch_all(sql, params)
+        ]
 
     def buscar_usuarios_filtro(self, where_sql: str, params: dict):
-        query = text(f"""
+        sql = f"""
             SELECT DISTINCT
                 COALESCE(
                     TRIM(u.USU_NOME) || ' (' || TRIM(u.USU_LOGIN) || ')',
@@ -97,11 +122,11 @@ class PerformanceRepository:
               ON u.USU_ID = a.AUD_USUARIO
             WHERE {where_sql}
             ORDER BY 1
-        """)
-        return self.erp_db.execute(query, params).fetchall()
+        """
+        return [(row.get("USUARIO"),) for row in self._fetch_all(sql, params)]
 
     def buscar_tabelas_filtro(self, where_sql: str, params: dict):
-        query = text(f"""
+        sql = f"""
             SELECT DISTINCT
                 COALESCE(TRIM(a.AUD_TABELA_DESC), TRIM(a.AUD_TABELA), '') AS tabela
             FROM TB_AUDITORIA a
@@ -109,11 +134,11 @@ class PerformanceRepository:
               ON u.USU_ID = a.AUD_USUARIO
             WHERE {where_sql}
             ORDER BY 1
-        """)
-        return self.erp_db.execute(query, params).fetchall()
+        """
+        return [(row.get("TABELA"),) for row in self._fetch_all(sql, params)]
 
     def buscar_registros(self, where_sql: str, params: dict):
-        query = text(f"""
+        sql = f"""
             SELECT
                 COALESCE(
                     TRIM(u.USU_NOME) || ' (' || TRIM(u.USU_LOGIN) || ')',
@@ -127,9 +152,9 @@ class PerformanceRepository:
                 a.AUD_DT_LANCAMENTO AS data_lancamento,
                 a.AUD_DT_ACAO AS data_acao,
                 CASE
-                    WHEN a.AUD_ACAO = 'I' THEN 'Inclusão'
-                    WHEN a.AUD_ACAO = 'A' THEN 'Alteração'
-                    WHEN a.AUD_ACAO = 'E' THEN 'Exclusão'
+                    WHEN a.AUD_ACAO = 'I' THEN 'Inclusao'
+                    WHEN a.AUD_ACAO = 'A' THEN 'Alteracao'
+                    WHEN a.AUD_ACAO = 'E' THEN 'Exclusao'
                     WHEN a.AUD_ACAO = 'C' THEN 'Cancelamento'
                     ELSE COALESCE(TRIM(a.AUD_ACAO), '')
                 END AS acao
@@ -138,5 +163,17 @@ class PerformanceRepository:
               ON u.USU_ID = a.AUD_USUARIO
             WHERE {where_sql}
             ORDER BY a.AUD_DT_LANCAMENTO DESC
-        """)
-        return self.erp_db.execute(query, params).fetchall()
+        """
+        return [
+            (
+                row.get("USUARIO"),
+                row.get("TABELA_DESC"),
+                row.get("TABELA"),
+                row.get("ID_REGISTRO"),
+                row.get("DESCRICAO_REGISTRO"),
+                row.get("DATA_LANCAMENTO"),
+                row.get("DATA_ACAO"),
+                row.get("ACAO"),
+            )
+            for row in self._fetch_all(sql, params)
+        ]

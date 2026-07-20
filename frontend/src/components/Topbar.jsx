@@ -57,8 +57,10 @@ export default function Topbar({
   }
 
   function handleEmpresaChange(event) {
-    const empresaId = Number(event.target.value);
-    const empresa = empresas.find((item) => Number(item.id) === empresaId);
+    const empresaId = event.target.value;
+    const empresa = empresas.find(
+      (item) => String(item.selector_id ?? item.id) === String(empresaId)
+    );
 
     if (empresa) {
       selecionarEmpresa(empresa);
@@ -110,7 +112,7 @@ export default function Topbar({
           <div className="topbar-company-group">
             <select
               id="empresa-topbar"
-              value={empresaAtual?.id || ""}
+              value={empresaAtual ? String(empresaAtual.selector_id ?? empresaAtual.id ?? "") : ""}
               onChange={handleEmpresaChange}
               disabled={loadingEmpresas}
               className="topbar-company-select"
@@ -119,8 +121,11 @@ export default function Topbar({
                 {loadingEmpresas ? "..." : "Selecione a empresa"}
               </option>
               {empresas.map((empresa) => (
-                <option key={empresa.id} value={empresa.id}>
-                  {empresa.nome_exibicao}
+                <option
+                  key={empresa.selector_id ?? empresa.id ?? empresa.tenant_id}
+                  value={empresa.selector_id ?? empresa.id ?? ""}
+                >
+                  {empresa.nome_exibicao || empresa.fantasia || empresa.razao_social || empresa.cnpj}
                 </option>
               ))}
             </select>

@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import Topbar from "../components/Topbar";
 import FuncionarioCard from "../components/FuncionarioCard";
 import api from "../services/api";
+import { useEmpresa } from "../context/EmpresaContext";
 import "../styles/dashboard.css";
 import "../styles/topbar.css";
 import "../styles/funcionarios.css";
 
 function Funcionarios({ onToggleSidebar, isMobileOrTablet, theme, toggleTheme }) {
+  const { empresaAtual } = useEmpresa();
   const [funcionarios, setFuncionarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
@@ -19,12 +21,21 @@ function Funcionarios({ onToggleSidebar, isMobileOrTablet, theme, toggleTheme })
         setLoading(true);
         setErro("");
 
-        const response = await api.get("/funcionarios/");
+        const params = {};
+        if (empresaAtual?.id) {
+          params.empresa_id = empresaAtual.id;
+        }
+
+        console.info("[Funcionarios] endpoint=/funcionarios/ params=", params);
+        const response = await api.get("/funcionarios/", { params });
         const dados = Array.isArray(response.data) ? response.data : [];
+        console.info("[Funcionarios] quantidade=", dados.length, "estrutura=", dados[0] || response.data);
 
         const funcionariosFormatados = dados.map((item) => ({
           pes_id: item.pes_id,
           col_pessoa: item.col_pessoa,
+          usuario_id: item.usuario_id,
+          login: item.login,
           nome: item.nome || "FUNCIONÁRIO SEM NOME",
           cargo_oficial: item.cargo_oficial || "Não informado",
           departamento_nome: item.departamento_nome || "Não informado",
@@ -44,7 +55,7 @@ function Funcionarios({ onToggleSidebar, isMobileOrTablet, theme, toggleTheme })
     }
 
     carregarFuncionarios();
-  }, []);
+  }, [empresaAtual]);
 
   const funcionariosFiltradosEOrdenados = useMemo(() => {
     let resultado = [...funcionarios];

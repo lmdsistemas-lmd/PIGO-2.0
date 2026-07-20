@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { listarEmpresas } from "../services/empresaService";
+import { listarEmpresas, obterTenantAtual } from "../services/empresaService";
 import { useAuth } from "./AuthContext";
 
 const EmpresaContext = createContext(null);
@@ -19,14 +19,56 @@ export function EmpresaProvider({ children }) {
       try {
         setLoadingEmpresas(true);
 
-        const data = await listarEmpresas();
+        const [tenantAtual, data] = await Promise.all([
+          obterTenantAtual().catch((error) => {
+            console.warn("[DEBUG EMPRESA CONTEXT] Tenant atual indisponivel:", error);
+            return null;
+          }),
+          listarEmpresas(),
+        ]);
         const lista = Array.isArray(data) ? data : [];
+        const tenantEmpresa = tenantAtual
+          ? {
+              id: null,
+              selector_id: "tenant",
+              tenant_id: tenantAtual.tenant_id,
+              fantasia: tenantAtual.nome_fantasia || "",
+              razao_social: tenantAtual.razao_social || "",
+              cnpj: tenantAtual.cnpj || "",
+              cidade: "",
+              status: tenantAtual.has_pigo_access ? "ATIVO" : "INATIVO",
+              nome_exibicao:
+                tenantAtual.display_name ||
+                tenantAtual.nome_fantasia ||
+                tenantAtual.razao_social ||
+                tenantAtual.cnpj,
+              isTenantContext: true,
+            }
+          : null;
 
-        console.log("[DEBUG EMPRESA CONTEXT] Lista recebida do servidor:", lista);
+        const listaComTenant = lista.length
+          ? lista.map((empresa, index) =>
+              index === 0 && tenantEmpresa
+                ? {
+                    ...empresa,
+                    selector_id: String(empresa.id),
+                    tenant_id: tenantEmpresa.tenant_id,
+                    fantasia: tenantEmpresa.fantasia || empresa.fantasia,
+                    razao_social: tenantEmpresa.razao_social || empresa.razao_social,
+                    cnpj: tenantEmpresa.cnpj || empresa.cnpj,
+                    nome_exibicao: tenantEmpresa.nome_exibicao || empresa.nome_exibicao,
+                  }
+                : empresa
+            )
+          : tenantEmpresa
+            ? [tenantEmpresa]
+            : [];
 
-        setEmpresas(lista);
+        console.log("[DEBUG EMPRESA CONTEXT] Lista recebida do servidor:", listaComTenant);
 
-        if (!lista.length) {
+        setEmpresas(listaComTenant);
+
+        if (!listaComTenant.length) {
           console.warn("[DEBUG EMPRESA CONTEXT] Lista vazia!");
           setEmpresaAtual(null);
           localStorage.removeItem("empresa_atual");
@@ -38,8 +80,10 @@ export function EmpresaProvider({ children }) {
 
         if (empresaSalvaObj) {
           console.log("[DEBUG EMPRESA CONTEXT] Tentando restaurar:", empresaSalvaObj);
-          const empresaEncontrada = lista.find(
-            (item) => String(item.id) === String(empresaSalvaObj.id)
+          const empresaEncontrada = listaComTenant.find(
+            (item) =>
+              String(item.selector_id ?? item.id) ===
+              String(empresaSalvaObj.selector_id ?? empresaSalvaObj.id)
           );
 
           if (empresaEncontrada) {
@@ -49,8 +93,8 @@ export function EmpresaProvider({ children }) {
           }
         }
 
-        if (lista.length > 0) {
-          const primeiraEmpresa = lista[0];
+        if (listaComTenant.length > 0) {
+          const primeiraEmpresa = listaComTenant[0];
           console.log("[DEBUG EMPRESA CONTEXT] Selecionando automática:", primeiraEmpresa);
           setEmpresaAtual(primeiraEmpresa);
           localStorage.setItem("empresa_atual", JSON.stringify(primeiraEmpresa));

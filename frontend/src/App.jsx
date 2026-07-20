@@ -6,7 +6,6 @@ import DashboardFinanceiro from "./pages/DashboardFinanceiro";
 import DashboardEstoque from "./pages/DashboardEstoque";
 import DashboardConsolidado from "./pages/DashboardConsolidado";
 import DetalhesPedidos from "./pages/DetalhesPedidos";
-import Relatorios from "./pages/Relatorios";
 import RelatoriosVendas from "./pages/RelatoriosVendas";
 import RelatorioPreviewPage from "./pages/RelatorioPreviewPage";
 import RelatoriosFinanceiro from "./pages/RelatoriosFinanceiro";
@@ -23,11 +22,13 @@ import PerformanceCancelamentos from "./pages/PerformanceCancelamentos";
 import Login from "./pages/Login";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import BottomNavigation from "./components/BottomNavigation";
+import FeatureDevelopmentModal from "./components/FeatureDevelopmentModal";
 
 function AppLayout() {
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(window.innerWidth <= 1200);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
+  const [reportsDevelopmentOpen, setReportsDevelopmentOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -62,6 +63,26 @@ function AppLayout() {
     setSidebarOpen(false);
   }
 
+  function handleOpenReportsDevelopment() {
+    setReportsDevelopmentOpen(true);
+  }
+
+  function handleCloseReportsDevelopment() {
+    setReportsDevelopmentOpen(false);
+  }
+
+  function handleAppClickCapture(event) {
+    const reportsLink = event.target.closest?.('a[href="/relatorios"]');
+
+    if (!reportsLink) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    handleOpenReportsDevelopment();
+  }
+
   const sharedLayoutProps = {
     onToggleSidebar: handleToggleSidebar,
     isMobileOrTablet,
@@ -69,18 +90,31 @@ function AppLayout() {
     toggleTheme,
   };
 
+  function ReportsDevelopmentRoute() {
+    useEffect(() => {
+      handleOpenReportsDevelopment();
+    }, []);
+
+    return <Navigate to="/dashboard/vendas" replace />;
+  }
+
   return (
-    <div className={`app-shell notranslate ${isMobileOrTablet ? "mobile-mode" : ""}`} translate="no">
+    <div
+      className={`app-shell notranslate ${isMobileOrTablet ? "mobile-mode" : ""}`}
+      translate="no"
+      onClickCapture={handleAppClickCapture}
+    >
       {!isMobileOrTablet && (
         <Sidebar
           isMobileOrTablet={isMobileOrTablet}
           isOpen={sidebarOpen}
           onClose={handleCloseSidebar}
+          onReportsDevelopment={handleOpenReportsDevelopment}
         />
       )}
 
       {isMobileOrTablet && (
-        <BottomNavigation />
+        <BottomNavigation onReportsDevelopment={handleOpenReportsDevelopment} />
       )}
 
       <div className="app-content">
@@ -102,8 +136,9 @@ function AppLayout() {
             path="/dashboard/estoque"
             element={<DashboardEstoque {...sharedLayoutProps} />}
           />
+          <Route path="/estoque" element={<Navigate to="/dashboard/estoque" replace />} />
 
-          <Route path="/relatorios" element={<Relatorios {...sharedLayoutProps} />} />
+          <Route path="/relatorios" element={<ReportsDevelopmentRoute />} />
           <Route
             path="/relatorios/vendas"
             element={<RelatoriosVendas {...sharedLayoutProps} />}
@@ -156,6 +191,17 @@ function AppLayout() {
           <Route path="*" element={<Navigate to="/dashboard/vendas" replace />} />
         </Routes>
       </div>
+
+      <FeatureDevelopmentModal
+        open={reportsDevelopmentOpen}
+        title="🚧 Relatórios em Desenvolvimento"
+        message={[
+          "Estamos trabalhando para disponibilizar este módulo em breve.",
+          "A área de Relatórios está em desenvolvimento e receberá diversos recursos para geração de relatórios gerenciais, financeiros, operacionais e indicadores do sistema.",
+          "Em uma próxima atualização, esta funcionalidade estará disponível.",
+        ]}
+        onClose={handleCloseReportsDevelopment}
+      />
     </div>
   );
 }

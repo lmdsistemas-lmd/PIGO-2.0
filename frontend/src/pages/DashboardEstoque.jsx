@@ -30,7 +30,7 @@ export default function DashboardEstoque({ onToggleSidebar, isMobileOrTablet, th
         setLoading(true);
         setError(null);
         
-        let url = "/api/dashboard/estoque";
+        let url = "/dashboard/estoque";
         if (empresaAtual && empresaAtual.id) {
           url += `?empresa_id=${empresaAtual.id}`;
         }

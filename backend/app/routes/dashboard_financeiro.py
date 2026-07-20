@@ -3,7 +3,7 @@ from app.schemas.dashboard_financeiro import DashboardFinanceiroResponse
 from app.services.dashboard_financeiro_service import DashboardFinanceiroService
 from app.routes.auth import get_current_user
 
-router = APIRouter(prefix="/api/dashboard", tags=["Dashboard Financeiro"])
+router = APIRouter(prefix="/dashboard", tags=["Dashboard Financeiro"])
 
 
 @router.get("/financeiro", response_model=DashboardFinanceiroResponse)

@@ -1,39 +1,30 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from sqlalchemy import text
 
-from app.database.erp_connection import get_erp_db
+from app.routes.auth import get_current_user
+from app.services.erp_query_service import ERPQueryService
+
 
 router = APIRouter(prefix="/erp", tags=["ERP"])
 
 
 @router.get("/pessoas")
-def listar_pessoas(db: Session = Depends(get_erp_db)):
-
-    query = text("""
+def listar_pessoas(current_user: dict = Depends(get_current_user)):
+    rows = ERPQueryService().fetch_all(
+        """
         SELECT
             PES_ID,
             PES_RSOCIAL_NOME
         FROM TB_PESSOA
         ROWS 50
-    """)
+        """
+    )
+    return [{"id": row.get("PES_ID"), "nome": row.get("PES_RSOCIAL_NOME")} for row in rows]
 
-    result = db.execute(query)
-
-    pessoas = []
-
-    for row in result:
-        pessoas.append({
-            "id": row[0],
-            "nome": row[1]
-        })
-
-    return pessoas
 
 @router.get("/colaboradores")
-def listar_colaboradores(db: Session = Depends(get_erp_db)):
-
-    query = text("""
+def listar_colaboradores(current_user: dict = Depends(get_current_user)):
+    rows = ERPQueryService().fetch_all(
+        """
         SELECT
             PES_ID,
             PES_RSOCIAL_NOME,
@@ -41,17 +32,13 @@ def listar_colaboradores(db: Session = Depends(get_erp_db)):
         FROM TB_PESSOA
         WHERE PES_COLABORADOR = 'S'
         ROWS 100
-    """)
-
-    result = db.execute(query)
-
-    colaboradores = []
-
-    for row in result:
-        colaboradores.append({
-            "id": row[0],
-            "nome": row[1],
-            "cpf": row[2]
-        })
-
-    return colaboradores
+        """
+    )
+    return [
+        {
+            "id": row.get("PES_ID"),
+            "nome": row.get("PES_RSOCIAL_NOME"),
+            "cpf": row.get("PES_CNPJ_CPF"),
+        }
+        for row in rows
+    ]

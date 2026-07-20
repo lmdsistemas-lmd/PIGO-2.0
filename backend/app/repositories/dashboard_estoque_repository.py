@@ -2,6 +2,10 @@ from __future__ import annotations
 from app.repositories.base_dashboard_repository import BaseDashboardRepository
 
 class DashboardEstoqueRepository(BaseDashboardRepository):
+    def _product_name(self, value) -> str:
+        name = str(value or "").strip()
+        return name or "Produto sem descricao"
+
     def get_resumo_produtos(self, empresa_id: int | None) -> dict:
         empresa_sql, empresa_params = self._empresa_filter("PRD_EMPRESA", empresa_id)
         
@@ -18,6 +22,7 @@ class DashboardEstoqueRepository(BaseDashboardRepository):
                 END) AS INATIVOS
             FROM TB_PRODUTO
             WHERE 1=1
+            {empresa_sql}
         """
         row = self._fetch_one(sql, empresa_params)
         return {
@@ -129,7 +134,7 @@ class DashboardEstoqueRepository(BaseDashboardRepository):
         rows = self._fetch_all(sql, empresa_params)
         return [
             {
-                "produto": row.get("PRODUTO"),
+                "produto": self._product_name(row.get("PRODUTO")),
                 "vendida": self._safe_float(row.get("QTD_VENDIDA")),
                 "estoque": self._safe_float(row.get("ESTOQUE_ATUAL"))
             } for row in rows
@@ -154,7 +159,7 @@ class DashboardEstoqueRepository(BaseDashboardRepository):
         rows = self._fetch_all(sql, empresa_params)
         return [
             {
-                "produto": row.get("PRODUTO"),
+                "produto": self._product_name(row.get("PRODUTO")),
                 "estoque": self._safe_float(row.get("ESTOQUE")),
                 "minimo": self._safe_float(row.get("MINIMO"))
             } for row in rows

@@ -180,7 +180,7 @@ function DashboardVendas({ onToggleSidebar, isMobileOrTablet, theme, toggleTheme
         params.set("empresa_id", String(empresaAtual.id));
       }
 
-      const endpoint = "/api/dashboard/vendas/clientes_novos";
+      const endpoint = "/dashboard/vendas/clientes_novos";
       
       const response = await api.get(`${endpoint}?${params.toString()}`);
       setModalData(response.data.data || []);
@@ -215,7 +215,7 @@ function DashboardVendas({ onToggleSidebar, isMobileOrTablet, theme, toggleTheme
           params.set("empresa_id", String(empresaAtual.id));
         }
 
-        const response = await api.get(`/api/dashboard/vendas?${params.toString()}`);
+        const response = await api.get(`/dashboard/vendas?${params.toString()}`);
         const data = response.data;
 
         if (!ignore) {

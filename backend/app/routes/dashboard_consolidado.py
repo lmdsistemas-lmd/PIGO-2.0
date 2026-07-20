@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Query
 from app.services.dashboard_consolidado_service import DashboardConsolidadoService
 
-router = APIRouter(prefix="/api/dashboard/consolidado", tags=["Dashboard Consolidado"])
+router = APIRouter(prefix="/dashboard/consolidado", tags=["Dashboard Consolidado"])
 service = DashboardConsolidadoService()
 
 @router.get("")

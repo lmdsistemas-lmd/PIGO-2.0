@@ -1,0 +1,11 @@
+[
+  {
+    "cnpj": "00000000000000",
+    "razao_social": "Empresa Exemplo",
+    "db_path": "C:\\caminho\\para\\DADOS.FDB",
+    "port": 3050,
+    "user": "usuario_firebird",
+    "pass": "senha_via_ambiente_ou_config_segura",
+    "api_token": "token_gerado_para_o_cliente"
+  }
+]

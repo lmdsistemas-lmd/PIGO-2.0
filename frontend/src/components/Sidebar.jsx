@@ -1,17 +1,26 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import FeatureDevelopmentModal from "./FeatureDevelopmentModal";
 import "../styles/sidebar.css";
+
+const REPORTS_DEVELOPMENT_MESSAGE = [
+  "Estamos trabalhando para disponibilizar este módulo em breve.",
+  "A área de Relatórios está em desenvolvimento e receberá diversos recursos para geração de relatórios gerenciais, financeiros, operacionais e indicadores do sistema.",
+  "Em uma próxima atualização, esta funcionalidade estará disponível.",
+];
 
 function Sidebar({
   isMobileOrTablet = false,
   isOpen = false,
   onClose = () => {},
+  onReportsDevelopment = () => {},
 }) {
   const location = useLocation();
 
   const [dashboardOpen, setDashboardOpen] = useState(
     location.pathname.startsWith("/dashboard")
   );
+  const [reportsDevelopmentOpen, setReportsDevelopmentOpen] = useState(false);
 
   useEffect(() => {
     if (location.pathname.startsWith("/dashboard")) {
@@ -38,24 +47,32 @@ function Sidebar({
     }
   }
 
+  function handleReportsClick(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    setReportsDevelopmentOpen(true);
+    handleMobileNavigate();
+  }
+
   return (
-    <aside
-      className={`sidebar ${isMobileOrTablet ? "sidebar-overlay-mode" : ""} ${
-        isOpen ? "sidebar-open" : ""
-      }`}
-    >
-      <div className="logo">
-        <img
-          src="/logo-comprida.svg"
-          alt="LMD Sistemas"
-          className="sidebar-logo-full"
-        />
-        <img
-          src="/logo-azul.svg"
-          alt="LMD"
-          className="sidebar-logo-icon"
-        />
-      </div>
+    <>
+      <aside
+        className={`sidebar ${isMobileOrTablet ? "sidebar-overlay-mode" : ""} ${
+          isOpen ? "sidebar-open" : ""
+        }`}
+      >
+        <div className="logo">
+          <img
+            src="/logo-comprida.svg"
+            alt="LMD Sistemas"
+            className="sidebar-logo-full"
+          />
+          <img
+            src="/logo-azul.svg"
+            alt="LMD"
+            className="sidebar-logo-icon"
+          />
+        </div>
 
       <nav className="sidebar-nav">
         <div className="menu-group">
@@ -116,9 +133,9 @@ function Sidebar({
           )}
         </div>
 
-        <Link
-          to="/relatorios"
-          onClick={handleMobileNavigate}
+        <button
+          type="button"
+          onClick={handleReportsClick}
           className={`menu-item ${isRelatoriosRoute ? "active" : ""}`}
           title="Relatórios"
         >
@@ -126,7 +143,7 @@ function Sidebar({
             <img src="/icons/relatorio.svg" alt="" />
           </span>
           <span className="menu-label">Relatórios</span>
-        </Link>
+        </button>
 
         <Link
           to="/funcionarios"
@@ -151,8 +168,16 @@ function Sidebar({
           </span>
           <span className="menu-label">Performance</span>
         </Link>
-      </nav>
-    </aside>
+        </nav>
+      </aside>
+
+      <FeatureDevelopmentModal
+        open={reportsDevelopmentOpen}
+        title="🚧 Relatórios em Desenvolvimento"
+        message={REPORTS_DEVELOPMENT_MESSAGE}
+        onClose={() => setReportsDevelopmentOpen(false)}
+      />
+    </>
   );
 }
 

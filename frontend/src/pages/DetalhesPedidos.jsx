@@ -37,7 +37,7 @@ export default function DetalhesPedidos({ onToggleSidebar, isMobileOrTablet, the
         if (!params.get("page")) params.set("page", "1");
         if (!params.get("empresa_id") && empresaAtual?.id) params.set("empresa_id", empresaAtual.id);
 
-        const response = await api.get(`/api/dashboard/vendas/pedidos?${params.toString()}`);
+        const response = await api.get(`/dashboard/vendas/pedidos?${params.toString()}`);
         setPedidos(response.data.data);
         setTotal(response.data.total);
       } catch (err) {
@@ -55,7 +55,7 @@ export default function DetalhesPedidos({ onToggleSidebar, isMobileOrTablet, the
       setLoadingModal(true);
       setModalOpen(true);
       setActiveTab('itens');
-      const response = await api.get(`/api/dashboard/vendas/pedido/${pedidoId}?empresa_id=${empresaAtual.id}`);
+      const response = await api.get(`/dashboard/vendas/pedido/${pedidoId}?empresa_id=${empresaAtual.id}`);
       setPedidoInfo(response.data);
     } catch (err) {
       console.error("Erro ao buscar detalhes do pedido:", err);

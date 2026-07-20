@@ -1,29 +1,47 @@
+# P.I.G.O Dashboard
 
+Dashboard SaaS multi-tenant para análise de dados sincronizados do ERP do cliente.
 
-### 🚀 Resumo do Projeto: Dashboard - Painel LMD
+## Arquitetura Atual
 
-O projeto evoluiu de um dashboard local para uma arquitetura **SaaS Multi-tenant**, com gerenciamento centralizado de licenças e coleta remota de dados.
+- `frontend`: aplicação React/Vite do dashboard.
+- `backend`: API FastAPI do P.I.G.O.
+- `remote-sync-agent`: agente instalado no ambiente do cliente para enviar dados do ERP.
 
-#### 1. 🏗️ Arquitetura do Sistema
-*   **Frontend (React + Vite)**: Interface principal de análise para os clientes finais.
-*   **Backend (FastAPI)**: API de suporte e ponte para consultas em tempo real.
-*   **Admin System (Next.js + Prisma + SQLite)**: O "cérebro" do sistema. Gerencia empresas, usuários administrativos, permissões e licenças.
-*   **Remote Sync Agent (Python)**: Serviço que roda no servidor do cliente para extrair dados do Firebird e enviá-los via nuvem para o Dashboard.
+## Licenciamento e Tenants
 
-#### 2. 🛠️ Módulos e Funcionalidades Recentes
-*   **Gerenciamento de Empresas**: O Admin agora possui uma lista completa de clientes com controle de status (Ativo/Inativo), plano e data de vencimento.
-*   **Segurança por API Token**: Cada empresa possui um token exclusivo (UUID) visível no Admin. Esse token é usado pelo Agente Remoto para se autenticar sem expor senhas do banco de dados.
-*   **Sincronismo Remoto**: Criada uma solução que elimina a necessidade de abrir portas no roteador do cliente ou usar VPN. O agente faz o "push" dos dados de Vendas e Financeiro de forma automática.
-*   **Correção de Compatibilidade**: O Agente foi otimizado para rodar tanto em Python 3.12 quanto no 3.13 (com patch para a biblioteca `fdb`).
+O P.I.G.O. não possui controle local de licença.
 
-#### 3. 📂 Estrutura de Arquivos Principal
-*   `/frontend`: Dashboard de indicadores.
-*   `/backend`: API de processamento Python.
-*   `/admin-system`: Painel administrativo (Porta 3000).
-*   `/remote-sync-agent`: Pasta pronta para ser enviada ao cliente, contendo o instalador (`run.bat`) e o coletor.
+A fonte única da verdade para empresa, licença, acesso, status, expiração e API Token é o License Control externo. O fluxo oficial é:
 
-#### 4. 🚦 Status Atual e Próximos Passos
-*   **Agente no Cliente**: Em fase de configuração de ambiente (ajuste de DLLs de 32/64 bits e caminhos de banco no `.env`).
-*   **Interface**: O Painel Admin já exibe os tokens de acesso e permite a cópia rápida para configuração.
-*   **Próximo Passo Sugerido**: Validar o recebimento do primeiro lote de dados remotos e exibi-los nos gráficos do dashboard principal.
+License Control externo -> `/api/internal/license-control/tenants/sync` -> tabelas
+`tenants`/`companies` -> frontend P.I.G.O.
 
+A rota antiga `/api/internal/license-control/sync-tenant` permanece como adaptador
+para a versão atual do `PigoIntegrationService.ts`.
+
+No backend, configure o mesmo segredo de `PIGO_INTEGRATION_TOKEN` em:
+
+```env
+LICENSE_CONTROL_INTEGRATION_TOKEN=<segredo-compartilhado>
+```
+
+Para aplicar as migrations e iniciar a API local na porta esperada pela integração:
+
+```powershell
+cd backend
+python -m scripts.apply_migrations
+uvicorn app.main:app --host 0.0.0.0 --port 4000
+```
+
+O frontend Vite usa a porta `5176`. Pelo domÃ­nio pÃºblico, todas as
+requisiÃ§Ãµes ao backend usam caminhos relativos sob `/api`.
+
+O P.I.G.O. deve usar somente:
+
+- `tenants`;
+- dados sincronizados pelo License Control externo;
+- API Token vinculado ao tenant;
+- dados recebidos pelo `remote-sync-agent`.
+
+Nenhum painel administrativo interno faz parte da arquitetura atual.

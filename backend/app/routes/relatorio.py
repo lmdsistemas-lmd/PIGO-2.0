@@ -1,57 +1,41 @@
-﻿from typing import Any, Dict, Optional
+from fastapi import APIRouter, Depends, HTTPException, status
 
-from fastapi import APIRouter, Depends, Body, Query
-from fastapi.responses import PlainTextResponse
-from sqlalchemy.orm import Session
-
-from app.database.erp_connection import get_erp_db
-from app.services.relatorios_service import RelatoriosService
-
-router = APIRouter(prefix="/relatorios", tags=["Relatórios"])
+from app.routes.auth import get_current_user
 
 
-def get_relatorios_service(db: Session = Depends(get_erp_db)) -> RelatoriosService:
-    return RelatoriosService(db)
+router = APIRouter(prefix="/relatorios", tags=["Relatorios"])
+
+
+def _relatorios_desativados():
+    raise HTTPException(
+        status_code=status.HTTP_410_GONE,
+        detail=(
+            "Modulo de relatorios em desenvolvimento. Execucao de SQL de relatorios "
+            "esta desativada ate a camada multi-tenant ser reimplementada."
+        ),
+    )
 
 
 @router.get("/categoria/{categoria}")
-def listar_relatorios(
-    categoria: str,
-    service: RelatoriosService = Depends(get_relatorios_service),
-):
-    return service.listar_relatorios(categoria)
+def listar_relatorios(categoria: str, current_user: dict = Depends(get_current_user)):
+    _relatorios_desativados()
 
 
 @router.get("/{cdarquivo}/inspecionar")
-def inspecionar_relatorio(
-    cdarquivo: int,
-    service: RelatoriosService = Depends(get_relatorios_service),
-):
-    return service.inspecionar_relatorio(cdarquivo)
+def inspecionar_relatorio(cdarquivo: int, current_user: dict = Depends(get_current_user)):
+    _relatorios_desativados()
 
 
-@router.get("/{cdarquivo}/xml", response_class=PlainTextResponse)
-def obter_xml_relatorio(
-    cdarquivo: int,
-    service: RelatoriosService = Depends(get_relatorios_service),
-):
-    return service.obter_xml_bruto(cdarquivo)
+@router.get("/{cdarquivo}/xml")
+def obter_xml_relatorio(cdarquivo: int, current_user: dict = Depends(get_current_user)):
+    _relatorios_desativados()
 
 
 @router.post("/{cdarquivo}/opcoes")
-def opcoes_relatorio(
-    cdarquivo: int,
-    payload: Optional[Dict[str, Any]] = Body(default=None),
-    service: RelatoriosService = Depends(get_relatorios_service),
-):
-    return service.opcoes_relatorio(cdarquivo, payload or {})
+def opcoes_relatorio(cdarquivo: int, current_user: dict = Depends(get_current_user)):
+    _relatorios_desativados()
 
 
 @router.post("/{cdarquivo}/preview")
-def preview_relatorio(
-    cdarquivo: int,
-    payload: Dict[str, Any] = Body(...),
-    limit: int = Query(200, ge=1, le=5000),
-    service: RelatoriosService = Depends(get_relatorios_service),
-):
-    return service.preview_relatorio(cdarquivo, payload, limit=limit)
+def preview_relatorio(cdarquivo: int, current_user: dict = Depends(get_current_user)):
+    _relatorios_desativados()

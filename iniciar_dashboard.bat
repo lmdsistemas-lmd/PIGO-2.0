@@ -1,10 +1,10 @@
 @echo off
 setlocal
 
-title Iniciando Dashboard Offline
+title Iniciando P.I.G.O Dashboard
 
 echo ==========================================
-echo   DASHBOARD WEB - MODO DEMONSTRACAO
+echo   P.I.G.O DASHBOARD - PRODUCAO LOCAL
 echo ==========================================
 echo.
 
@@ -39,18 +39,18 @@ echo.
 echo Iniciando backend...
 echo.
 
-start "Backend Dashboard" cmd /k "cd /d %~dp0backend && call venv\Scripts\activate && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+start "P.I.G.O Dashboard" cmd /k "cd /d %~dp0backend && call venv\Scripts\activate && uvicorn app.main:app --host 0.0.0.0 --port 4000"
 
 timeout /t 4 /nobreak > nul
 
 echo.
 echo Dashboard iniciado.
-echo Acesse nesta maquina: http://127.0.0.1:8000
-echo Acesse na rede:      http://192.168.1.12:8000
+echo Acesse nesta maquina: http://127.0.0.1:4000
+echo Acesso oficial:       https://pigo.lmdsistemasdev.qzz.io
 echo.
-echo Dica: descubra o IP com o comando ipconfig
+echo Caddy deve apontar pigo.lmdsistemasdev.qzz.io para localhost:4000
 echo.
 
-start http://127.0.0.1:8000
+start http://127.0.0.1:4000
 
 endlocal
