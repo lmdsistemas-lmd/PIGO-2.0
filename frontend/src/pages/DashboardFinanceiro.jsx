@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Topbar from "../components/Topbar";
 import api from "../services/api";
+import { maskCnpj, resolveEmpresaErpId } from "../services/empresaIdentity";
 import { useEmpresa } from "../context/EmpresaContext";
 import "../styles/dashboard.css";
 import "../styles/topbar.css";
@@ -137,7 +138,7 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
   const activeControllerRef = useRef(null);
 
   const selectedEmpresaId = useMemo(() => {
-    return empresaAtual?.id ? String(empresaAtual.id) : "";
+    return resolveEmpresaErpId(empresaAtual);
   }, [empresaAtual]);
 
   const selectedEmpresaNome = useMemo(() => {
@@ -149,6 +150,21 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
       ""
     );
   }, [empresaAtual]);
+
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.debug("[FINANCEIRO] empresa selecionada", {
+        id: empresaAtual?.id ?? null,
+        empresa_id: empresaAtual?.empresa_id ?? null,
+        erp_id: empresaAtual?.erp_id ?? null,
+        external_company_id: empresaAtual?.external_company_id ?? null,
+        codigo: empresaAtual?.codigo ?? null,
+        cnpj: maskCnpj(empresaAtual?.cnpj),
+        nome: selectedEmpresaNome,
+        resolved_erp_id: selectedEmpresaId || null,
+      });
+    }
+  }, [empresaAtual, selectedEmpresaId, selectedEmpresaNome]);
 
   const selectedPeriodData = useMemo(() => {
     return (
@@ -174,7 +190,11 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
 
     if (!selectedEmpresaId) {
       setLoading(false);
-      setError("Nenhuma empresa disponível para consultar o financeiro.");
+      setError(
+        empresaAtual
+          ? "A empresa selecionada não possui vínculo com uma empresa do ERP."
+          : "Nenhuma empresa foi selecionada para consultar o financeiro."
+      );
       return () => controller.abort();
     }
 
@@ -276,6 +296,7 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
     selectedEmpresaId,
     customRange.start,
     customRange.end,
+    empresaAtual,
     loadingEmpresas,
     retryVersion,
   ]);

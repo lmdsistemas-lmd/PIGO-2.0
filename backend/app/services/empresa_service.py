@@ -18,7 +18,7 @@ def listar_empresas_erp(db: Session = None):
             erp = ERPQueryService()
             rows = erp.fetch_all(
                 """
-                SELECT EMP_ID, EMP_FANTASIA, EMP_RAZAO_SOCIAL, EMP_CNPJ, EMP_CIDADE
+                SELECT EMP_ID, EMP_FANTASIA, EMP_RAZAO_SOCIAL, EMP_CNPJ
                 FROM TB_EMPRESA
                 ORDER BY EMP_ID
                 """
@@ -37,10 +37,12 @@ def listar_empresas_erp(db: Session = None):
                 
                 empresas.append({
                     "id": empresa_id,
+                    "empresa_id": empresa_id,
+                    "erp_id": empresa_id,
                     "fantasia": fantasia,
                     "razao_social": razao,
                     "cnpj": cnpj_raw,
-                    "cidade": limpar(row.get("EMP_CIDADE") or row.get("emp_cidade")),
+                    "cidade": "",
                     "status": "ATIVO",
                     "nome_exibicao": nome
                 })

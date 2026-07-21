@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { listarEmpresas, obterTenantAtual } from "../services/empresaService";
 import { useAuth } from "./AuthContext";
+import { normalizeCnpj, resolveEmpresaErpId } from "../services/empresaIdentity";
 
 const EmpresaContext = createContext(null);
 
@@ -26,7 +27,18 @@ export function EmpresaProvider({ children }) {
           }),
           listarEmpresas(),
         ]);
-        const lista = Array.isArray(data) ? data : [];
+        const lista = Array.isArray(data)
+          ? data.map((empresa) => {
+              const erpId = resolveEmpresaErpId(empresa);
+              return {
+                ...empresa,
+                id: erpId || null,
+                empresa_id: erpId || null,
+                erp_id: erpId || null,
+                selector_id: erpId || empresa.selector_id,
+              };
+            })
+          : [];
         const tenantEmpresa = tenantAtual
           ? {
               id: null,
@@ -83,12 +95,15 @@ export function EmpresaProvider({ children }) {
           const empresaEncontrada = listaComTenant.find(
             (item) =>
               String(item.selector_id ?? item.id) ===
-              String(empresaSalvaObj.selector_id ?? empresaSalvaObj.id)
+                String(empresaSalvaObj.selector_id ?? empresaSalvaObj.id) ||
+              (normalizeCnpj(item.cnpj) &&
+                normalizeCnpj(item.cnpj) === normalizeCnpj(empresaSalvaObj.cnpj))
           );
 
           if (empresaEncontrada) {
             console.log("[DEBUG EMPRESA CONTEXT] Restaurada:", empresaEncontrada);
             setEmpresaAtual(empresaEncontrada);
+            localStorage.setItem("empresa_atual", JSON.stringify(empresaEncontrada));
             return;
           }
         }
