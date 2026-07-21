@@ -37,7 +37,13 @@ api.interceptors.response.use(
         ? "Não foi possível conectar ao servidor"
         : "Erro inesperado na aplicação");
 
-    return Promise.reject(new Error(message));
+    error.message = message;
+    error.requestId =
+      error.response?.headers?.["x-request-id"] ||
+      error.response?.data?.request_id ||
+      "";
+
+    return Promise.reject(error);
   }
 );
 

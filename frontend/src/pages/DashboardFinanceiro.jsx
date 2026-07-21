@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Topbar from "../components/Topbar";
 import api from "../services/api";
 import { useEmpresa } from "../context/EmpresaContext";
@@ -115,6 +115,10 @@ function getHeight(value, maxValue, maxHeight) {
   return Math.max((Number(value || 0) / maxValue) * maxHeight, 18);
 }
 
+function FinancialEmptyState({ message = "Nenhum dado disponível para o período." }) {
+  return <div className="financial-empty-state">{message}</div>;
+}
+
 function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleTheme }) {
   const { empresaAtual, loadingEmpresas } = useEmpresa();
 
@@ -128,6 +132,9 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
   const [financialData, setFinancialData] = useState(EMPTY_DATA);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [retryVersion, setRetryVersion] = useState(0);
+  const requestIdRef = useRef(0);
+  const activeControllerRef = useRef(null);
 
   const selectedEmpresaId = useMemo(() => {
     return empresaAtual?.id ? String(empresaAtual.id) : "";
@@ -151,9 +158,35 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
   }, [selectedPeriod]);
 
   useEffect(() => {
-    let cancelled = false;
+    const requestId = ++requestIdRef.current;
+    const requestLabel = `financial-${requestId}`;
+    const controller = new AbortController();
+    activeControllerRef.current?.abort();
+    activeControllerRef.current = controller;
+
+    const customRangeReady =
+      selectedPeriod !== "custom" || (customRange.start && customRange.end);
+
+    if (loadingEmpresas) {
+      setLoading(true);
+      return () => controller.abort();
+    }
+
+    if (!selectedEmpresaId) {
+      setLoading(false);
+      setError("Nenhuma empresa disponível para consultar o financeiro.");
+      return () => controller.abort();
+    }
+
+    if (!customRangeReady) {
+      setLoading(false);
+      setError("");
+      return () => controller.abort();
+    }
 
     async function loadDashboard() {
+      const requestStartedAt = performance.now();
+
       try {
         setLoading(true);
         setError("");
@@ -178,37 +211,64 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
         }
 
         const response = await api.get(
-          `/dashboard/financeiro?${params.toString()}`
+          `/dashboard/financeiro?${params.toString()}`,
+          {
+            signal: controller.signal,
+            timeout: 30000,
+            headers: { "X-Request-Id": requestLabel },
+          }
         );
 
+        const responseReceivedAt = performance.now();
         const data = response.data;
 
-        if (!cancelled) {
+        if (requestId === requestIdRef.current) {
           setFinancialData({
             ...EMPTY_DATA,
             ...data,
           });
+
+          if (import.meta.env.DEV) {
+            requestAnimationFrame(() => {
+              console.debug("[financeiro:performance]", {
+                request_id: requestLabel,
+                endpoint: response.config?.url,
+                status: response.status,
+                request_ms: Math.round(responseReceivedAt - requestStartedAt),
+                processing_and_render_ms: Math.round(
+                  performance.now() - responseReceivedAt
+                ),
+                total_until_render_ms: Math.round(
+                  performance.now() - requestStartedAt
+                ),
+              });
+            });
+          }
         }
       } catch (err) {
+        if (err?.code === "ERR_CANCELED" || controller.signal.aborted) {
+          return;
+        }
+
         console.error("Erro ao carregar dashboard:", err);
 
-        if (!cancelled) {
-          setError(err?.message || "Falha ao carregar dados");
-          setFinancialData(EMPTY_DATA);
+        if (requestId === requestIdRef.current) {
+          const message = err?.code === "ECONNABORTED"
+            ? "A consulta financeira excedeu 30 segundos. Tente novamente."
+            : err?.message || "Falha ao carregar dados";
+          setError(`${message}${err?.requestId ? ` Código: ${err.requestId}` : ""}`);
         }
       } finally {
-        if (!cancelled) {
+        if (requestId === requestIdRef.current) {
           setLoading(false);
         }
       }
     }
 
-    if (!loadingEmpresas && selectedEmpresaId) {
-      loadDashboard();
-    }
+    loadDashboard();
 
     return () => {
-      cancelled = true;
+      controller.abort();
     };
   }, [
     selectedPeriod,
@@ -217,7 +277,14 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
     customRange.start,
     customRange.end,
     loadingEmpresas,
+    retryVersion,
   ]);
+
+  function retryDashboard() {
+    activeControllerRef.current?.abort();
+    setError("");
+    setRetryVersion((current) => current + 1);
+  }
 
   const totalReceitas = useMemo(() => {
     return financialData.receitasDespesas.reduce((accumulator, item) => {
@@ -305,7 +372,10 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
     selectedType === "aberto" ? "Aberto" : "Faturados";
 
   return (
-    <div className="dashboard-page financial-dashboard-page">
+    <div
+      aria-busy={loading}
+      className="dashboard-page financial-dashboard-page"
+    >
       <Topbar
         titulo="Dashboard"
         caminho="Dashboard / Financeiro"
@@ -427,7 +497,16 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
           </div>
         )}
 
-        {error ? <p className="financial-filter-help">{error}</p> : null}
+        {error ? (
+          <div className="financial-state-message financial-state-message--error" role="alert">
+            <span>{error}</span>
+            <button onClick={retryDashboard} type="button">Tentar novamente</button>
+          </div>
+        ) : loading ? (
+          <p className="financial-state-message" role="status">
+            Carregando indicadores financeiros...
+          </p>
+        ) : null}
       </section>
 
       <section className="financial-top-grid">
@@ -618,7 +697,9 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
 
           <div className="table-responsive">
             <div className="financial-comparison-chart">
-              {financialData.receitasDespesas.map((item) => (
+              {!financialData.receitasDespesas.length ? (
+                <FinancialEmptyState />
+              ) : financialData.receitasDespesas.map((item) => (
                 <div className="financial-month-group" key={item.label}>
                   <div className="financial-bar-pair">
                     <div
@@ -683,7 +764,9 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
           </div>
 
           <div className="financial-aging-list">
-            {financialData.aging.map((item) => (
+            {!financialData.aging.length ? (
+              <FinancialEmptyState />
+            ) : financialData.aging.map((item) => (
               <div className="financial-aging-item" key={item.faixa}>
                 <div className="financial-aging-copy">
                   <strong>{item.faixa}</strong>
@@ -727,7 +810,9 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
           </div>
 
           <div className="financial-ranking-list">
-            {financialData.melhoresClientes.map((item, index) => (
+            {!financialData.melhoresClientes.length ? (
+              <FinancialEmptyState />
+            ) : financialData.melhoresClientes.map((item, index) => (
               <div className="financial-ranking-item" key={item.nome}>
                 <div className="financial-ranking-head">
                   <div className="financial-ranking-title">
@@ -780,7 +865,9 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
           </div>
 
           <div className="financial-ranking-list">
-            {financialData.melhoresFornecedores.map((item, index) => (
+            {!financialData.melhoresFornecedores.length ? (
+              <FinancialEmptyState />
+            ) : financialData.melhoresFornecedores.map((item, index) => (
               <div className="financial-ranking-item" key={item.nome}>
                 <div className="financial-ranking-head">
                   <div className="financial-ranking-title">
@@ -837,7 +924,11 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
               </thead>
 
               <tbody>
-                {financialData.estoqueCritico.map((item) => (
+                {!financialData.estoqueCritico.length ? (
+                  <tr>
+                    <td colSpan="4"><FinancialEmptyState /></td>
+                  </tr>
+                ) : financialData.estoqueCritico.map((item) => (
                   <tr key={item.produto}>
                     <td>{item.produto}</td>
                     <td>{formatNumber(item.estoque)}</td>
@@ -884,7 +975,11 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
               </thead>
 
               <tbody>
-                {financialData.cidadesClientes.map((item) => (
+                {!financialData.cidadesClientes.length ? (
+                  <tr>
+                    <td colSpan="3"><FinancialEmptyState /></td>
+                  </tr>
+                ) : financialData.cidadesClientes.map((item) => (
                   <tr key={item.cidade}>
                     <td>{item.cidade}</td>
                     <td>{formatNumber(item.quantidade)}</td>
@@ -961,9 +1056,9 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
                       r={16 + Number(item.quantidade || 0) / 18}
                     />
                     <circle
+                      className="financial-map-marker-ring"
                       cx="0"
                       cy="0"
-                      fill="#ffffff"
                       r="12"
                       stroke={item.cor || "#2563eb"}
                       strokeWidth="3"
@@ -984,7 +1079,9 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
           </div>
 
           <div className="financial-map-legend">
-            {financialData.cidadesClientes.map((item) => (
+            {!financialData.cidadesClientes.length ? (
+              <FinancialEmptyState message="Nenhuma praça disponível para o período." />
+            ) : financialData.cidadesClientes.map((item) => (
               <div
                 className="financial-map-legend-item"
                 key={`legend-${item.cidade}`}
