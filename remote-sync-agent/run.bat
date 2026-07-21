@@ -9,6 +9,14 @@ echo   LMD DASHBOARD - AGENTE DE SINCRONISMO
 echo ==========================================
 echo.
 
+if exist venv\Scripts\python.exe (
+    venv\Scripts\python.exe --version >nul 2>&1
+    if errorlevel 1 (
+        echo Ambiente virtual aponta para um Python removido. Recriando...
+        rmdir /s /q venv
+    )
+)
+
 if not exist venv\Scripts\python.exe (
     echo Criando ambiente virtual...
     python -m venv venv

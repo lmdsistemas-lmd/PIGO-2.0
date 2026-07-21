@@ -1,11 +1,22 @@
 import json
+import hashlib
 import logging
+import locale
 import os
+import random
 import sys
 import time
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
+from urllib.parse import urlsplit
+
+# Compatibilidade do fdb 2.0.2 com Python 3.13, que removeu locale.resetlocale.
+if not hasattr(locale, "resetlocale"):
+    def _resetlocale(category=locale.LC_ALL):
+        return locale.setlocale(category, "")
+
+    locale.resetlocale = _resetlocale
 
 import fdb
 import requests
@@ -42,13 +53,39 @@ API_TOKEN = os.getenv("API_TOKEN")
 COMPANY_CNPJ = os.getenv("COMPANY_CNPJ")
 SYNC_INTERVAL = int(os.getenv("SYNC_INTERVAL_MINUTES", "5"))
 DIAGNOSTIC_FILE = os.getenv("SCHEMA_DIAGNOSTIC_FILE", "schema_diagnostics.json")
+SEND_SUCCESS = "success"
+SEND_RETRYABLE_FAILURE = "retryable_failure"
+SEND_PERMANENT_FAILURE = "permanent_failure"
 
 
 def mask_token(token):
     value = str(token or "").strip()
     if not value:
         return "(nao configurado)"
-    return f"{'*' * 8}{value[-8:]}"
+    return "(configurado)"
+
+
+def mask_cnpj(cnpj):
+    digits = "".join(char for char in str(cnpj or "") if char.isdigit())
+    if len(digits) < 4:
+        return "(nao configurado)"
+    return f"{digits[:2]}********{digits[-2:]}"
+
+
+def remote_endpoint(path):
+    return f"{str(API_BASE_URL or '').rstrip('/')}/{path.lstrip('/')}"
+
+
+def sanitized_remote_context():
+    parsed = urlsplit(str(API_BASE_URL or ""))
+    return {
+        "source": str(ENV_FILE),
+        "protocol": parsed.scheme or "(ausente)",
+        "host": parsed.hostname or "(ausente)",
+        "port": parsed.port or (443 if parsed.scheme == "https" else 80),
+        "base_path": parsed.path or "/",
+        "sync_endpoint": urlsplit(remote_endpoint("sync")).path,
+    }
 
 
 def log_startup_context():
@@ -56,19 +93,21 @@ def log_startup_context():
     logger.info("[BOOT] agent.py=%s", AGENT_FILE)
     logger.info("[BOOT] .env carregado=%s | existe=%s", ENV_FILE, ENV_FILE.exists())
     logger.info("[BOOT] Python=%s", sys.executable)
-    logger.info("[BOOT] API_BASE_URL=%s", API_BASE_URL)
-    logger.info("[BOOT] COMPANY_CNPJ=%s", COMPANY_CNPJ)
+    context = sanitized_remote_context()
+    logger.info(
+        "[BOOT] remote source=%s protocol=%s host=%s port=%s base_path=%s endpoint=%s",
+        context["source"], context["protocol"], context["host"], context["port"],
+        context["base_path"], context["sync_endpoint"],
+    )
+    logger.info("[BOOT] COMPANY_CNPJ=%s", mask_cnpj(COMPANY_CNPJ))
     logger.info("[BOOT] API_TOKEN=%s", mask_token(API_TOKEN))
-    logger.info("[BOOT] FB_HOST=%s | FB_PORT=%s | FB_DATABASE=%s", FB_HOST, FB_PORT, FB_DATABASE)
-    logger.info("[BOOT] FB_CLIENT_PATH=%s", FB_CLIENT_PATH)
+    logger.info(
+        "[BOOT] FB_HOST=%s | FB_PORT=%s | FB_DATABASE=%s | client_configured=%s",
+        FB_HOST, FB_PORT, Path(FB_DATABASE).name if FB_DATABASE else "(nao configurado)", bool(FB_CLIENT_PATH),
+    )
 
 
-if FB_CLIENT_PATH:
-    try:
-        fdb.load_api(FB_CLIENT_PATH)
-        logger.info("DLL do Firebird carregada.")
-    except Exception as exc:
-        logger.error("Erro ao carregar DLL do Firebird: %s", exc)
+_fb_client_loaded = False
 
 
 def require_env():
@@ -89,7 +128,12 @@ def require_env():
 
 
 def get_db_connection():
+    global _fb_client_loaded
     require_env()
+    if FB_CLIENT_PATH and not _fb_client_loaded:
+        fdb.load_api(FB_CLIENT_PATH)
+        _fb_client_loaded = True
+        logger.info("DLL do Firebird carregada.")
     return fdb.connect(
         host=FB_HOST,
         port=FB_PORT,
@@ -247,7 +291,8 @@ class FirebirdSchema:
 
 def execute_select(conn, sql, params=None, table_name=None):
     start = time.perf_counter()
-    logger.info("[SQL] Tabela=%s | SQL=%s | Params=%s", table_name or "-", " ".join(sql.split()), params or [])
+    query_id = hashlib.sha256(" ".join(sql.split()).encode()).hexdigest()[:12]
+    logger.info("[SQL] Tabela=%s | query_id=%s", table_name or "-", query_id)
     cur = conn.cursor()
     try:
         cur.execute(sql, params or [])
@@ -267,7 +312,7 @@ def execute_select(conn, sql, params=None, table_name=None):
 def send_to_dashboard(data_type, content):
     if not COMPANY_CNPJ or not API_TOKEN:
         logger.error("CNPJ ou API_TOKEN nao configurados")
-        return False
+        return SEND_PERMANENT_FAILURE
 
     payload = {
         "cnpj": COMPANY_CNPJ,
@@ -280,18 +325,95 @@ def send_to_dashboard(data_type, content):
         "Content-Type": "application/json",
     }
 
-    url = f"{API_BASE_URL.rstrip('/')}/sync"
-    start = time.perf_counter()
-    try:
-        response = requests.post(url, json=payload, headers=headers, timeout=300)
-        elapsed = time.perf_counter() - start
+    url = remote_endpoint("sync")
+    record_count = len(content) if isinstance(content, list) else 0
+    payload_bytes = len(json.dumps(payload, ensure_ascii=False).encode("utf-8"))
+    payload_hash = hashlib.sha256(json.dumps(payload, sort_keys=True, default=str).encode()).hexdigest()[:12]
+
+    for attempt, base_delay in enumerate((0, 5, 15), start=1):
+        if base_delay:
+            time.sleep(base_delay + random.uniform(0, 1.5))
+        start = time.perf_counter()
+        try:
+            response = requests.post(url, json=payload, headers=headers, timeout=(10, 300))
+            elapsed = time.perf_counter() - start
+        except (requests.Timeout, requests.ConnectionError) as exc:
+            logger.warning(
+                "[API] falha transitória type=%s attempt=%s error=%s",
+                data_type, attempt, type(exc).__name__,
+            )
+            continue
+        except requests.RequestException as exc:
+            logger.error("[API] falha permanente type=%s error=%s", data_type, type(exc).__name__)
+            return SEND_PERMANENT_FAILURE
+
         if response.status_code == 200:
-            logger.info("[API] %s enviado com %s registros em %.3fs", data_type, len(content), elapsed)
-            return True
-        logger.error("[API] %s falhou: HTTP %s - %s", data_type, response.status_code, response.text[:500])
-        return False
-    except Exception:
-        logger.exception("[API] Falha ao enviar %s", data_type)
+            try:
+                confirmation = response.json()
+            except ValueError:
+                logger.error("[API] confirmação inválida type=%s: resposta não JSON", data_type)
+                return SEND_PERMANENT_FAILURE
+
+            if (
+                confirmation.get("success") is True
+                and confirmation.get("tenant_id")
+                and int(confirmation.get("received", -1)) == record_count
+            ):
+                logger.info(
+                    "[API] confirmado type=%s records=%s bytes=%s hash=%s elapsed=%.3fs",
+                    data_type, record_count, payload_bytes, payload_hash, elapsed,
+                )
+                return SEND_SUCCESS
+            logger.error("[API] confirmação rejeitada type=%s HTTP=200", data_type)
+            return SEND_PERMANENT_FAILURE
+
+        if response.status_code in {408, 429, 500, 502, 503, 504}:
+            logger.warning(
+                "[API] falha transitória type=%s attempt=%s status=%s",
+                data_type, attempt, response.status_code,
+            )
+            continue
+
+        logger.error(
+            "[API] falha permanente type=%s status=%s response_bytes=%s",
+            data_type, response.status_code, len(response.content),
+        )
+        return SEND_PERMANENT_FAILURE
+
+    return SEND_RETRYABLE_FAILURE
+
+
+def diagnose_remote():
+    require_env()
+    public_health = remote_endpoint("health")
+    auth_health = remote_endpoint("sync/health")
+    headers = {"Authorization": f"Bearer {API_TOKEN}"}
+    logger.info("[DIAGNOSTICO] iniciando conectividade remota")
+    try:
+        response = requests.get(public_health, timeout=(10, 20))
+        payload = response.json()
+        if response.status_code != 200 or payload.get("status") != "ok":
+            logger.error("[DIAGNOSTICO] health público inválido status=%s", response.status_code)
+            return False
+
+        response = requests.get(
+            auth_health,
+            params={"cnpj": COMPANY_CNPJ},
+            headers=headers,
+            timeout=(10, 20),
+        )
+        if response.status_code != 200:
+            logger.error("[DIAGNOSTICO] autenticação falhou status=%s", response.status_code)
+            return False
+        payload = response.json()
+        logger.info(
+            "[DIAGNOSTICO] remoto disponível auth=%s tenant_resolved=%s",
+            payload.get("authenticated") is True,
+            bool(payload.get("tenant_id")),
+        )
+        return payload.get("authenticated") is True and bool(payload.get("tenant_id"))
+    except (requests.RequestException, ValueError) as exc:
+        logger.error("[DIAGNOSTICO] falha type=%s", type(exc).__name__)
         return False
 
 
@@ -475,6 +597,7 @@ def run_sync():
 
     conn = None
     success_all = True
+    permanent_failure = False
     try:
         conn = get_db_connection()
         schema = FirebirdSchema(conn).load()
@@ -502,15 +625,27 @@ def run_sync():
             if table_name in FINANCIAL_MAPPINGS:
                 continue
             rows = fetch_generic_table(conn, schema, spec, data_corte, is_first_run)
-            if rows and not send_to_dashboard(table_name, rows):
-                success_all = False
+            if rows:
+                send_result = send_to_dashboard(table_name, rows)
+                if send_result != SEND_SUCCESS:
+                    success_all = False
+                    permanent_failure = send_result == SEND_PERMANENT_FAILURE
+                    if permanent_failure:
+                        logger.error("[SYNC] ciclo interrompido por falha permanente")
+                        break
             elif not rows:
                 logger.info("[SYNC] %s sem dados para envio", table_name)
 
-        for canonical_table in FINANCIAL_MAPPINGS:
+        for canonical_table in (() if permanent_failure else FINANCIAL_MAPPINGS):
             rows = fetch_financial_table(conn, schema, canonical_table, data_corte, is_first_run)
-            if rows and not send_to_dashboard(canonical_table, rows):
-                success_all = False
+            if rows:
+                send_result = send_to_dashboard(canonical_table, rows)
+                if send_result != SEND_SUCCESS:
+                    success_all = False
+                    permanent_failure = send_result == SEND_PERMANENT_FAILURE
+                    if permanent_failure:
+                        logger.error("[SYNC] ciclo interrompido por falha permanente")
+                        break
             elif not rows:
                 logger.info("[FINANCEIRO] %s sem dados para envio", canonical_table)
 
@@ -533,12 +668,22 @@ def run_sync():
 def start_agent():
     logger.info("AGENTE P.I.G.O ATIVO")
     log_startup_context()
-    run_sync()
-    schedule.every(SYNC_INTERVAL).minutes.do(run_sync)
+
+    def run_when_available():
+        if diagnose_remote():
+            return run_sync()
+        logger.error("Diagnóstico remoto falhou; coleta pesada adiada para o próximo ciclo.")
+        return False
+
+    run_when_available()
+    schedule.every(SYNC_INTERVAL).minutes.do(run_when_available)
     while True:
         schedule.run_pending()
         time.sleep(1)
 
 
 if __name__ == "__main__":
+    if "--diagnose" in sys.argv:
+        log_startup_context()
+        raise SystemExit(0 if diagnose_remote() else 1)
     start_agent()

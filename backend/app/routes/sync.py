@@ -32,6 +32,43 @@ class SyncData(BaseModel):
     timestamp: str
 
 
+@router.get("/health")
+def sync_health(
+    cnpj: str,
+    authorization: str = Header(None),
+    db: Session = Depends(get_db),
+):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Token de sincronismo nao informado")
+
+    token = authorization.replace("Bearer ", "").strip()
+    tenant = get_tenant_by_api_token(db, token)
+    if not tenant:
+        raise HTTPException(
+            status_code=403,
+            detail={"success": False, "error": "API Token invalido ou inativo"},
+        )
+
+    normalized_cnpj = re.sub(r"\D", "", str(cnpj or ""))
+    tenant_cnpj = re.sub(r"\D", "", str(tenant.cnpj or ""))
+    if normalized_cnpj != tenant_cnpj:
+        raise HTTPException(
+            status_code=403,
+            detail={"success": False, "error": "CNPJ nao corresponde ao tenant"},
+        )
+
+    access_ok, access_message = validate_tenant_access(tenant)
+    if not access_ok:
+        raise HTTPException(status_code=403, detail=access_message)
+
+    return {
+        "status": "ok",
+        "service": "pigo-remote-sync",
+        "authenticated": True,
+        "tenant_id": str(tenant.id),
+    }
+
+
 @router.post("")
 async def receive_sync_data(
     data: SyncData,

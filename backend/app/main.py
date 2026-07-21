@@ -125,8 +125,15 @@ app.include_router(internal_license_control_router, prefix="/api")
 def health_check():
     return {
         "success": True,
-        "message": "API online"
+        "message": "API online",
+        "status": "ok",
+        "service": "pigo",
     }
+
+
+@app.get("/api/health", tags=["Sistema"])
+def api_health_check():
+    return {"status": "ok", "service": "pigo"}
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]

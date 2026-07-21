@@ -19,6 +19,18 @@ Ele nao precisa ficar na mesma maquina do P.I.G.O Dashboard.
    - `COMPANY_CNPJ=<cnpj somente numeros>`
 4. Execute `run.bat`.
 
+A configuracao ativa sempre vem do arquivo `.env` ao lado de `agent.py`; ele tem
+precedencia sobre variaveis herdadas pelo processo. Para validar URL, TLS,
+autenticacao e tenant sem coletar ou enviar dados do ERP, execute:
+
+```bat
+venv\Scripts\python.exe agent.py --diagnose
+```
+
+Depois de trocar servidor ou token, atualize `API_BASE_URL` e `API_TOKEN` nesse
+arquivo e reinicie o processo/servico. O `run.bat` recria automaticamente um
+ambiente virtual copiado de outra maquina ou ligado a um Python removido.
+
 ## Tabelas
 
 O agente sincroniza as tabelas espelhadas do ERP, incluindo `TB_USUARIO` com:
@@ -67,5 +79,5 @@ esperada nao existe, o log informa a tabela equivalente encontrada.
 O agente grava `agent.log`. O log nao deve conter senha ou token. Em caso de erro, valide porta,
 caminho do `.FDB`, DLL do Firebird e conectividade HTTPS com `https://pigo.lmdsistemasdev.qzz.io/health`.
 
-Os logs financeiros incluem SQL executado, tabela utilizada, quantidade de
-registros, tempo de execucao e erro completo quando houver falha.
+Os logs financeiros incluem identificador hash da consulta, tabela utilizada,
+quantidade de registros e tempo de execucao, sem SQL, parametros ou payloads.
