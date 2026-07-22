@@ -1,4 +1,5 @@
 import csv
+import time
 from io import BytesIO, StringIO
 from uuid import UUID
 
@@ -10,16 +11,24 @@ from app.database.connection import get_db
 from app.database.erp_connection import current_tenant_id
 from app.models.reporting import ReportExport, ReportRun
 from app.routes.auth import get_current_user
+from app.schemas.report_assistant import ReportAssistantInterpretInput
 from app.schemas.reporting import BusinessIntentInput, BusinessValidationInput, ReportDefinition, ReportExportInput, ReportPreviewInput, ReportTemplateInput
 from app.services.relatorio_export_service import RelatorioExportService
 from app.services.relatorio_pdf_service import RelatorioPdfService
 from app.services.business_semantic_layer import BusinessSemanticLayer
 from app.services.business_knowledge_layer import BusinessKnowledgeLayer
+from app.services.audit_service import write_audit_log
+from app.services.report_assistant_service import ReportAssistantPermissionError, ReportAssistantRateLimitError, ReportAssistantService
 from app.services.report_catalog import CATALOG, READY_TEMPLATES, ReportCatalog
 from app.services.report_engine import ReportEngine, clear_report_cache
 from app.services.report_template_service import ReportTemplateService
 
 router = APIRouter(prefix="/reports", tags=["Report Engine"])
+
+
+def _client_ip(request: Request) -> str | None:
+    forwarded = request.headers.get("x-forwarded-for")
+    return forwarded.split(",", 1)[0].strip() if forwarded else request.client.host if request.client else None
 
 
 def _tenant():
@@ -58,6 +67,54 @@ def validate_business_knowledge(payload: BusinessValidationInput, user=Depends(g
 @router.post("/knowledge/parse-intent")
 def parse_business_intent(payload: BusinessIntentInput, user=Depends(get_current_user)):
     return BusinessKnowledgeLayer().parse_intent(payload.text)
+
+
+@router.post("/assistant/interpret")
+def interpret_report_assistant(
+    payload: ReportAssistantInterpretInput,
+    request: Request,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    started_at = time.perf_counter()
+    request_id = request.headers.get("x-request-id") or getattr(request.state, "trace_id", "")
+    service = ReportAssistantService()
+    try:
+        result = service.interpret(
+            payload.prompt, payload.company_id, _tenant(), user,
+            request_id=request_id, answers=payload.answers,
+        )
+    except ReportAssistantRateLimitError as exc:
+        raise HTTPException(429, str(exc)) from exc
+    except ReportAssistantPermissionError as exc:
+        raise HTTPException(403, str(exc)) from exc
+
+    try:
+        write_audit_log(
+            db,
+            action="reports.assistant.interpret",
+            ip_address=_client_ip(request),
+            user_agent=request.headers.get("user-agent"),
+            metadata={
+                "tenant_id": _tenant(), "company_erp_id": payload.company_id,
+                "requested_by": str(user.get("sub") or user.get("id") or ""),
+                "prompt_hash": service.prompt_hash(payload.prompt), "code": result.code,
+                "confidence": result.confidence,
+                "intent": {
+                    "objects": result.intent.objects,
+                    "metrics": result.intent.metrics,
+                    "dimensions": result.intent.dimensions,
+                    "period": result.intent.period,
+                    "filters": [{"concept": item.concept, "operator": item.operator} for item in result.intent.filters],
+                } if result.intent else None,
+                "ambiguities": result.questions, "unavailable_concepts": result.unavailable_concepts,
+                "duration_ms": round((time.perf_counter() - started_at) * 1000, 2), "request_id": request_id,
+            },
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
+    return result
 
 
 @router.get("/catalog/{category}/{source}/filters/{filter_key}/options")

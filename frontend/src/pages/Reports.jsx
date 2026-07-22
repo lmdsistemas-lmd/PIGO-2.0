@@ -4,7 +4,7 @@ import { useEmpresa } from "../context/EmpresaContext";
 import { resolveEmpresaErpId } from "../services/empresaIdentity";
 import {
   createReport, deleteReport, duplicateReport, exportReport,
-  getFilterOptions, getReadyTemplates, getReportCatalog, listReports, previewReport, updateReport,
+  getFilterOptions, getReadyTemplates, getReportCatalog, interpretReportPrompt, listReports, previewReport, updateReport,
 } from "../services/reportsService";
 import "../styles/report-builder.css";
 import "../styles/report-builder-controls.css";
@@ -13,6 +13,9 @@ const CATEGORY_ORDER = ["sales", "finance", "accounting", "other"];
 const CHARTS = { table: "Tabela", cards: "Cards", bar: "Barras", line: "Linha", pie: "Pizza", area: "Área" };
 const ROLES = [["all", "Todos"], ["administrator", "Administrador"], ["supervisor", "Supervisor"], ["finance", "Financeiro"], ["sales", "Vendas"], ["user", "Usuário"]];
 const EMPTY_FORM = { name: "", description: "", source: "", fields: [], filters: [], group_by: [], order_by: [], totals: [], chart: "table", permissions: ["all"] };
+const ASSISTANT_EXAMPLES = ["Vendas por produto deste mês", "Recebimentos em aberto por cliente", "Clientes por cidade", "Produtos por grupo", "Faturamento por vendedor neste ano"];
+const BUSINESS_LABELS = { revenue: "Faturamento", open_receivable: "Em aberto", receivable: "A receber", customer_count: "Quantidade de clientes", product_count: "Quantidade de produtos", seller: "Vendedor", customer: "Cliente", product: "Produto", city: "Cidade", group: "Grupo", brand: "Marca" };
+const PERIOD_LABELS = { today: "Hoje", yesterday: "Ontem", current_week: "Esta semana", last_week: "Semana passada", current_month: "Este mês", previous_month: "Mês passado", current_quarter: "Este trimestre", last_quarter: "Último trimestre", current_year: "Este ano", previous_year: "Ano passado", last_7_days: "Últimos 7 dias", last_30_days: "Últimos 30 dias", last_90_days: "Últimos 90 dias" };
 
 function ReportChart({ preview }) {
   if (!preview || preview.chart === "table" || !preview.rows.length) return null;
@@ -53,6 +56,11 @@ export default function Reports(props) {
   const [filterOptions, setFilterOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [assistantPrompt, setAssistantPrompt] = useState("");
+  const [assistantResult, setAssistantResult] = useState(null);
+  const [assistantAnswers, setAssistantAnswers] = useState({});
+  const [assistantLoading, setAssistantLoading] = useState(false);
 
   const categoryMeta = catalog[category] || { label: "Relatórios", sources: {}, planned_sources: [] };
   const sourceMeta = categoryMeta.sources?.[form.source];
@@ -76,6 +84,30 @@ export default function Reports(props) {
   function newReport() {
     const firstSource = Object.keys(categoryMeta.sources || {})[0] || "";
     setEditingId(""); setForm({ ...EMPTY_FORM, source: firstSource }); setPreview(null); setBuilderOpen(true);
+  }
+
+  function openAssistant() {
+    setAssistantOpen(true); setBuilderOpen(false); setPreview(null); setAssistantResult(null); setAssistantAnswers({}); setError("");
+  }
+
+  async function interpretPrompt(answers = assistantAnswers) {
+    if (!empresaId) return setError("Selecione uma empresa ERP antes de usar o assistente.");
+    setAssistantLoading(true); setError("");
+    try {
+      const result = await interpretReportPrompt({ prompt: assistantPrompt, company_id: Number(empresaId), answers });
+      setAssistantResult(result); setAssistantAnswers(answers);
+    } catch (err) { setError(err.message || "Não foi possível interpretar a solicitação."); }
+    finally { setAssistantLoading(false); }
+  }
+
+  function applyAssistantDefinition(previewAfter = false) {
+    const suggested = assistantResult?.report_definition;
+    if (!suggested) return;
+    setCategory(suggested.category);
+    setEditingId("");
+    setForm({ ...EMPTY_FORM, name: `Relatório assistido — ${assistantPrompt.slice(0, 80)}`, description: assistantPrompt, ...suggested });
+    setAssistantOpen(false); setBuilderOpen(true); setPreview(null);
+    if (previewAfter) run(suggested);
   }
 
   function editReport(report) {
@@ -145,7 +177,7 @@ export default function Reports(props) {
     <main className="report-workspace">
       <header className="report-hero">
         <div><span className="report-eyebrow">Report Engine</span><h1>Relatórios que acompanham o seu negócio</h1><p>Escolha os dados, organize a visão e gere resultados sem escrever código.</p></div>
-        <button className="report-primary" onClick={newReport} disabled={!hasSources}>+ Novo relatório</button>
+        <div className="report-hero-actions"><button onClick={openAssistant} disabled={!empresaId}>Criar com Assistente</button><button className="report-primary" onClick={newReport} disabled={!hasSources}>+ Novo relatório</button></div>
       </header>
 
       <nav className="report-tabs" aria-label="Categorias">
@@ -153,6 +185,27 @@ export default function Reports(props) {
       </nav>
 
       {error && <div className="report-alert" role="alert">{error}<button onClick={() => reload()}>Tentar novamente</button></div>}
+
+      {assistantOpen && <section className="report-assistant" aria-label="Assistente de relatórios">
+        <header><div><span>Assistente determinístico</span><h2>O que você deseja analisar?</h2><p>Descreva o resultado em linguagem de negócio. Você revisará tudo antes da execução.</p></div><button onClick={() => setAssistantOpen(false)}>Fechar</button></header>
+        <div className="report-assistant-input"><textarea maxLength="1000" value={assistantPrompt} onChange={(event) => { setAssistantPrompt(event.target.value); setAssistantResult(null); }} placeholder="Quero o faturamento por vendedor do último trimestre" /><button className="report-primary" disabled={assistantLoading || assistantPrompt.trim().length < 3} onClick={() => interpretPrompt()}>{assistantLoading ? "Interpretando..." : "Interpretar solicitação"}</button></div>
+        <div className="report-assistant-examples"><span>Experimente:</span>{ASSISTANT_EXAMPLES.map((example) => <button key={example} onClick={() => { setAssistantPrompt(example); setAssistantResult(null); }}>{example}</button>)}</div>
+
+        {assistantResult && !assistantResult.success && <div className="assistant-feedback" role="status"><strong>{assistantResult.message || "Preciso confirmar alguns detalhes."}</strong>
+          {assistantResult.questions?.map((question) => <div className="assistant-question" key={question.id}><p>{question.question}</p>{question.options.map((option) => <button key={option.value} onClick={() => { const answers = { ...assistantAnswers, [question.id]: option.value }; interpretPrompt(answers); }}>{option.label}</button>)}</div>)}
+          {!!assistantResult.unavailable_concepts?.length && <p>Indisponível: {assistantResult.unavailable_concepts.map((item) => BUSINESS_LABELS[item] || item).join(", ")}.</p>}
+          {assistantResult.suggestions?.map((suggestion) => <small key={suggestion}>{suggestion}</small>)}
+        </div>}
+
+        {assistantResult?.success && <div className="assistant-confirmation"><span>Entendi o seguinte</span><div className="assistant-summary">
+          <article><small>Categoria</small><strong>{catalog[assistantResult.report_definition.category]?.label || assistantResult.report_definition.category}</strong></article>
+          <article><small>Fonte</small><strong>{catalog[assistantResult.report_definition.category]?.sources?.[assistantResult.report_definition.source]?.label || assistantResult.report_definition.source}</strong></article>
+          <article><small>Métrica</small><strong>{assistantResult.intent.metrics.map((item) => BUSINESS_LABELS[item] || item).join(", ")}</strong></article>
+          <article><small>Agrupamento</small><strong>{assistantResult.intent.dimensions.map((item) => BUSINESS_LABELS[item] || item).join(", ") || "Sem agrupamento"}</strong></article>
+          <article><small>Período</small><strong>{PERIOD_LABELS[assistantResult.intent.period?.type] || "Sem período"}</strong></article>
+          <article><small>Visualização</small><strong>{CHARTS[assistantResult.report_definition.chart] || assistantResult.report_definition.chart}</strong></article>
+        </div><p>Confiança: {Math.round(assistantResult.confidence * 100)}%. A definição ainda não foi executada.</p><footer><button onClick={() => setAssistantResult(null)}>Voltar e editar texto</button><button onClick={() => applyAssistantDefinition(false)}>Ajustar no Builder</button><button className="report-primary" onClick={() => applyAssistantDefinition(true)}>Gerar preview</button></footer></div>}
+      </section>}
 
       <section className="report-catalog-header"><div><h2>{categoryMeta.label}</h2><p>{hasSources ? "Modelos criados pela sua equipe e fontes disponíveis." : "Catálogo preparado para a próxima conexão de dados."}</p></div><span>{reports.length} relatório(s)</span></section>
 

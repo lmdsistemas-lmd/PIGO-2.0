@@ -65,6 +65,11 @@ class ReportQueryBuilder:
         sql += " LIMIT :report_limit"
         return sql, params
 
+    def validate(self, definition: ReportDefinition) -> None:
+        """Valida uma definição sem montar ou executar SQL."""
+        source = self.catalog.source(definition.category, definition.source)
+        self._validate(definition, source)
+
     def _validate(self, definition, source):
         fields = source["fields"]
         unknown = set(definition.fields) - set(fields)

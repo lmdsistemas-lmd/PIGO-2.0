@@ -4,12 +4,12 @@ from copy import deepcopy
 
 
 BUSINESS_OBJECTS = {
-    "sale": {"name": "Venda", "description": "Operação comercial realizada com um cliente.", "sources": ["sales.orders", "sales.items"], "synonyms": ["venda", "pedido", "faturamento"]},
-    "customer": {"name": "Cliente", "description": "Pessoa ou empresa que compra produtos.", "sources": ["sales.customers"], "synonyms": ["cliente", "consumidor", "comprador", "pessoa"]},
-    "product": {"name": "Produto", "description": "Item comercializado pela empresa.", "sources": ["sales.products", "sales.items"], "synonyms": ["produto", "item", "mercadoria"]},
-    "receipt": {"name": "Recebimento", "description": "Título financeiro a receber de um cliente.", "sources": ["finance.receipts"], "synonyms": ["recebimento", "conta a receber", "titulo a receber"]},
-    "payment": {"name": "Pagamento", "description": "Compromisso financeiro a pagar.", "sources": [], "planned": True, "synonyms": ["pagamento", "conta a pagar", "despesa"]},
-    "seller": {"name": "Vendedor", "description": "Responsável comercial por uma venda ou cliente.", "sources": ["sales.sellers", "sales.orders"], "synonyms": ["vendedor", "representante", "consultor"]},
+    "sale": {"name": "Venda", "description": "Operação comercial realizada com um cliente.", "sources": ["sales.orders", "sales.items"], "synonyms": ["venda", "vendas", "pedido", "pedidos", "faturamento"]},
+    "customer": {"name": "Cliente", "description": "Pessoa ou empresa que compra produtos.", "sources": ["sales.customers"], "synonyms": ["cliente", "clientes", "consumidor", "comprador", "pessoa"]},
+    "product": {"name": "Produto", "description": "Item comercializado pela empresa.", "sources": ["sales.products", "sales.items"], "synonyms": ["produto", "produtos", "item", "itens", "mercadoria"]},
+    "receipt": {"name": "Recebimento", "description": "Título financeiro a receber de um cliente.", "sources": ["finance.receipts"], "synonyms": ["recebimento", "recebimentos", "conta a receber", "titulo a receber"]},
+    "payment": {"name": "Pagamento", "description": "Compromisso financeiro a pagar.", "sources": [], "planned": True, "synonyms": ["pagamento", "pagamentos", "conta a pagar", "despesa"]},
+    "seller": {"name": "Vendedor", "description": "Responsável comercial por uma venda ou cliente.", "sources": ["sales.sellers", "sales.orders"], "synonyms": ["vendedor", "vendedores", "representante", "consultor"]},
     "company": {"name": "Empresa", "description": "Empresa ERP proprietária dos dados.", "sources": [], "synonyms": ["empresa", "filial", "unidade"]},
     "city": {"name": "Cidade", "description": "Localidade associada a uma entidade de negócio.", "sources": ["sales.customers", "sales.sellers"], "synonyms": ["cidade", "municipio", "localidade"]},
     "group": {"name": "Grupo", "description": "Família comercial de produtos.", "sources": ["sales.products", "sales.items"], "synonyms": ["grupo", "grupo de produto", "familia"]},
@@ -35,13 +35,15 @@ BUSINESS_METRICS = {
     "average_ticket": {"name": "Ticket médio", "object": "sale", "format": "currency", "formula": "revenue / sale_count", "dependencies": ["revenue", "sale_count"], "synonyms": ["ticket medio", "valor medio da venda"]},
     "sale_count": {"name": "Quantidade de vendas", "object": "sale", "format": "integer", "definition": {"source": "sales.orders", "field": "number", "aggregation": "count"}, "synonyms": ["quantidade de vendas", "numero de vendas", "pedidos"]},
     "quantity": {"name": "Quantidade vendida", "object": "product", "format": "decimal", "definition": {"source": "sales.items", "field": "quantity", "aggregation": "sum"}, "synonyms": ["quantidade", "volume vendido", "itens vendidos"]},
+    "customer_count": {"name": "Quantidade de clientes", "object": "customer", "format": "integer", "definition": {"source": "sales.customers", "field": "customer_id", "aggregation": "count"}, "synonyms": ["quantidade de clientes", "numero de clientes"]},
+    "product_count": {"name": "Quantidade de produtos", "object": "product", "format": "integer", "definition": {"source": "sales.products", "field": "product_id", "aggregation": "count"}, "synonyms": ["quantidade de produtos", "numero de produtos"]},
     "gross_profit": {"name": "Lucro bruto", "object": "sale", "format": "currency", "formula": "revenue - cost_of_goods", "dependencies": ["revenue", "cost_of_goods"], "synonyms": ["lucro", "lucro bruto"]},
     "margin": {"name": "Margem", "object": "sale", "format": "percentage", "formula": "gross_profit / revenue * 100", "dependencies": ["gross_profit", "revenue"], "synonyms": ["margem", "margem de lucro", "lucratividade"]},
     "markup": {"name": "Markup", "object": "sale", "format": "percentage", "formula": "gross_profit / cost_of_goods * 100", "dependencies": ["gross_profit", "cost_of_goods"], "synonyms": ["markup"]},
     "cost_of_goods": {"name": "CMV", "object": "sale", "format": "currency", "definition": {"source": "sales.items", "field": "unit_cost", "aggregation": "sum_product_quantity"}, "synonyms": ["cmv", "custo", "custo da mercadoria vendida"]},
     "receivable": {"name": "A receber", "object": "receipt", "format": "currency", "definition": {"source": "finance.receipts", "field": "amount", "aggregation": "sum"}, "synonyms": ["a receber", "contas a receber", "recebiveis"]},
     "open_receivable": {"name": "Em aberto", "object": "receipt", "format": "currency", "definition": {"source": "finance.receipts", "field": "amount", "aggregation": "sum", "filters": [{"field": "open", "operator": "eq", "value": "S"}]}, "synonyms": ["em aberto", "saldo aberto", "nao recebido"]},
-    "delinquency": {"name": "Inadimplência", "object": "receipt", "format": "currency", "planned": True, "dependencies": ["open_receivable"], "synonyms": ["inadimplencia", "vencido", "atrasado"]},
+    "delinquency": {"name": "Inadimplência", "object": "receipt", "format": "currency", "planned": True, "dependencies": ["open_receivable"], "synonyms": ["inadimplencia", "vencido", "vencidos", "atrasado", "atrasados"]},
     "average_term": {"name": "Prazo médio", "object": "receipt", "format": "days", "planned": True, "synonyms": ["prazo medio", "tempo medio de recebimento"]},
 }
 
