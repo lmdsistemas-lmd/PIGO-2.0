@@ -27,9 +27,7 @@ CATALOG = {
                     "customer_id": _field("Cliente", "PV.PEV_CLIENTE"),
                     "seller_id": _field("Vendedor", "PV.PEV_VENDEDOR"),
                     "status": _field("Status", "PV.PEV_STATUS"),
-                    "quantity": _field("Quantidade", "COALESCE(PV.PEV_QT_ITENS, 0)", "number"),
                     "total": _field("Valor", "COALESCE(PV.PEV_VALOR_TOTAL, 0)", "currency"),
-                    "discount": _field("Desconto", "COALESCE(PV.PEV_DESCONTO, 0)", "currency"),
                     "company": _field("Empresa", "PV.PEV_EMPRESA"),
                 },
                 "filters": {
@@ -78,10 +76,96 @@ CATALOG = {
     "other": {"label": "Outros", "sources": {}, "planned_sources": ["Funcionários", "Estoque", "Inventário", "Auditoria", "Logs", "Usuários", "Acessos", "Conferência"]},
 }
 
+CATALOG["sales"]["sources"].update({
+    "items": {
+        "label": "Itens vendidos", "description": "Produtos, quantidades, custos e valores por pedido.",
+        "table": "TB_PEDIDO_VENDA_ITEM", "alias": "I",
+        "joins": [
+            "JOIN TB_PEDIDO_VENDA PV ON PV.PEV_ID = I.PEVI_PEDIDO_VENDA AND PV.PEV_EMPRESA = I.PEVI_EMPRESA",
+            "LEFT JOIN TB_PRODUTO P ON P.PRD_ID = I.PEVI_PRODUTO AND P.PRD_EMPRESA = I.PEVI_EMPRESA",
+        ],
+        "fields": {
+            "order_number": _field("Pedido", "I.PEVI_PEDIDO_VENDA"),
+            "date": _field("Data", "PV.PEV_DT_EMISSAO", "date", ["min", "max", "count"]),
+            "product_id": _field("Código do produto", "I.PEVI_PRODUTO"),
+            "product": _field("Produto", "P.PRD_DESCRICAO"),
+            "group": _field("Grupo", "P.PRD_GRUPO"), "brand": _field("Marca", "P.PRD_MARCA"),
+            "quantity": _field("Quantidade", "COALESCE(I.PEVI_QUANTIDADE, 0)", "number"),
+            "unit_price": _field("Valor unitário", "COALESCE(I.PEVI_VALOR_UNITARIO, 0)", "currency"),
+            "unit_cost": _field("Custo unitário", "COALESCE(I.PEVI_VALOR_CUSTO_UNITARIO, 0)", "currency"),
+            "total": _field("Valor total", "COALESCE(I.PEVI_VALOR_TOTAL, 0)", "currency"),
+            "company": _field("Empresa", "I.PEVI_EMPRESA"),
+        },
+        "filters": {
+            "company": {"label": "Empresa", "field": "company", "operators": ["eq"]},
+            "period": {"label": "Período", "field": "date", "operators": ["between"]},
+            "product_id": {"label": "Produto", "field": "product_id", "operators": ["eq", "in"], "option_label": "product"},
+            "group": {"label": "Grupo", "field": "group", "operators": ["eq", "in"]},
+            "brand": {"label": "Marca", "field": "brand", "operators": ["eq", "in"]},
+        },
+        "groupings": ["date", "product_id", "product", "group", "brand", "company"],
+    },
+    "customers": {
+        "label": "Clientes", "description": "Cadastro, localização e vendedor associado.",
+        "table": "TB_CLIENTE", "alias": "C", "joins": ["JOIN TB_PESSOA P ON P.PES_ID = C.CLI_PESSOA", "LEFT JOIN TB_CIDADE CI ON CI.CID_ID = P.PES_CIDADE"],
+        "fields": {
+            "customer_id": _field("Código", "C.CLI_PESSOA"), "name": _field("Nome", "P.PES_RSOCIAL_NOME"),
+            "trade_name": _field("Fantasia", "P.PES_FANTASIA_APELIDO"), "city": _field("Cidade", "CI.CID_NOME"),
+            "registered_at": _field("Cadastro", "P.PES_DT_CADASTRO", "date", ["min", "max", "count"]),
+            "seller_id": _field("Vendedor", "P.PES_VENDEDOR"), "company": _field("Empresa", "C.CLI_EMPRESA"),
+        },
+        "filters": {
+            "company": {"label": "Empresa", "field": "company", "operators": ["eq"]},
+            "period": {"label": "Período de cadastro", "field": "registered_at", "operators": ["between"]},
+            "city": {"label": "Cidade", "field": "city", "operators": ["eq", "in"]},
+            "seller_id": {"label": "Vendedor", "field": "seller_id", "operators": ["eq", "in"]},
+        }, "groupings": ["registered_at", "city", "seller_id", "company"],
+    },
+    "products": {
+        "label": "Produtos", "description": "Catálogo de produtos, preços, custos, grupos e marcas.",
+        "table": "TB_PRODUTO", "alias": "P", "joins": [],
+        "fields": {
+            "product_id": _field("Código", "P.PRD_ID"), "product": _field("Produto", "P.PRD_DESCRICAO"),
+            "group": _field("Grupo", "P.PRD_GRUPO"), "brand": _field("Marca", "P.PRD_MARCA"),
+            "status": _field("Status", "P.PRD_STATUS"),
+            "minimum_stock": _field("Estoque mínimo", "COALESCE(P.PRD_ESTOQUE_MINIMO, 0)", "number"),
+            "sale_price": _field("Preço de venda", "COALESCE(P.PRD_PRECO_VENDA, 0)", "currency"),
+            "cost_price": _field("Preço de custo", "COALESCE(P.PRD_PRECO_CUSTO, 0)", "currency"),
+            "company": _field("Empresa", "P.PRD_EMPRESA"),
+        },
+        "filters": {
+            "company": {"label": "Empresa", "field": "company", "operators": ["eq"]},
+            "group": {"label": "Grupo", "field": "group", "operators": ["eq", "in"]},
+            "brand": {"label": "Marca", "field": "brand", "operators": ["eq", "in"]},
+            "status": {"label": "Status", "field": "status", "operators": ["eq", "in"]},
+        }, "groupings": ["group", "brand", "status", "company"],
+    },
+    "sellers": {
+        "label": "Vendedores", "description": "Vendedores sincronizados e seus cadastros.",
+        "table": "TB_VENDEDOR", "alias": "V", "distinct": True,
+        "joins": ["JOIN TB_PESSOA P ON P.PES_ID = V.VDR_PESSOA", "LEFT JOIN TB_CIDADE CI ON CI.CID_ID = P.PES_CIDADE", "JOIN TB_PEDIDO_VENDA PV ON PV.PEV_VENDEDOR = V.VDR_PESSOA"],
+        "fields": {"seller_id": _field("Código", "V.VDR_PESSOA"), "name": _field("Nome", "P.PES_RSOCIAL_NOME"), "city": _field("Cidade", "CI.CID_NOME"), "company": _field("Empresa", "PV.PEV_EMPRESA")},
+        "filters": {"company": {"label": "Empresa", "field": "company", "operators": ["eq"]}, "city": {"label": "Cidade", "field": "city", "operators": ["eq", "in"]}},
+        "groupings": ["city", "company"],
+    },
+})
+CATALOG["sales"]["planned_sources"] = ["Comissões", "Metas", "Cancelamentos"]
+
+READY_TEMPLATES = [
+    {"key": "sales_by_product", "name": "Vendas por produto", "description": "Quantidade e valor vendido por produto.", "definition": {"category": "sales", "source": "items", "fields": ["product", "quantity", "total"], "filters": [], "group_by": ["product"], "order_by": [{"field": "total_sum", "direction": "desc"}], "totals": [{"field": "quantity", "aggregation": "sum"}, {"field": "total", "aggregation": "sum"}], "chart": "bar"}},
+    {"key": "sales_by_group", "name": "Vendas por grupo", "description": "Faturamento agrupado por grupo de produtos.", "definition": {"category": "sales", "source": "items", "fields": ["group", "total"], "filters": [], "group_by": ["group"], "order_by": [{"field": "total_sum", "direction": "desc"}], "totals": [{"field": "total", "aggregation": "sum"}], "chart": "pie"}},
+    {"key": "customer_directory", "name": "Cadastro de clientes", "description": "Clientes organizados por cidade.", "definition": {"category": "sales", "source": "customers", "fields": ["customer_id", "name", "city", "registered_at"], "filters": [], "group_by": [], "order_by": [{"field": "name", "direction": "asc"}], "totals": [], "chart": "table"}},
+    {"key": "product_prices", "name": "Tabela de preços", "description": "Preço de venda e custo dos produtos.", "definition": {"category": "sales", "source": "products", "fields": ["product_id", "product", "group", "brand", "sale_price", "cost_price"], "filters": [], "group_by": [], "order_by": [{"field": "product", "direction": "asc"}], "totals": [], "chart": "table"}},
+    {"key": "receipts_by_status", "name": "Recebimentos por status", "description": "Valores financeiros agrupados por status.", "definition": {"category": "finance", "source": "receipts", "fields": ["status", "amount"], "filters": [], "group_by": ["status"], "order_by": [{"field": "amount_sum", "direction": "desc"}], "totals": [{"field": "amount", "aggregation": "sum"}], "chart": "cards"}},
+]
+
 
 class ReportCatalog:
     def sync_metadata(self, db):
         """Mantém o catálogo relacional alinhado ao registro seguro do Engine."""
+        db.execute(text("DELETE FROM report_filters"))
+        db.execute(text("DELETE FROM report_fields"))
+        db.execute(text("DELETE FROM report_sources"))
         for position, (category_key, category) in enumerate(CATALOG.items(), 1):
             db.execute(text("""INSERT INTO report_categories(key,name,position) VALUES (:key,:name,:position)
                 ON CONFLICT (key) DO UPDATE SET name=EXCLUDED.name, position=EXCLUDED.position"""),
@@ -109,6 +193,9 @@ class ReportCatalog:
             for source in category["sources"].values():
                 source.pop("table", None)
                 source.pop("alias", None)
+                source.pop("joins", None)
+                source.pop("company_field", None)
+                source.pop("distinct", None)
                 for field in source["fields"].values():
                     field.pop("expression", None)
         return result

@@ -12,7 +12,7 @@ class ReportQueryBuilder:
         source = self.catalog.source(definition.category, definition.source)
         fields = source["fields"]
         self._validate(definition, source)
-        params = {"report_company": str(empresa_id), "report_limit": min(limit, 50)}
+        params = {"report_limit": min(limit, 50)}
 
         if definition.totals:
             selected = [f'{fields[key]["expression"]} AS "{key}"' for key in definition.group_by]
@@ -22,7 +22,10 @@ class ReportQueryBuilder:
         else:
             selected = [f'{fields[key]["expression"]} AS "{key}"' for key in definition.fields]
 
-        where = [f'{fields["company"]["expression"]} = :report_company']
+        where = []
+        if "company" in fields:
+            params["report_company"] = str(empresa_id)
+            where.append(f'{fields["company"]["expression"]} = :report_company')
         for index, item in enumerate(definition.filters):
             filter_meta = source["filters"][item.field]
             expression = fields[filter_meta["field"]]["expression"]
@@ -44,7 +47,11 @@ class ReportQueryBuilder:
                 params[f"filter_{index}"] = item.value
                 where.append(f"{expression} {self.OPERATORS[item.operator]} :filter_{index}")
 
-        sql = f'SELECT {", ".join(selected)} FROM {source["table"]} {source["alias"]} WHERE {" AND ".join(where)}'
+        joins = " " + " ".join(source.get("joins", [])) if source.get("joins") else ""
+        select_keyword = "SELECT DISTINCT" if source.get("distinct") and not definition.totals else "SELECT"
+        sql = f'{select_keyword} {", ".join(selected)} FROM {source["table"]} {source["alias"]}{joins}'
+        if where:
+            sql += f' WHERE {" AND ".join(where)}'
         if definition.totals and definition.group_by:
             sql += " GROUP BY " + ", ".join(fields[key]["expression"] for key in definition.group_by)
         if definition.order_by:
@@ -75,3 +82,23 @@ class ReportQueryBuilder:
             field = fields.get(total.field)
             if not field or total.aggregation not in field["aggregations"]:
                 raise ValueError(f"Total não permitido: {total.field}/{total.aggregation}.")
+
+    def build_filter_options(self, category: str, source_key: str, filter_key: str, empresa_id: int, search: str = ""):
+        source = self.catalog.source(category, source_key)
+        filter_meta = source["filters"].get(filter_key)
+        if not filter_meta or filter_key in {"company", "period"}:
+            raise ValueError("Filtro não possui opções dinâmicas.")
+        fields = source["fields"]
+        value_expression = fields[filter_meta["field"]]["expression"]
+        label_expression = fields[filter_meta.get("option_label", filter_meta["field"])]["expression"]
+        joins = " " + " ".join(source.get("joins", [])) if source.get("joins") else ""
+        params = {"options_limit": 100}
+        where = [f"{value_expression} IS NOT NULL"]
+        if "company" in fields:
+            params["report_company"] = str(empresa_id)
+            where.append(f'{fields["company"]["expression"]} = :report_company')
+        if search:
+            params["options_search"] = f"%{search.strip()}%"
+            where.append(f"CAST({label_expression} AS VARCHAR(255)) LIKE :options_search")
+        sql = f'SELECT DISTINCT {value_expression} AS "value", {label_expression} AS "label" FROM {source["table"]} {source["alias"]}{joins} WHERE {" AND ".join(where)} ORDER BY "label" LIMIT :options_limit'
+        return sql, params

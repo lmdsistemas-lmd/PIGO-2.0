@@ -1,7 +1,7 @@
 import unittest
 
 from app.schemas.reporting import ReportDefinition, ReportFilterValue, ReportTotal
-from app.services.report_catalog import ReportCatalog
+from app.services.report_catalog import READY_TEMPLATES, ReportCatalog
 from app.services.report_engine import ReportEngine, clear_report_cache
 from app.services.report_query_builder import ReportQueryBuilder
 
@@ -26,6 +26,7 @@ class ReportEngineTests(unittest.TestCase):
         catalog = ReportCatalog().public_catalog()
         source = catalog["sales"]["sources"]["orders"]
         self.assertNotIn("table", source)
+        self.assertNotIn("joins", catalog["sales"]["sources"]["items"])
         self.assertNotIn("expression", source["fields"]["total"])
 
     def test_unknown_field_and_filter_are_rejected(self):
@@ -64,6 +65,36 @@ class ReportEngineTests(unittest.TestCase):
         sql, _ = ReportQueryBuilder().build(definition, 1)
         self.assertIn("SUM(", sql)
         self.assertIn("GROUP BY", sql)
+
+    def test_phase_two_sources_generate_catalogued_joins(self):
+        builder = ReportQueryBuilder()
+        definitions = {
+            "items": ["order_number", "product", "total"],
+            "customers": ["customer_id", "name", "city"],
+            "products": ["product_id", "product", "sale_price"],
+            "sellers": ["seller_id", "name"],
+        }
+        for source, fields in definitions.items():
+            sql, params = builder.build(ReportDefinition(category="sales", source=source, fields=fields), 1)
+            self.assertNotIn(";", sql)
+            self.assertEqual(params.get("report_company", "1"), "1")
+        items_sql, _ = builder.build(ReportDefinition(category="sales", source="items", fields=definitions["items"]), 1)
+        self.assertIn("JOIN TB_PEDIDO_VENDA", items_sql)
+        self.assertIn("LEFT JOIN TB_PRODUTO", items_sql)
+
+    def test_dynamic_filter_options_are_catalogued(self):
+        sql, params = ReportQueryBuilder().build_filter_options("sales", "items", "product_id", 1)
+        self.assertIn("SELECT DISTINCT", sql)
+        self.assertIn("PEVI_PRODUTO", sql)
+        self.assertEqual(params["report_company"], "1")
+        with self.assertRaises(ValueError):
+            ReportQueryBuilder().build_filter_options("sales", "items", "period", 1)
+
+    def test_ready_templates_all_validate(self):
+        builder = ReportQueryBuilder()
+        for template in READY_TEMPLATES:
+            definition = ReportDefinition.model_validate(template["definition"])
+            builder.build(definition, 1)
 
 
 if __name__ == "__main__":

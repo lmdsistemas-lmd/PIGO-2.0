@@ -44,7 +44,7 @@ class ReportEngine:
 
         sql, params = self.builder.build(definition, empresa_id, limit)
         logger.info("report.engine.start request_id=%s tenant=%s company=%s source=%s", request_id, tenant_id, empresa_id, definition.source)
-        rows = [dict(row) for row in self.provider.execute(sql, params)]
+        rows = [{str(key).lower(): value for key, value in dict(row).items()} for row in self.provider.execute(sql, params)]
         duration_ms = round((time.perf_counter() - started) * 1000, 2)
         columns = self._columns(definition, rows)
         result = {
@@ -68,4 +68,22 @@ class ReportEngine:
             [f"{item.field}_{item.aggregation}" for item in definition.totals]
             if definition.totals else definition.fields
         )
-        return [{"key": key, "label": key.replace("_", " ").title()} for key in keys]
+        source = self.builder.catalog.source(definition.category, definition.source)
+        columns = []
+        for key in keys:
+            base_key = key
+            aggregation = ""
+            for suffix in ("sum", "avg", "min", "max", "count"):
+                if key.endswith(f"_{suffix}"):
+                    base_key, aggregation = key[:-(len(suffix) + 1)], suffix
+                    break
+            label = source["fields"].get(base_key, {}).get("label", key.replace("_", " ").title())
+            if aggregation:
+                label = f"{label} ({aggregation})"
+            columns.append({"key": key, "label": label, "type": source["fields"].get(base_key, {}).get("type", "text")})
+        return columns
+
+    def filter_options(self, category, source, filter_key, tenant_id, empresa_id, search=""):
+        sql, params = self.builder.build_filter_options(category, source, filter_key, empresa_id, search)
+        rows = self.provider.execute(sql, params)
+        return [{"value": row.get("VALUE") or row.get("value"), "label": row.get("LABEL") or row.get("label") or row.get("VALUE") or row.get("value")} for row in rows]

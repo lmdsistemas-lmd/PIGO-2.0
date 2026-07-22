@@ -11,3 +11,8 @@
 .report-visual-item > div { background: linear-gradient(#38bdf8, #2563eb); border-radius: 8px 8px 2px 2px; }
 .report-visual--line .report-visual-item > div, .report-visual--area .report-visual-item > div { background: linear-gradient(#22c55e99, #16a34a); }
 .report-visual--pie .report-visual-item > div { border-radius: 50%; width: 54px; justify-self: center; }
+.ready-template-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.ready-template-strip button { text-align: left; display: grid; gap: 7px; border: 1px solid var(--border-color, #e2e8f0); border-radius: 14px; padding: 16px; background: var(--surface, #fff); color: inherit; cursor: pointer; }
+.ready-template-strip button:hover { border-color: #2563eb; transform: translateY(-2px); }
+.ready-template-strip span { color: #2563eb; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+.ready-template-strip small { color: var(--text-secondary, #64748b); }

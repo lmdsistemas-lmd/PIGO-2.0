@@ -4,7 +4,7 @@ import { useEmpresa } from "../context/EmpresaContext";
 import { resolveEmpresaErpId } from "../services/empresaIdentity";
 import {
   createReport, deleteReport, duplicateReport, exportReport,
-  getReportCatalog, listReports, previewReport, updateReport,
+  getFilterOptions, getReadyTemplates, getReportCatalog, listReports, previewReport, updateReport,
 } from "../services/reportsService";
 import "../styles/report-builder.css";
 import "../styles/report-builder-controls.css";
@@ -25,18 +25,31 @@ function ReportChart({ preview }) {
   return <div className={`report-visual report-visual--${preview.chart}`}>{values.map((item, index) => <div className="report-visual-item" key={`${item.label}-${index}`} title={`${item.label}: ${item.value}`}><div style={{ height: `${Math.max(8, Math.abs(item.value) / maximum * 160)}px` }} /><span>{item.label}</span></div>)}</div>;
 }
 
+function formatReportValue(value, type) {
+  if (value === null || value === undefined || value === "") return "—";
+  if (type === "currency") return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value));
+  if (type === "number") return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 3 }).format(Number(value));
+  if (type === "date") {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? String(value) : parsed.toLocaleDateString("pt-BR");
+  }
+  return String(value);
+}
+
 export default function Reports(props) {
   const { empresaAtual } = useEmpresa();
   const empresaId = resolveEmpresaErpId(empresaAtual);
   const [category, setCategory] = useState("sales");
   const [catalog, setCatalog] = useState({});
   const [reports, setReports] = useState([]);
+  const [readyTemplates, setReadyTemplates] = useState([]);
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState("");
   const [builderOpen, setBuilderOpen] = useState(false);
   const [preview, setPreview] = useState(null);
   const [draftFilter, setDraftFilter] = useState({ field: "", operator: "eq", value: "" });
   const [draftTotal, setDraftTotal] = useState({ field: "", aggregation: "sum" });
+  const [filterOptions, setFilterOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -46,7 +59,10 @@ export default function Reports(props) {
 
   const reload = useCallback(async (selectedCategory = category) => {
     setLoading(true); setError("");
-    try { setReports(await listReports(selectedCategory)); }
+    try {
+      const [saved, ready] = await Promise.all([listReports(selectedCategory), getReadyTemplates(selectedCategory)]);
+      setReports(saved); setReadyTemplates(ready);
+    }
     catch (err) { setError(err.message || "Não foi possível carregar os relatórios."); }
     finally { setLoading(false); }
   }, [category]);
@@ -65,6 +81,22 @@ export default function Reports(props) {
     setEditingId(report.id);
     setForm({ name: report.name, description: report.description, permissions: report.permissions, ...report.definition });
     setPreview(null); setBuilderOpen(true);
+  }
+
+  function applyReadyTemplate(template) {
+    setCategory(template.definition.category);
+    setEditingId("");
+    setForm({ ...EMPTY_FORM, name: template.name, description: template.description, ...template.definition });
+    setPreview(null); setBuilderOpen(true);
+  }
+
+  async function selectFilterField(field) {
+    const operator = sourceMeta.filters[field]?.operators?.[0] || "eq";
+    setDraftFilter({ field, operator, value: "" }); setFilterOptions([]);
+    if (field && field !== "period" && empresaId) {
+      try { setFilterOptions(await getFilterOptions(category, form.source, field, empresaId)); }
+      catch { setFilterOptions([]); }
+    }
   }
 
   function definition() {
@@ -123,6 +155,8 @@ export default function Reports(props) {
 
       <section className="report-catalog-header"><div><h2>{categoryMeta.label}</h2><p>{hasSources ? "Modelos criados pela sua equipe e fontes disponíveis." : "Catálogo preparado para a próxima conexão de dados."}</p></div><span>{reports.length} relatório(s)</span></section>
 
+      {readyTemplates.length > 0 && <section><div className="report-catalog-header"><div><h2>Comece com um modelo</h2><p>Estruturas prontas que podem ser ajustadas antes de salvar.</p></div></div><div className="ready-template-strip">{readyTemplates.map((template) => <button key={template.key} onClick={() => applyReadyTemplate(template)}><span>{categoryMeta.sources?.[template.definition.source]?.label}</span><strong>{template.name}</strong><small>{template.description}</small></button>)}</div></section>}
+
       {loading && !preview ? <div className="report-empty">Carregando catálogo...</div> : reports.length ? <div className="report-grid">
         {reports.map((report) => <article className="report-card" key={report.id}><span>{categoryMeta.sources?.[report.source]?.label || report.source}</span><h3>{report.name}</h3><p>{report.description || "Sem descrição"}</p><div className="report-actions"><button onClick={() => run(report.definition)}>Executar</button><button onClick={() => editReport(report)}>Editar</button><button onClick={async () => { await duplicateReport(report.id); reload(); }}>Duplicar</button><button onClick={async () => { if (confirm("Excluir este relatório?")) { await deleteReport(report.id); reload(); } }}>Excluir</button></div></article>)}
       </div> : <div className="report-empty"><strong>Nenhum relatório criado em {categoryMeta.label}.</strong><p>{hasSources ? "Use o construtor para criar o primeiro modelo." : `Fontes previstas: ${categoryMeta.planned_sources.join(", ")}.`}</p></div>}
@@ -142,9 +176,9 @@ export default function Reports(props) {
           <label>Direção<select value={form.order_by[0]?.direction || "asc"} onChange={(e) => setForm({ ...form, order_by: form.order_by.length ? [{ ...form.order_by[0], direction: e.target.value }] : [] })}><option value="asc">Ascendente</option><option value="desc">Descendente</option></select></label>
         </section>
         <section className="builder-section"><h3>Filtros</h3><div className="builder-inline">
-          <select value={draftFilter.field} onChange={(e) => { const field = e.target.value; setDraftFilter({ field, operator: sourceMeta.filters[field]?.operators?.[0] || "eq", value: "" }); }}><option value="">Selecione</option>{Object.entries(sourceMeta.filters).filter(([key]) => key !== "company").map(([key, meta]) => <option key={key} value={key}>{meta.label}</option>)}</select>
+          <select value={draftFilter.field} onChange={(e) => selectFilterField(e.target.value)}><option value="">Selecione</option>{Object.entries(sourceMeta.filters).filter(([key]) => key !== "company").map(([key, meta]) => <option key={key} value={key}>{meta.label}</option>)}</select>
           <select value={draftFilter.operator} onChange={(e) => setDraftFilter({ ...draftFilter, operator: e.target.value })}>{(sourceMeta.filters[draftFilter.field]?.operators || ["eq"]).map((operator) => <option key={operator}>{operator}</option>)}</select>
-          <input placeholder={draftFilter.operator === "between" ? "início, fim" : "valor"} value={draftFilter.value} onChange={(e) => setDraftFilter({ ...draftFilter, value: e.target.value })} /><button type="button" onClick={addFilter}>Adicionar</button>
+          {filterOptions.length ? <select value={draftFilter.value} onChange={(e) => setDraftFilter({ ...draftFilter, value: e.target.value })}><option value="">Escolha uma opção</option>{filterOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> : <input placeholder={draftFilter.operator === "between" ? "início, fim" : "valor"} value={draftFilter.value} onChange={(e) => setDraftFilter({ ...draftFilter, value: e.target.value })} />}<button type="button" onClick={addFilter}>Adicionar</button>
         </div><div className="builder-chips">{form.filters.map((item, index) => <button type="button" key={`${item.field}-${index}`} onClick={() => setForm({ ...form, filters: form.filters.filter((_, position) => position !== index) })}>{sourceMeta.filters[item.field]?.label}: {String(item.value)} ×</button>)}</div></section>
         <section className="builder-section"><h3>Totais</h3><div className="builder-inline">
           <select value={draftTotal.field} onChange={(e) => setDraftTotal({ field: e.target.value, aggregation: sourceMeta.fields[e.target.value]?.aggregations?.[0] || "sum" })}><option value="">Selecione</option>{availableFields.map(([key, field]) => <option key={key} value={key}>{field.label}</option>)}</select>
@@ -154,7 +188,7 @@ export default function Reports(props) {
         <footer className="builder-footer"><button type="button" onClick={() => run()}>Visualizar 50 registros</button><button className="report-primary" type="submit" disabled={!form.fields.length}>Salvar relatório</button></footer>
       </form>}
 
-      {preview && <section className="report-preview-panel"><header><div><span>{preview.cache === "hit" ? "Cache" : `${preview.query_time_ms} ms`}</span><h2>{previewTitle}</h2><p>{preview.row_count} registro(s) encontrados</p></div><div>{["pdf", "excel", "csv"].map((format) => <button key={format} onClick={() => exportReport({ definition: editingId ? reports.find((r) => r.id === editingId)?.definition || definition() : definition(), empresa_id: Number(empresaId), format, template_id: editingId || null })}>{format.toUpperCase()}</button>)}<button onClick={() => window.print()}>Imprimir</button></div></header><ReportChart preview={preview} /><div className="report-table-wrap"><table><thead><tr>{preview.columns.map((column) => <th key={column.key}>{column.label}</th>)}</tr></thead><tbody>{preview.rows.map((row, index) => <tr key={index}>{preview.columns.map((column) => <td key={column.key}>{String(row[column.key] ?? "")}</td>)}</tr>)}</tbody></table></div></section>}
+      {preview && <section className="report-preview-panel"><header><div><span>{preview.cache === "hit" ? "Cache" : `${preview.query_time_ms} ms`}</span><h2>{previewTitle}</h2><p>{preview.row_count} registro(s) encontrados</p></div><div>{["pdf", "excel", "csv"].map((format) => <button key={format} onClick={() => exportReport({ definition: editingId ? reports.find((r) => r.id === editingId)?.definition || definition() : definition(), empresa_id: Number(empresaId), format, template_id: editingId || null })}>{format.toUpperCase()}</button>)}<button onClick={() => window.print()}>Imprimir</button></div></header><ReportChart preview={preview} />{preview.rows.length ? <div className="report-table-wrap"><table><thead><tr>{preview.columns.map((column) => <th key={column.key}>{column.label}</th>)}</tr></thead><tbody>{preview.rows.map((row, index) => <tr key={index}>{preview.columns.map((column) => <td key={column.key}>{formatReportValue(row[column.key], column.type)}</td>)}</tr>)}</tbody></table></div> : <div className="report-empty">Nenhum registro encontrado para os filtros selecionados.</div>}</section>}
     </main>
   </div>;
 }

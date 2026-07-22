@@ -13,7 +13,7 @@ from app.routes.auth import get_current_user
 from app.schemas.reporting import ReportDefinition, ReportExportInput, ReportPreviewInput, ReportTemplateInput
 from app.services.relatorio_export_service import RelatorioExportService
 from app.services.relatorio_pdf_service import RelatorioPdfService
-from app.services.report_catalog import ReportCatalog
+from app.services.report_catalog import READY_TEMPLATES, ReportCatalog
 from app.services.report_engine import ReportEngine, clear_report_cache
 from app.services.report_template_service import ReportTemplateService
 
@@ -36,6 +36,19 @@ def catalog(db: Session = Depends(get_db), user=Depends(get_current_user)):
     report_catalog = ReportCatalog()
     report_catalog.sync_metadata(db)
     return report_catalog.public_catalog()
+
+
+@router.get("/catalog/{category}/{source}/filters/{filter_key}/options")
+def filter_options(category: str, source: str, filter_key: str, empresa_id: int, search: str = "", user=Depends(get_current_user)):
+    try:
+        return ReportEngine().filter_options(category, source, filter_key, _tenant(), empresa_id, search)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@router.get("/ready-templates")
+def ready_templates(category: str | None = None, user=Depends(get_current_user)):
+    return [item for item in READY_TEMPLATES if not category or item["definition"]["category"] == category]
 
 
 @router.get("")

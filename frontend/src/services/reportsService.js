@@ -1,6 +1,8 @@
 import api from "./api";
 
 export const getReportCatalog = async () => (await api.get("/reports/catalog")).data;
+export const getReadyTemplates = async (category) => (await api.get("/reports/ready-templates", { params: { category } })).data;
+export const getFilterOptions = async (category, source, filter, empresaId, search = "") => (await api.get(`/reports/catalog/${category}/${source}/filters/${filter}/options`, { params: { empresa_id: empresaId, search } })).data;
 export const listReports = async (category) => (await api.get("/reports", { params: { category } })).data;
 export const createReport = async (payload) => (await api.post("/reports", payload)).data;
 export const updateReport = async (id, payload) => (await api.put(`/reports/${id}`, payload)).data;
