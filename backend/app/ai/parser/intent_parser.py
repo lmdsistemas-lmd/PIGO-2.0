@@ -1,7 +1,6 @@
 import re
-from abc import ABC, abstractmethod
 
-from app.schemas.report_assistant import ReportIntent, ReportIntentFilter
+from app.ai.schemas.intent import ReportIntent, ReportIntentFilter
 from app.services.business_knowledge_layer import BUSINESS_METRICS, BUSINESS_OBJECTS, BusinessKnowledgeLayer, _normalize
 
 
@@ -26,17 +25,11 @@ class UnsafeReportRequest(ValueError):
     pass
 
 
-class ReportIntentProvider(ABC):
-    @abstractmethod
-    def interpret(self, prompt: str, answers: dict[str, str] | None = None) -> tuple[ReportIntent, float]:
-        raise NotImplementedError
-
-
-class DeterministicIntentProvider(ReportIntentProvider):
+class DeterministicIntentParser:
     def __init__(self):
         self.knowledge = BusinessKnowledgeLayer()
 
-    def interpret(self, prompt: str, answers: dict[str, str] | None = None) -> tuple[ReportIntent, float]:
+    def parse(self, prompt: str, answers: dict[str, str] | None = None) -> tuple[ReportIntent, float]:
         text = _normalize(prompt)
         if not text:
             raise ValueError("Informe o relatório que deseja criar.")

@@ -1,7 +1,8 @@
 import unittest
 
-from app.services.report_assistant_service import ReportAssistantPermissionError, ReportAssistantService
-from app.services.report_intent_provider import DeterministicIntentProvider
+from app.ai.providers.deterministic_provider import DeterministicIntentProvider
+from app.ai.services.assistant_service import ReportAssistantService
+from app.ai.validators.permission_validator import ReportPermissionError
 
 
 class FakeEngine:
@@ -78,7 +79,7 @@ class ReportAssistantTests(unittest.TestCase):
         self.assertEqual(no_match.code, "REPORT_FILTER_NOT_FOUND")
 
     def test_finance_source_respects_role(self):
-        with self.assertRaises(ReportAssistantPermissionError):
+        with self.assertRaises(ReportPermissionError):
             self.interpret("Recebimentos em aberto por cliente", user={"sub": "limited", "role": "sales"})
 
     def test_response_never_exposes_physical_query_details(self):

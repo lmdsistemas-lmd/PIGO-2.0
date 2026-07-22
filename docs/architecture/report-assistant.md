@@ -2,6 +2,8 @@
 
 O assistente transforma linguagem de negócio em uma `ReportDefinition` revisável. Ele não executa preview, não salva relatórios e não recebe nem produz SQL.
 
+O código fica isolado em `backend/app/ai`, dividido em `providers`, `parser`, `validators`, `schemas` e `services`. O Report Engine permanece fora desse pacote e não depende de fornecedor de IA.
+
 Fluxo da primeira versão:
 
 1. `DeterministicIntentProvider` normaliza o texto e reconhece objetos, métricas, dimensões, períodos e filtros.

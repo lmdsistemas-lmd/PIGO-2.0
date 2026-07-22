@@ -4,11 +4,14 @@ from collections import defaultdict, deque
 from threading import Lock
 
 from app.core.report_ai_config import REPORT_ASSISTANT_RATE_LIMIT_PER_MINUTE
-from app.schemas.report_assistant import ReportAssistantResult
-from app.services.business_knowledge_layer import BUSINESS_METRICS, BUSINESS_OBJECTS, BusinessKnowledgeLayer, _normalize
+from app.ai.parser.intent_parser import UnsafeReportRequest
+from app.ai.providers.deterministic_provider import DeterministicIntentProvider
+from app.ai.schemas.intent import ReportAssistantResult
+from app.ai.services.intent_to_definition import FILTER_FIELDS, ReportIntentToDefinitionService
+from app.ai.validators.permission_validator import ReportPermissionValidator
+from app.ai.validators.semantic_validator import ReportSemanticValidator
+from app.services.business_knowledge_layer import _normalize
 from app.services.report_engine import ReportEngine
-from app.services.report_intent_provider import DeterministicIntentProvider, UnsafeReportRequest
-from app.services.report_intent_to_definition_service import FILTER_FIELDS, ReportIntentToDefinitionService
 
 
 _requests = defaultdict(deque)
@@ -19,16 +22,13 @@ class ReportAssistantRateLimitError(RuntimeError):
     pass
 
 
-class ReportAssistantPermissionError(PermissionError):
-    pass
-
-
 class ReportAssistantService:
     def __init__(self, provider=None, converter=None, engine=None):
         self.provider = provider or DeterministicIntentProvider()
         self.converter = converter or ReportIntentToDefinitionService()
         self.engine = engine or ReportEngine()
-        self.knowledge = BusinessKnowledgeLayer()
+        self.semantic_validator = ReportSemanticValidator()
+        self.permission_validator = ReportPermissionValidator()
 
     def interpret(self, prompt, company_id, tenant_id, user, request_id="", answers=None):
         started = time.perf_counter()
@@ -40,7 +40,7 @@ class ReportAssistantService:
         except ValueError as exc:
             return self._result(False, "REPORT_INTENT_LOW_CONFIDENCE", request_id, message=str(exc), suggestions=self._low_confidence_suggestions())
 
-        unavailable = self._unavailable(intent)
+        unavailable, ambiguities = self.semantic_validator.evaluate(intent)
         if unavailable:
             return self._result(
                 False, "REPORT_CONCEPT_UNAVAILABLE", request_id, intent=intent,
@@ -48,14 +48,12 @@ class ReportAssistantService:
                 unavailable_concepts=unavailable, suggestions=["receivable"] if "payment" in unavailable else [],
             )
 
-        validation = self.knowledge.validate(objects=intent.objects, metrics=intent.metrics, dimensions=intent.dimensions)
-        ambiguities = [warning for warning in validation["warnings"] if warning["code"] == "AMBIGUOUS_DIMENSION"]
         if ambiguities:
-            return self._result(False, "REPORT_INTENT_AMBIGUOUS", request_id, intent=intent, confidence=confidence, questions=self._questions(ambiguities))
+            return self._result(False, "REPORT_INTENT_AMBIGUOUS", request_id, intent=intent, confidence=confidence, questions=self.semantic_validator.questions(ambiguities))
         if confidence < 0.65 or not intent.metrics:
             return self._result(False, "REPORT_INTENT_LOW_CONFIDENCE", request_id, intent=intent, confidence=confidence, message="Não consegui entender o relatório com segurança.", suggestions=self._low_confidence_suggestions())
 
-        self._check_permission(intent.category, user)
+        self.permission_validator.validate(intent.category, user)
         try:
             self._resolve_filters(intent, tenant_id, company_id)
             definition = self.converter.convert(intent, company_id)
@@ -76,28 +74,6 @@ class ReportAssistantService:
     def _result(success, code, request_id, **kwargs):
         return ReportAssistantResult(success=success, code=code, request_id=request_id, **kwargs)
 
-    @staticmethod
-    def _unavailable(intent):
-        unavailable = []
-        for object_id in intent.objects:
-            if BUSINESS_OBJECTS.get(object_id, {}).get("planned"):
-                unavailable.append(object_id)
-        for metric_id in intent.metrics:
-            if metric_id not in BUSINESS_METRICS or BUSINESS_METRICS[metric_id].get("planned") or not BUSINESS_METRICS[metric_id].get("definition"):
-                unavailable.append(metric_id)
-        return sorted(set(unavailable))
-
-    @staticmethod
-    def _questions(ambiguities):
-        questions = []
-        for warning in ambiguities:
-            concept = warning["concept"]
-            questions.append({
-                "id": f"{concept}_context", "question": f"Qual {BUSINESS_OBJECTS[concept]['name'].lower()} você deseja utilizar?",
-                "options": [{"value": f"{owner}_{concept}", "label": f"{BUSINESS_OBJECTS[concept]['name']} do {BUSINESS_OBJECTS[owner]['name'].lower()}"} for owner in warning["options"]],
-            })
-        return questions
-
     def _resolve_filters(self, intent, tenant_id, company_id):
         if not intent.filters:
             return
@@ -113,12 +89,6 @@ class ReportAssistantService:
                 raise LookupError(f"Não foi encontrada uma opção única para {item.concept}: {item.value}.")
             item.value = matches[0]["value"]
             item.requires_resolution = False
-
-    @staticmethod
-    def _check_permission(category, user):
-        role = str(user.get("role") or user.get("perfil") or "").lower()
-        if category == "finance" and role not in {"administrator", "administrador", "admin", "erp-admin", "finance", "financeiro", "supervisor"}:
-            raise ReportAssistantPermissionError("O usuário não possui acesso às fontes financeiras.")
 
     @staticmethod
     def _low_confidence_suggestions():

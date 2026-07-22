@@ -1,3 +1,5 @@
+"""Contratos públicos e independentes de fornecedor para o assistente."""
+
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field

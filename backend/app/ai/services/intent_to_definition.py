@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 
-from app.schemas.report_assistant import ReportIntent
+from app.ai.schemas.intent import ReportIntent
 from app.schemas.reporting import ReportDefinition, ReportFilterValue, ReportOrder, ReportTotal
 from app.services.report_catalog import ReportCatalog
 from app.services.report_query_builder import ReportQueryBuilder
