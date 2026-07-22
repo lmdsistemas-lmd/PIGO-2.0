@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "test:reports": "node --test tests/reports-workspace.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

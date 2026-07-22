@@ -1,0 +1,3 @@
+export default function ReportTemplates({ templates, sources, onUse }) {
+  return <section className="reports-library-section"><header><div><span>Início rápido</span><h2>Modelos prontos</h2></div></header>{templates.length ? <div className="reports-template-row">{templates.map((template) => <button key={template.key} onClick={() => onUse(template)}><span>{sources[template.definition.source]?.label}</span><strong>{template.name}</strong><small>{template.description}</small><b>Usar modelo →</b></button>)}</div> : <div className="reports-empty compact">Nenhum modelo disponível nesta categoria.</div>}</section>;
+}

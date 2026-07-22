@@ -104,6 +104,11 @@ function AppLayout() {
           <Route path="/estoque" element={<Navigate to="/dashboard/estoque" replace />} />
 
           <Route path="/relatorios" element={<Reports {...sharedLayoutProps} />} />
+          <Route path="/relatorios/:categoria" element={<Reports {...sharedLayoutProps} />} />
+          <Route path="/relatorios/:categoria/novo" element={<Reports {...sharedLayoutProps} />} />
+          <Route path="/relatorios/:categoria/preview-temporario" element={<Reports {...sharedLayoutProps} />} />
+          <Route path="/relatorios/:categoria/:reportId/editar" element={<Reports {...sharedLayoutProps} />} />
+          <Route path="/relatorios/:categoria/:reportId/preview" element={<Reports {...sharedLayoutProps} />} />
 
           <Route path="/funcionarios" element={<Funcionarios {...sharedLayoutProps} />} />
           <Route
