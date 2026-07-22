@@ -57,3 +57,13 @@ class ReportPreviewInput(BaseModel):
 class ReportExportInput(ReportPreviewInput):
     format: Literal["pdf", "excel", "csv"]
     template_id: UUID | None = None
+
+
+class BusinessValidationInput(BaseModel):
+    objects: list[str] = Field(default_factory=list)
+    metrics: list[str] = Field(default_factory=list)
+    dimensions: list[str] = Field(default_factory=list)
+
+
+class BusinessIntentInput(BaseModel):
+    text: str = Field(min_length=3, max_length=1000)

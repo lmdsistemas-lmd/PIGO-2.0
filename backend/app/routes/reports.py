@@ -10,10 +10,11 @@ from app.database.connection import get_db
 from app.database.erp_connection import current_tenant_id
 from app.models.reporting import ReportExport, ReportRun
 from app.routes.auth import get_current_user
-from app.schemas.reporting import ReportDefinition, ReportExportInput, ReportPreviewInput, ReportTemplateInput
+from app.schemas.reporting import BusinessIntentInput, BusinessValidationInput, ReportDefinition, ReportExportInput, ReportPreviewInput, ReportTemplateInput
 from app.services.relatorio_export_service import RelatorioExportService
 from app.services.relatorio_pdf_service import RelatorioPdfService
 from app.services.business_semantic_layer import BusinessSemanticLayer
+from app.services.business_knowledge_layer import BusinessKnowledgeLayer
 from app.services.report_catalog import CATALOG, READY_TEMPLATES, ReportCatalog
 from app.services.report_engine import ReportEngine, clear_report_cache
 from app.services.report_template_service import ReportTemplateService
@@ -42,6 +43,21 @@ def catalog(db: Session = Depends(get_db), user=Depends(get_current_user)):
 @router.get("/semantics")
 def semantics(user=Depends(get_current_user)):
     return BusinessSemanticLayer().public_dictionary(CATALOG)
+
+
+@router.get("/knowledge")
+def business_knowledge(user=Depends(get_current_user)):
+    return BusinessKnowledgeLayer().public_model()
+
+
+@router.post("/knowledge/validate")
+def validate_business_knowledge(payload: BusinessValidationInput, user=Depends(get_current_user)):
+    return BusinessKnowledgeLayer().validate(**payload.model_dump())
+
+
+@router.post("/knowledge/parse-intent")
+def parse_business_intent(payload: BusinessIntentInput, user=Depends(get_current_user)):
+    return BusinessKnowledgeLayer().parse_intent(payload.text)
 
 
 @router.get("/catalog/{category}/{source}/filters/{filter_key}/options")
