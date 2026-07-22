@@ -1,5 +1,9 @@
+import logging
+import time
+
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from sqlalchemy import func, text
+from sqlalchemy.exc import DBAPIError, TimeoutError as SQLAlchemyTimeoutError
 from sqlalchemy.orm import Session
 
 from app.core.security import create_access_token, decode_access_token
@@ -10,6 +14,17 @@ from app.services.tenant_access_service import get_tenant_by_cnpj, validate_tena
 
 
 router = APIRouter(prefix="/auth", tags=["Autenticacao"])
+logger = logging.getLogger("pigo.auth")
+
+
+def _login_stage(request: Request, stage: str, started_at: float, **context) -> None:
+    logger.info(
+        "%s request_id=%s duration_ms=%s %s",
+        stage,
+        getattr(request.state, "trace_id", ""),
+        round((time.perf_counter() - started_at) * 1000, 2),
+        " ".join(f"{key}={value}" for key, value in context.items()),
+    )
 
 
 def _client_ip(request: Request) -> str | None:
@@ -97,17 +112,36 @@ def _find_synced_erp_user(db: Session, tenant: Tenant, login_value: str):
 
 @router.post("/login")
 def login(payload: dict, request: Request, db: Session = Depends(get_db)):
+    started_at = time.perf_counter()
+    _login_stage(request, "login.request.received", started_at)
+    _login_stage(request, "login.validation.started", started_at)
     cnpj_value = _only_digits(payload.get("cnpj") or payload.get("license_cnpj") or "")
     login_value = str(payload.get("login") or payload.get("email") or "").strip()
     password = str(payload.get("senha") or payload.get("password") or "").strip()
 
     if not cnpj_value or not login_value or not password:
+        _login_stage(request, "login.response.sent", started_at, status=400, code="INVALID_LOGIN_PAYLOAD")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="CNPJ, login e senha do ERP sao obrigatorios",
         )
 
-    tenant = get_tenant_by_cnpj(db, cnpj_value)
+    _login_stage(request, "login.database.started", started_at, operation="tenant_lookup")
+    try:
+        tenant = get_tenant_by_cnpj(db, cnpj_value)
+    except (SQLAlchemyTimeoutError, DBAPIError) as exc:
+        db.rollback()
+        logger.error(
+            "login.database.failed request_id=%s duration_ms=%s error_type=%s",
+            getattr(request.state, "trace_id", ""),
+            round((time.perf_counter() - started_at) * 1000, 2),
+            type(exc).__name__,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "AUTH_DATABASE_UNAVAILABLE", "message": "Serviço de autenticação temporariamente indisponível."},
+        ) from exc
+    _login_stage(request, "login.database.finished", started_at, operation="tenant_lookup", found=bool(tenant))
     if not tenant:
         write_audit_log(
             db,
@@ -117,6 +151,8 @@ def login(payload: dict, request: Request, db: Session = Depends(get_db)):
             metadata={"login": login_value, "cnpj": cnpj_value, "source": "license_control"},
         )
         db.commit()
+        _login_stage(request, "login.authentication.finished", started_at, success=False, code="TENANT_NOT_FOUND")
+        _login_stage(request, "login.response.sent", started_at, status=403)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Empresa nao sincronizada pelo License Control")
 
     access_ok, access_message = validate_tenant_access(tenant)
@@ -137,9 +173,26 @@ def login(payload: dict, request: Request, db: Session = Depends(get_db)):
             },
         )
         db.commit()
+        _login_stage(request, "login.authentication.finished", started_at, success=False, code="LICENSE_BLOCKED")
+        _login_stage(request, "login.response.sent", started_at, status=403)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=access_message)
 
-    erp_user = _find_synced_erp_user(db, tenant, login_value)
+    _login_stage(request, "login.database.started", started_at, operation="user_lookup")
+    try:
+        erp_user = _find_synced_erp_user(db, tenant, login_value)
+    except (SQLAlchemyTimeoutError, DBAPIError) as exc:
+        db.rollback()
+        logger.error(
+            "login.database.failed request_id=%s duration_ms=%s error_type=%s",
+            getattr(request.state, "trace_id", ""),
+            round((time.perf_counter() - started_at) * 1000, 2),
+            type(exc).__name__,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "AUTH_DATABASE_UNAVAILABLE", "message": "Serviço de autenticação temporariamente indisponível."},
+        ) from exc
+    _login_stage(request, "login.database.finished", started_at, operation="user_lookup", found=bool(erp_user))
     if not erp_user or not _password_matches(erp_user["senha"], password):
         write_audit_log(
             db,
@@ -149,6 +202,8 @@ def login(payload: dict, request: Request, db: Session = Depends(get_db)):
             metadata={"login": login_value, "cnpj": cnpj_value},
         )
         db.commit()
+        _login_stage(request, "login.authentication.finished", started_at, success=False, code="INVALID_CREDENTIALS")
+        _login_stage(request, "login.response.sent", started_at, status=401)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuario ou senha invalidos no ERP")
 
     if not _is_admin_flag(erp_user["administrador"]):
@@ -160,6 +215,8 @@ def login(payload: dict, request: Request, db: Session = Depends(get_db)):
             metadata={"login": login_value, "cnpj": cnpj_value},
         )
         db.commit()
+        _login_stage(request, "login.authentication.finished", started_at, success=False, code="ADMIN_REQUIRED")
+        _login_stage(request, "login.response.sent", started_at, status=403)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Usuario sem permissao administrativa no ERP")
 
     write_audit_log(
@@ -189,6 +246,9 @@ def login(payload: dict, request: Request, db: Session = Depends(get_db)):
             "empresa": _tenant_display_name(tenant),
         }
     )
+
+    _login_stage(request, "login.authentication.finished", started_at, success=True)
+    _login_stage(request, "login.response.sent", started_at, status=200)
 
     return {
         "access_token": access_token,
