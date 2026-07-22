@@ -1,0 +1,18 @@
+import api from "./api";
+
+export const getReportCatalog = async () => (await api.get("/reports/catalog")).data;
+export const listReports = async (category) => (await api.get("/reports", { params: { category } })).data;
+export const createReport = async (payload) => (await api.post("/reports", payload)).data;
+export const updateReport = async (id, payload) => (await api.put(`/reports/${id}`, payload)).data;
+export const duplicateReport = async (id) => (await api.post(`/reports/${id}/duplicate`)).data;
+export const deleteReport = async (id) => api.delete(`/reports/${id}`);
+export const previewReport = async (payload) => (await api.post("/reports/preview", payload)).data;
+export async function exportReport(payload) {
+  const response = await api.post("/reports/export", payload, { responseType: "blob" });
+  const url = URL.createObjectURL(response.data);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `relatorio-pigo.${payload.format === "excel" ? "xlsx" : payload.format}`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}

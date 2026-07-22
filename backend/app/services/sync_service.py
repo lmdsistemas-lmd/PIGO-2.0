@@ -73,6 +73,10 @@ class SyncService:
             job.finished_at = datetime.now()
             db.commit()
 
+            from app.services.report_engine import clear_report_cache
+
+            clear_report_cache(str(tenant.id))
+
             logger.info(
                 "[SYNC] completed tenant_id=%s tenant_cnpj=%s data_type=%s destination=%s "
                 "received=%s inserted=%s updated=%s ignored=%s ignored_reasons=%s pk=%s",

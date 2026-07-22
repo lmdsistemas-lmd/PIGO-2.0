@@ -15,7 +15,7 @@ from app.routes.indicadores import router as indicadores_router
 from app.routes.performance import router as performance_router
 from app.routes.dashboard_financeiro import router as dashboard_financeiro_router
 from app.routes.dashboard_vendas import router as dashboard_vendas_router
-from app.routes.relatorio import router as relatorio_router
+from app.routes.reports import router as reports_router
 from app.routes.auth import router as auth_router
 from app.routes.license import router as license_router
 from app.routes.me import router as me_router
@@ -108,7 +108,7 @@ app.include_router(indicadores_router, prefix="/api")
 app.include_router(performance_router, prefix="/api")
 app.include_router(dashboard_financeiro_router, prefix="/api")
 app.include_router(dashboard_vendas_router, prefix="/api")
-app.include_router(relatorio_router, prefix="/api")
+app.include_router(reports_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
 app.include_router(license_router, prefix="/api")
 app.include_router(me_router, prefix="/api")

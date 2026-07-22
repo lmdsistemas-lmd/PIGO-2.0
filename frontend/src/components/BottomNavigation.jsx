@@ -1,18 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import FeatureDevelopmentModal from "./FeatureDevelopmentModal";
 import "../styles/bottom-navigation.css";
 
-const REPORTS_DEVELOPMENT_MESSAGE = [
-  "Estamos trabalhando para disponibilizar este módulo em breve.",
-  "A área de Relatórios está em desenvolvimento e receberá diversos recursos para geração de relatórios gerenciais, financeiros, operacionais e indicadores do sistema.",
-  "Em uma próxima atualização, esta funcionalidade estará disponível.",
-];
-
-function BottomNavigation({ onReportsDevelopment = () => {} }) {
+function BottomNavigation() {
   const location = useLocation();
   const [outrosOpen, setOutrosOpen] = useState(false);
-  const [reportsDevelopmentOpen, setReportsDevelopmentOpen] = useState(false);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -82,13 +74,6 @@ function BottomNavigation({ onReportsDevelopment = () => {} }) {
     },
   ];
 
-  function handleReportsClick(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    setOutrosOpen(false);
-    setReportsDevelopmentOpen(true);
-  }
-
   return (
     <>
       {outrosOpen && (
@@ -127,19 +112,6 @@ function BottomNavigation({ onReportsDevelopment = () => {} }) {
           {outrosOpen && (
             <div className="bottom-nav-popup">
               {outrosItems.map((item) =>
-                item.path === "/relatorios" ? (
-                  <button
-                    key={item.path}
-                    type="button"
-                    className={`bottom-nav-popup-item ${item.active ? "active" : ""}`}
-                    onClick={handleReportsClick}
-                  >
-                    <div className="bottom-nav-popup-icon">
-                      <img src={item.icon} alt="" aria-hidden="true" />
-                    </div>
-                    <span className="bottom-nav-popup-label">{item.label}</span>
-                  </button>
-                ) : (
                   <Link
                     key={item.path}
                     to={item.path}
@@ -151,19 +123,12 @@ function BottomNavigation({ onReportsDevelopment = () => {} }) {
                     </div>
                     <span className="bottom-nav-popup-label">{item.label}</span>
                   </Link>
-                )
               )}
             </div>
           )}
         </div>
       </nav>
 
-      <FeatureDevelopmentModal
-        open={reportsDevelopmentOpen}
-        title="🚧 Relatórios em Desenvolvimento"
-        message={REPORTS_DEVELOPMENT_MESSAGE}
-        onClose={() => setReportsDevelopmentOpen(false)}
-      />
     </>
   );
 }

@@ -1,32 +1,17 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import FeatureDevelopmentModal from "./FeatureDevelopmentModal";
 import "../styles/sidebar.css";
-
-const REPORTS_DEVELOPMENT_MESSAGE = [
-  "Estamos trabalhando para disponibilizar este módulo em breve.",
-  "A área de Relatórios está em desenvolvimento e receberá diversos recursos para geração de relatórios gerenciais, financeiros, operacionais e indicadores do sistema.",
-  "Em uma próxima atualização, esta funcionalidade estará disponível.",
-];
 
 function Sidebar({
   isMobileOrTablet = false,
   isOpen = false,
   onClose = () => {},
-  onReportsDevelopment = () => {},
 }) {
   const location = useLocation();
 
   const [dashboardOpen, setDashboardOpen] = useState(
     location.pathname.startsWith("/dashboard")
   );
-  const [reportsDevelopmentOpen, setReportsDevelopmentOpen] = useState(false);
-
-  useEffect(() => {
-    if (location.pathname.startsWith("/dashboard")) {
-      setDashboardOpen(true);
-    }
-  }, [location.pathname]);
 
   const isDashboardRoute = location.pathname.startsWith("/dashboard");
   const isVendasRoute = location.pathname === "/dashboard/vendas";
@@ -36,6 +21,7 @@ function Sidebar({
   const isRelatoriosRoute = location.pathname.startsWith("/relatorios");
   const isFuncionariosRoute = location.pathname.startsWith("/funcionarios");
   const isPerformanceRoute = location.pathname.startsWith("/performance");
+  const showDashboardSubmenu = dashboardOpen || isDashboardRoute;
 
   function handleDashboardClick() {
     setDashboardOpen((prev) => !prev);
@@ -45,13 +31,6 @@ function Sidebar({
     if (isMobileOrTablet) {
       onClose();
     }
-  }
-
-  function handleReportsClick(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    setReportsDevelopmentOpen(true);
-    handleMobileNavigate();
   }
 
   return (
@@ -88,7 +67,7 @@ function Sidebar({
             <span className="menu-label">Dashboard</span>
           </button>
 
-          {dashboardOpen && (
+          {showDashboardSubmenu && (
             <div className="submenu">
               <Link
                 to="/dashboard/vendas"
@@ -133,9 +112,9 @@ function Sidebar({
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={handleReportsClick}
+        <Link
+          to="/relatorios"
+          onClick={handleMobileNavigate}
           className={`menu-item ${isRelatoriosRoute ? "active" : ""}`}
           title="Relatórios"
         >
@@ -143,7 +122,7 @@ function Sidebar({
             <img src="/icons/relatorio.svg" alt="" />
           </span>
           <span className="menu-label">Relatórios</span>
-        </button>
+        </Link>
 
         <Link
           to="/funcionarios"
@@ -171,12 +150,6 @@ function Sidebar({
         </nav>
       </aside>
 
-      <FeatureDevelopmentModal
-        open={reportsDevelopmentOpen}
-        title="🚧 Relatórios em Desenvolvimento"
-        message={REPORTS_DEVELOPMENT_MESSAGE}
-        onClose={() => setReportsDevelopmentOpen(false)}
-      />
     </>
   );
 }
