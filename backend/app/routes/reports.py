@@ -13,7 +13,8 @@ from app.routes.auth import get_current_user
 from app.schemas.reporting import ReportDefinition, ReportExportInput, ReportPreviewInput, ReportTemplateInput
 from app.services.relatorio_export_service import RelatorioExportService
 from app.services.relatorio_pdf_service import RelatorioPdfService
-from app.services.report_catalog import READY_TEMPLATES, ReportCatalog
+from app.services.business_semantic_layer import BusinessSemanticLayer
+from app.services.report_catalog import CATALOG, READY_TEMPLATES, ReportCatalog
 from app.services.report_engine import ReportEngine, clear_report_cache
 from app.services.report_template_service import ReportTemplateService
 
@@ -36,6 +37,11 @@ def catalog(db: Session = Depends(get_db), user=Depends(get_current_user)):
     report_catalog = ReportCatalog()
     report_catalog.sync_metadata(db)
     return report_catalog.public_catalog()
+
+
+@router.get("/semantics")
+def semantics(user=Depends(get_current_user)):
+    return BusinessSemanticLayer().public_dictionary(CATALOG)
 
 
 @router.get("/catalog/{category}/{source}/filters/{filter_key}/options")

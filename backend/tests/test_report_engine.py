@@ -1,7 +1,8 @@
 import unittest
 
 from app.schemas.reporting import ReportDefinition, ReportFilterValue, ReportTotal
-from app.services.report_catalog import READY_TEMPLATES, ReportCatalog
+from app.services.report_catalog import CATALOG, READY_TEMPLATES, ReportCatalog
+from app.services.business_semantic_layer import BusinessSemanticLayer
 from app.services.report_engine import ReportEngine, clear_report_cache
 from app.services.report_query_builder import ReportQueryBuilder
 
@@ -28,6 +29,14 @@ class ReportEngineTests(unittest.TestCase):
         self.assertNotIn("table", source)
         self.assertNotIn("joins", catalog["sales"]["sources"]["items"])
         self.assertNotIn("expression", source["fields"]["total"])
+        for category in catalog.values():
+            for public_source in category["sources"].values():
+                for field in public_source["fields"].values():
+                    self.assertTrue(field["semantic_id"])
+                    self.assertTrue(field["description"])
+                    self.assertTrue(field["help"])
+                    self.assertIn("can_group", field)
+                    self.assertIn("can_filter", field)
 
     def test_unknown_field_and_filter_are_rejected(self):
         with self.assertRaises(ValueError):
@@ -95,6 +104,22 @@ class ReportEngineTests(unittest.TestCase):
         for template in READY_TEMPLATES:
             definition = ReportDefinition.model_validate(template["definition"])
             builder.build(definition, 1)
+
+    def test_business_dictionary_contains_no_physical_identifiers(self):
+        dictionary = BusinessSemanticLayer().public_dictionary(CATALOG)
+        serialized = str(dictionary).upper()
+        self.assertNotIn("TB_", serialized)
+        self.assertNotIn("PEV_", serialized)
+        self.assertNotIn("REC_", serialized)
+        self.assertTrue(any(item["semantic_id"] == "sales.orders.total" for item in dictionary))
+
+    def test_preview_columns_use_business_metadata(self):
+        provider = FakeProvider(); engine = ReportEngine(provider=provider)
+        result = engine.execute(self.definition, "tenant-semantic", 1)
+        total = next(item for item in result["columns"] if item["key"] == "total")
+        self.assertEqual(total["label"], "Valor da venda")
+        self.assertEqual(total["format"], "currency")
+        self.assertTrue(total["description"])
 
 
 if __name__ == "__main__":

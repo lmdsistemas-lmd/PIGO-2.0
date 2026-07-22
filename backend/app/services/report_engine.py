@@ -80,7 +80,13 @@ class ReportEngine:
             label = source["fields"].get(base_key, {}).get("label", key.replace("_", " ").title())
             if aggregation:
                 label = f"{label} ({aggregation})"
-            columns.append({"key": key, "label": label, "type": source["fields"].get(base_key, {}).get("type", "text")})
+            semantic = source["fields"].get(base_key, {})
+            columns.append({
+                "key": key, "label": label, "type": semantic.get("type", "text"),
+                "format": semantic.get("format", semantic.get("type", "text")),
+                "description": semantic.get("description", ""), "help": semantic.get("help", ""),
+                "semantic_id": semantic.get("semantic_id", ""),
+            })
         return columns
 
     def filter_options(self, category, source, filter_key, tenant_id, empresa_id, search=""):

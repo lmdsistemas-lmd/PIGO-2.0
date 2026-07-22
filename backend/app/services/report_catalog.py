@@ -1,6 +1,7 @@
 from copy import deepcopy
 import json
 from sqlalchemy import text
+from app.services.business_semantic_layer import BusinessSemanticLayer
 
 
 def _field(label, expression, data_type="text", aggregations=None):
@@ -151,6 +152,11 @@ CATALOG["sales"]["sources"].update({
 })
 CATALOG["sales"]["planned_sources"] = ["Comissões", "Metas", "Cancelamentos"]
 
+_semantic_layer = BusinessSemanticLayer()
+for _category_key, _category in CATALOG.items():
+    for _source_key, _source in list(_category["sources"].items()):
+        _category["sources"][_source_key] = _semantic_layer.enrich_source(_category_key, _source_key, _source)
+
 READY_TEMPLATES = [
     {"key": "sales_by_product", "name": "Vendas por produto", "description": "Quantidade e valor vendido por produto.", "definition": {"category": "sales", "source": "items", "fields": ["product", "quantity", "total"], "filters": [], "group_by": ["product"], "order_by": [{"field": "total_sum", "direction": "desc"}], "totals": [{"field": "quantity", "aggregation": "sum"}, {"field": "total", "aggregation": "sum"}], "chart": "bar"}},
     {"key": "sales_by_group", "name": "Vendas por grupo", "description": "Faturamento agrupado por grupo de produtos.", "definition": {"category": "sales", "source": "items", "fields": ["group", "total"], "filters": [], "group_by": ["group"], "order_by": [{"field": "total_sum", "direction": "desc"}], "totals": [{"field": "total", "aggregation": "sum"}], "chart": "pie"}},
@@ -176,10 +182,11 @@ class ReportCatalog:
                     ON CONFLICT (key) DO UPDATE SET name=EXCLUDED.name, metadata=EXCLUDED.metadata"""),
                     {"category": category_key, "key": source_key, "name": source["label"], "metadata": '{}'})
                 for field_position, (field_key, field) in enumerate(source["fields"].items(), 1):
-                    db.execute(text("""INSERT INTO report_fields(source_key,key,label,data_type,aggregations,position)
-                        VALUES (:source,:key,:label,:type,CAST(:aggregations AS jsonb),:position)
-                        ON CONFLICT (source_key,key) DO UPDATE SET label=EXCLUDED.label,data_type=EXCLUDED.data_type,aggregations=EXCLUDED.aggregations,position=EXCLUDED.position"""),
-                        {"source": source_key, "key": field_key, "label": field["label"], "type": field["type"], "aggregations": json.dumps(field["aggregations"]), "position": field_position})
+                    semantic_metadata = {key: value for key, value in field.items() if key not in {"expression", "aggregations", "type", "label"}}
+                    db.execute(text("""INSERT INTO report_fields(source_key,key,label,data_type,aggregations,position,semantic_metadata)
+                        VALUES (:source,:key,:label,:type,CAST(:aggregations AS jsonb),:position,CAST(:semantic AS jsonb))
+                        ON CONFLICT (source_key,key) DO UPDATE SET label=EXCLUDED.label,data_type=EXCLUDED.data_type,aggregations=EXCLUDED.aggregations,position=EXCLUDED.position,semantic_metadata=EXCLUDED.semantic_metadata"""),
+                        {"source": source_key, "key": field_key, "label": field["label"], "type": field["type"], "aggregations": json.dumps(field["aggregations"]), "position": field_position, "semantic": json.dumps(semantic_metadata)})
                 for filter_key, filter_meta in source["filters"].items():
                     db.execute(text("""INSERT INTO report_filters(source_key,key,label,data_type,operators,options)
                         VALUES (:source,:key,:label,'select',CAST(:operators AS jsonb),CAST(:options AS jsonb))
