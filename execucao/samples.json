@@ -1,0 +1,4876 @@
+{
+  "mode": "disconnected synthetic visual preview",
+  "fixture_date": "2026-10-16",
+  "samples": [
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "query": "",
+      "data": {
+        "id": "dev-local",
+        "login": "dev-local",
+        "nome": "PIGO Desenvolvimento",
+        "perfil": "Administrador ERP",
+        "role": "erp-admin",
+        "cnpj": "00000000000191",
+        "tenant_id": "52b65504-6e81-5238-87ae-4415fcb613e9",
+        "empresa": "PIGO Desenvolvimento",
+        "auth_source": "erp",
+        "permissions": null
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/me/tenant",
+      "query": "",
+      "data": {
+        "tenant_id": "52b65504-6e81-5238-87ae-4415fcb613e9",
+        "cnpj": "00000000000191",
+        "razao_social": "PIGO Desenvolvimento",
+        "nome_fantasia": "PIGO Desenvolvimento",
+        "display_name": "PIGO Desenvolvimento",
+        "has_pigo_access": true,
+        "license_status": "active",
+        "expires_at": "2026-11-15T22:25:15.306283+00:00",
+        "environment": "development",
+        "api_token_active": true
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/dashboard/vendas",
+      "query": "empresa_id=1&period=month",
+      "data": {
+        "resumo": {
+          "faturamento": 1000.0,
+          "pedidos": 4,
+          "ticketMedio": 250.0,
+          "itensPorVenda": 1.0,
+          "custoTotal": 40.0,
+          "lucroBruto": 960.0,
+          "margemLucro": 96.0,
+          "markup": 2400.0,
+          "lucratividade": 96.0,
+          "variation": "Sem base anterior"
+        },
+        "historico": [
+          {
+            "ano": 2026,
+            "label": "Out",
+            "valor": 10999.0,
+            "pedidos": 5
+          }
+        ],
+        "topClientes": [
+          {
+            "nome": "Cliente Aurora",
+            "valor": 940.0,
+            "pedidos": 2
+          },
+          {
+            "nome": "Cliente Horizonte",
+            "valor": 60.0,
+            "pedidos": 2
+          }
+        ],
+        "topProdutos": [
+          {
+            "produto": "Produto 301",
+            "quantidade": 1.0,
+            "valor": 790.0
+          },
+          {
+            "produto": "Produto 302",
+            "quantidade": 1.0,
+            "valor": 150.0
+          },
+          {
+            "produto": "Produto 303",
+            "quantidade": 1.0,
+            "valor": 40.0
+          },
+          {
+            "produto": "Produto 304",
+            "quantidade": 1.0,
+            "valor": 20.0
+          }
+        ],
+        "vendasPorCidade": [
+          {
+            "codigo_ibge": "1721000",
+            "uf": null,
+            "cidade": "Palmas",
+            "quantidade": 4
+          }
+        ],
+        "vendasPorVendedor": [
+          {
+            "vendedor": "Ana Vendedora",
+            "pedidos": 2,
+            "valor": 940.0
+          },
+          {
+            "vendedor": "Bruno Vendedor",
+            "pedidos": 2,
+            "valor": 60.0
+          }
+        ],
+        "vendasPorGrupo": [
+          {
+            "label": "Grupo de teste",
+            "valor": 1000.0
+          }
+        ],
+        "vendasPorMarca": [
+          {
+            "label": "Marca de teste",
+            "valor": 1000.0
+          }
+        ],
+        "mediaPorFaixaHoraria": [
+          {
+            "faixa": "00h",
+            "valor": 2199.8,
+            "pedidos": 5
+          }
+        ],
+        "mediaPorDiaSemana": [
+          {
+            "dia": "Sex",
+            "valor": 2199.8,
+            "pedidos": 5
+          }
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/dashboard/vendas/pedidos",
+      "query": "empresa_id=1&period=month",
+      "data": {
+        "total": 5,
+        "data": [
+          {
+            "id": "4",
+            "data": "2026-10-16T00:00:00",
+            "cliente": "Cliente Horizonte",
+            "valor": 20.0,
+            "status": "FATURADO"
+          },
+          {
+            "id": "98",
+            "data": "2026-10-16T00:00:00",
+            "cliente": "Cliente de outra empresa",
+            "valor": 9999.0,
+            "status": "CANCELADO"
+          },
+          {
+            "id": "1",
+            "data": "2026-10-16T00:00:00",
+            "cliente": "Cliente Aurora",
+            "valor": 790.0,
+            "status": "FATURADO"
+          },
+          {
+            "id": "2",
+            "data": "2026-10-16T00:00:00",
+            "cliente": "Cliente Aurora",
+            "valor": 150.0,
+            "status": "FATURADO"
+          },
+          {
+            "id": "3",
+            "data": "2026-10-16T00:00:00",
+            "cliente": "Cliente Horizonte",
+            "valor": 40.0,
+            "status": "FATURADO"
+          }
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/dashboard/vendas/clientes_novos",
+      "query": "empresa_id=1&period=month",
+      "data": {
+        "total": 3,
+        "data": [
+          {
+            "id": "101",
+            "nome": "Cliente Aurora",
+            "fantasia": "Cliente Aurora",
+            "data_cadastro": "2026-10-16T00:00:00"
+          },
+          {
+            "id": "102",
+            "nome": "Cliente Horizonte",
+            "fantasia": "Cliente Horizonte",
+            "data_cadastro": "2026-10-16T00:00:00"
+          },
+          {
+            "id": "103",
+            "nome": "Cliente sem compras",
+            "fantasia": "Cliente sem compras",
+            "data_cadastro": "2026-10-16T00:00:00"
+          }
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/acesso/perfis",
+      "query": "",
+      "data": [
+        {
+          "id": "edfee979-bda4-56af-bf2c-185ddce7bef7",
+          "nome": "Administrador PIGO",
+          "permissions": [
+            "access.manage",
+            "catalogs.manage",
+            "catalogs.read",
+            "finance.read",
+            "inventory.read",
+            "management.manage",
+            "management.read",
+            "performance.read",
+            "reports.manage",
+            "reports.read",
+            "team.read"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/acesso/permissoes",
+      "query": "",
+      "data": [
+        {
+          "key": "management.read",
+          "nome": "Consultar Gestão",
+          "grupo": "Gestão"
+        },
+        {
+          "key": "management.manage",
+          "nome": "Cadastrar e editar metas",
+          "grupo": "Gestão"
+        },
+        {
+          "key": "inventory.read",
+          "nome": "Consultar Estoque",
+          "grupo": "Gestão"
+        },
+        {
+          "key": "finance.read",
+          "nome": "Consultar Financeiro",
+          "grupo": "Financeiro"
+        },
+        {
+          "key": "catalogs.read",
+          "nome": "Consultar Cadastros",
+          "grupo": "Cadastros"
+        },
+        {
+          "key": "catalogs.manage",
+          "nome": "Solicitar gravação de cadastros no ERP",
+          "grupo": "Cadastros"
+        },
+        {
+          "key": "reports.read",
+          "nome": "Consultar relatórios e usar assistente IA",
+          "grupo": "Relatórios"
+        },
+        {
+          "key": "reports.manage",
+          "nome": "Criar e editar relatórios",
+          "grupo": "Relatórios"
+        },
+        {
+          "key": "team.read",
+          "nome": "Consultar Equipe",
+          "grupo": "Equipe"
+        },
+        {
+          "key": "performance.read",
+          "nome": "Consultar Performance",
+          "grupo": "Performance"
+        },
+        {
+          "key": "access.manage",
+          "nome": "Administrar usuários e perfis do PIGO",
+          "grupo": "Acesso"
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/acesso/usuarios",
+      "query": "",
+      "data": [
+        {
+          "id": "5c36b801-5012-59a8-9fb8-de4f702e1496",
+          "login": "demo-pigo",
+          "nome": "Administrador de demonstração",
+          "ativo": true,
+          "perfil_id": "edfee979-bda4-56af-bf2c-185ddce7bef7",
+          "perfil": "Administrador PIGO"
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/dashboard/clientes",
+      "query": "empresa_id=1&period=today",
+      "data": {
+        "periodo": {
+          "inicio": "2026-10-16",
+          "fim": "2026-10-16"
+        },
+        "resumo": {
+          "clientes": 3,
+          "compradores": 2,
+          "novos": 3,
+          "semCompras": 1,
+          "faturamento": 1000.0,
+          "ticketMedio": 250.0
+        },
+        "ranking": [
+          {
+            "codigo": "101",
+            "nome": "Cliente Aurora",
+            "pedidos": 2,
+            "valor": 940.0
+          },
+          {
+            "codigo": "102",
+            "nome": "Cliente Horizonte",
+            "pedidos": 2,
+            "valor": 60.0
+          }
+        ],
+        "cidades": [
+          {
+            "nome": "Palmas",
+            "clientes": 3
+          }
+        ],
+        "semCompras": [
+          {
+            "codigo": "103",
+            "nome": "Cliente sem compras",
+            "cidade": "Palmas"
+          }
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/dashboard/consolidado",
+      "query": "period=this_month",
+      "data": {
+        "cards": {
+          "faturamento_total": 20998.0,
+          "total_vendas": 6,
+          "ticket_medio": 3499.67,
+          "filiais_ativas": 2
+        },
+        "resumo_filiais": [
+          {
+            "id": "1",
+            "nome": "Empresa 1",
+            "faturamento": 10999.0,
+            "participacao": 52.38117915991999,
+            "vendas": 5,
+            "ticket_medio": 2199.8
+          },
+          {
+            "id": "2",
+            "nome": "Empresa 2",
+            "faturamento": 9999.0,
+            "participacao": 47.618820840080005,
+            "vendas": 1,
+            "ticket_medio": 9999.0
+          }
+        ],
+        "graficos": {
+          "vendas_dia_semana": [
+            {
+              "name": "Sex",
+              "Empresa 1": 10999.0,
+              "Empresa 2": 9999.0
+            }
+          ],
+          "vendas_mensais": [
+            {
+              "name": "Out/2026",
+              "Empresa 1": 10999.0,
+              "Empresa 2": 9999.0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/dashboard/consolidado",
+      "query": "period=today",
+      "data": {
+        "cards": {
+          "faturamento_total": 20998.0,
+          "total_vendas": 6,
+          "ticket_medio": 3499.67,
+          "filiais_ativas": 2
+        },
+        "resumo_filiais": [
+          {
+            "id": "1",
+            "nome": "Empresa 1",
+            "faturamento": 10999.0,
+            "participacao": 52.38117915991999,
+            "vendas": 5,
+            "ticket_medio": 2199.8
+          },
+          {
+            "id": "2",
+            "nome": "Empresa 2",
+            "faturamento": 9999.0,
+            "participacao": 47.618820840080005,
+            "vendas": 1,
+            "ticket_medio": 9999.0
+          }
+        ],
+        "graficos": {
+          "vendas_dia_semana": [
+            {
+              "name": "Sex",
+              "Empresa 1": 10999.0,
+              "Empresa 2": 9999.0
+            }
+          ],
+          "vendas_mensais": [
+            {
+              "name": "Out/2026",
+              "Empresa 1": 10999.0,
+              "Empresa 2": 9999.0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/dashboard/curva-abc",
+      "query": "empresa_id=1&period=today",
+      "data": {
+        "produtos": [
+          {
+            "codigo": "301",
+            "produto": "Produto 301",
+            "quantidade": 1.0,
+            "valor": 790.0,
+            "classe": "A",
+            "participacao": 79.0,
+            "acumulado": 79.0
+          },
+          {
+            "codigo": "302",
+            "produto": "Produto 302",
+            "quantidade": 1.0,
+            "valor": 150.0,
+            "classe": "A",
+            "participacao": 15.0,
+            "acumulado": 94.0
+          },
+          {
+            "codigo": "303",
+            "produto": "Produto 303",
+            "quantidade": 1.0,
+            "valor": 40.0,
+            "classe": "B",
+            "participacao": 4.0,
+            "acumulado": 98.0
+          },
+          {
+            "codigo": "304",
+            "produto": "Produto 304",
+            "quantidade": 1.0,
+            "valor": 20.0,
+            "classe": "C",
+            "participacao": 2.0,
+            "acumulado": 100.0
+          }
+        ],
+        "total": 1000.0,
+        "classes": [
+          {
+            "classe": "A",
+            "produtos": 2,
+            "valor": 940.0
+          },
+          {
+            "classe": "B",
+            "produtos": 1,
+            "valor": 40.0
+          },
+          {
+            "classe": "C",
+            "produtos": 1,
+            "valor": 20.0
+          }
+        ],
+        "periodo": {
+          "inicio": "2026-10-16",
+          "fim": "2026-10-16"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/dashboard/estoque",
+      "query": "empresa_id=1",
+      "data": {
+        "estoqueDisponivel": true,
+        "resumo": {
+          "totalProdutos": 4,
+          "ativos": 0,
+          "inativos": 0
+        },
+        "valores": {
+          "custoTotal": 0.0,
+          "vendaTotal": 0.0
+        },
+        "alertas": {
+          "total": 0,
+          "semEstoque": 0,
+          "abaixoMinimo": 0
+        },
+        "compras": {
+          "quantidade": 0,
+          "valorTotal": 0.0
+        },
+        "rotatividade": [
+          {
+            "produto": "Produto 301",
+            "vendida": 1.0,
+            "estoque": 1.0
+          },
+          {
+            "produto": "Produto 302",
+            "vendida": 1.0,
+            "estoque": 2.0
+          },
+          {
+            "produto": "Produto 303",
+            "vendida": 1.0,
+            "estoque": 3.0
+          },
+          {
+            "produto": "Produto 304",
+            "vendida": 1.0,
+            "estoque": 4.0
+          }
+        ],
+        "criticos": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/dashboard/financeiro",
+      "query": "period=month&type=aberto&empresa_id=1",
+      "data": {
+        "estoqueDisponivel": true,
+        "contasPagar": {
+          "total": 200.0,
+          "variation": "Sem base anterior",
+          "subtitle": "Compromissos financeiros em aberto do periodo selecionado",
+          "highlight": "1 titulos vencem nos proximos 7 dias",
+          "history": [
+            200
+          ]
+        },
+        "contasReceber": {
+          "total": 500.0,
+          "variation": "Sem base anterior",
+          "subtitle": "Titulos a receber e carteira financeira ativa",
+          "highlight": "Prazo medio de recebimento em 15 dias",
+          "history": [
+            500
+          ]
+        },
+        "inadimplencia": {
+          "taxa": 0.0,
+          "totalVencido": 0.0,
+          "totalReceber": 500.0,
+          "recuperadoMes": 0.0
+        },
+        "receitasDespesas": [
+          {
+            "label": "Out",
+            "receitas": 500.0,
+            "despesas": 200.0
+          }
+        ],
+        "aging": [
+          {
+            "faixa": "1-7 dias",
+            "valor": 0.0,
+            "titulos": 0,
+            "tone": "blue"
+          },
+          {
+            "faixa": "1-21 dias",
+            "valor": 0.0,
+            "titulos": 0,
+            "tone": "sky"
+          },
+          {
+            "faixa": "1-30 dias",
+            "valor": 0.0,
+            "titulos": 0,
+            "tone": "amber"
+          },
+          {
+            "faixa": "31-60 dias",
+            "valor": 0.0,
+            "titulos": 0,
+            "tone": "orange"
+          },
+          {
+            "faixa": "61-90 dias",
+            "valor": 0.0,
+            "titulos": 0,
+            "tone": "orange-strong"
+          },
+          {
+            "faixa": "91-120 dias",
+            "valor": 0.0,
+            "titulos": 0,
+            "tone": "red-soft"
+          },
+          {
+            "faixa": "A vencer",
+            "valor": 500.0,
+            "titulos": 1,
+            "tone": "teal"
+          },
+          {
+            "faixa": "+120 dias",
+            "valor": 0.0,
+            "titulos": 0,
+            "tone": "red"
+          }
+        ],
+        "melhoresClientes": [
+          {
+            "nome": "Cliente Aurora",
+            "valor": 500.0,
+            "pedidos": 1
+          }
+        ],
+        "melhoresFornecedores": [
+          {
+            "nome": "Cliente Aurora",
+            "quantidade": 1,
+            "volume": 200.0
+          }
+        ],
+        "estoqueCritico": [],
+        "cidadesClientes": [
+          {
+            "cidade": "Palmas",
+            "quantidade": 1,
+            "codigo_ibge": "1721000",
+            "uf": null,
+            "x": null,
+            "y": null,
+            "cor": "#2563eb"
+          }
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/dashboard/metas",
+      "query": "empresa_id=1&mes=2026-10-01",
+      "data": {
+        "mes": "2026-10-01",
+        "metas": [
+          {
+            "id": "aceeaf3e-2b84-4a05-bdf2-e864ea5ff66b",
+            "vendedor_id": 0,
+            "responsavel": "Toda a empresa",
+            "meta": 2000.0,
+            "realizado": 1000.0,
+            "percentual": 50.0,
+            "faltante": 1000.0,
+            "projecao": 1937.5
+          },
+          {
+            "id": "105a77b1-45e3-42f2-b72d-cbd19ed09e21",
+            "vendedor_id": 201,
+            "responsavel": "Ana Vendedora",
+            "meta": 1000.0,
+            "realizado": 940.0,
+            "percentual": 94.0,
+            "faltante": 60.0,
+            "projecao": 1821.25
+          }
+        ],
+        "vendedores": [
+          {
+            "id": "201",
+            "nome": "Ana Vendedora"
+          },
+          {
+            "id": "202",
+            "nome": "Bruno Vendedor"
+          }
+        ],
+        "faturamento": 1000.0
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/dashboard/vendas",
+      "query": "period=today",
+      "data": {
+        "resumo": {
+          "faturamento": 10999.0,
+          "pedidos": 5,
+          "ticketMedio": 2199.8,
+          "itensPorVenda": 0.8,
+          "custoTotal": 40.0,
+          "lucroBruto": 10959.0,
+          "margemLucro": 99.64,
+          "markup": 27397.5,
+          "lucratividade": 99.64,
+          "variation": "Sem base anterior"
+        },
+        "historico": [
+          {
+            "ano": 2026,
+            "label": "Out",
+            "valor": 20998.0,
+            "pedidos": 6
+          }
+        ],
+        "topClientes": [
+          {
+            "nome": "Cliente de outra empresa",
+            "valor": 9999.0,
+            "pedidos": 1
+          },
+          {
+            "nome": "Cliente Aurora",
+            "valor": 940.0,
+            "pedidos": 2
+          },
+          {
+            "nome": "Cliente Horizonte",
+            "valor": 60.0,
+            "pedidos": 2
+          }
+        ],
+        "topProdutos": [
+          {
+            "produto": "Produto 301",
+            "quantidade": 1.0,
+            "valor": 790.0
+          },
+          {
+            "produto": "Produto 302",
+            "quantidade": 1.0,
+            "valor": 150.0
+          },
+          {
+            "produto": "Produto 303",
+            "quantidade": 1.0,
+            "valor": 40.0
+          },
+          {
+            "produto": "Produto 304",
+            "quantidade": 1.0,
+            "valor": 20.0
+          }
+        ],
+        "vendasPorCidade": [
+          {
+            "codigo_ibge": "1721000",
+            "uf": null,
+            "cidade": "Palmas",
+            "quantidade": 5
+          }
+        ],
+        "vendasPorVendedor": [
+          {
+            "vendedor": "Ana Vendedora",
+            "pedidos": 3,
+            "valor": 10939.0
+          },
+          {
+            "vendedor": "Bruno Vendedor",
+            "pedidos": 2,
+            "valor": 60.0
+          }
+        ],
+        "vendasPorGrupo": [
+          {
+            "label": "Grupo de teste",
+            "valor": 1000.0
+          }
+        ],
+        "vendasPorMarca": [
+          {
+            "label": "Marca de teste",
+            "valor": 1000.0
+          }
+        ],
+        "mediaPorFaixaHoraria": [
+          {
+            "faixa": "00h",
+            "valor": 3499.67,
+            "pedidos": 6
+          }
+        ],
+        "mediaPorDiaSemana": [
+          {
+            "dia": "Sex",
+            "valor": 3499.67,
+            "pedidos": 6
+          }
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/dashboard/vendas",
+      "query": "period=today&empresa_id=1",
+      "data": {
+        "resumo": {
+          "faturamento": 1000.0,
+          "pedidos": 4,
+          "ticketMedio": 250.0,
+          "itensPorVenda": 1.0,
+          "custoTotal": 40.0,
+          "lucroBruto": 960.0,
+          "margemLucro": 96.0,
+          "markup": 2400.0,
+          "lucratividade": 96.0,
+          "variation": "Sem base anterior"
+        },
+        "historico": [
+          {
+            "ano": 2026,
+            "label": "Out",
+            "valor": 10999.0,
+            "pedidos": 5
+          }
+        ],
+        "topClientes": [
+          {
+            "nome": "Cliente Aurora",
+            "valor": 940.0,
+            "pedidos": 2
+          },
+          {
+            "nome": "Cliente Horizonte",
+            "valor": 60.0,
+            "pedidos": 2
+          }
+        ],
+        "topProdutos": [
+          {
+            "produto": "Produto 301",
+            "quantidade": 1.0,
+            "valor": 790.0
+          },
+          {
+            "produto": "Produto 302",
+            "quantidade": 1.0,
+            "valor": 150.0
+          },
+          {
+            "produto": "Produto 303",
+            "quantidade": 1.0,
+            "valor": 40.0
+          },
+          {
+            "produto": "Produto 304",
+            "quantidade": 1.0,
+            "valor": 20.0
+          }
+        ],
+        "vendasPorCidade": [
+          {
+            "codigo_ibge": "1721000",
+            "uf": null,
+            "cidade": "Palmas",
+            "quantidade": 4
+          }
+        ],
+        "vendasPorVendedor": [
+          {
+            "vendedor": "Ana Vendedora",
+            "pedidos": 2,
+            "valor": 940.0
+          },
+          {
+            "vendedor": "Bruno Vendedor",
+            "pedidos": 2,
+            "valor": 60.0
+          }
+        ],
+        "vendasPorGrupo": [
+          {
+            "label": "Grupo de teste",
+            "valor": 1000.0
+          }
+        ],
+        "vendasPorMarca": [
+          {
+            "label": "Marca de teste",
+            "valor": 1000.0
+          }
+        ],
+        "mediaPorFaixaHoraria": [
+          {
+            "faixa": "00h",
+            "valor": 2199.8,
+            "pedidos": 5
+          }
+        ],
+        "mediaPorDiaSemana": [
+          {
+            "dia": "Sex",
+            "valor": 2199.8,
+            "pedidos": 5
+          }
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/departamentos/",
+      "query": "",
+      "data": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/empresas",
+      "query": "",
+      "data": [
+        {
+          "id": "1",
+          "empresa_id": "1",
+          "erp_id": "1",
+          "fantasia": "Empresa 1",
+          "razao_social": "Empresa de teste 1",
+          "cnpj": "00000000000191",
+          "cidade": "",
+          "status": "ATIVO",
+          "nome_exibicao": "Empresa 1"
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/erp/cadastros/clientes",
+      "query": "empresa_id=1",
+      "data": {
+        "fields": {
+          "nome": "text",
+          "fantasia": "text",
+          "documento": "text",
+          "email": "text",
+          "telefone": "text",
+          "status": "text"
+        },
+        "agent_ready": false,
+        "agent_seen_at": null,
+        "commands": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/erp/cadastros/departamentos",
+      "query": "empresa_id=1",
+      "data": {
+        "fields": {
+          "nome": "text",
+          "status": "text"
+        },
+        "agent_ready": false,
+        "agent_seen_at": null,
+        "commands": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/erp/cadastros/fornecedores",
+      "query": "empresa_id=1",
+      "data": {
+        "fields": {
+          "nome": "text",
+          "fantasia": "text",
+          "email": "text",
+          "telefone": "text",
+          "status": "text"
+        },
+        "agent_ready": false,
+        "agent_seen_at": null,
+        "commands": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/erp/cadastros/grupos",
+      "query": "empresa_id=1",
+      "data": {
+        "fields": {
+          "nome": "text",
+          "status": "text"
+        },
+        "agent_ready": false,
+        "agent_seen_at": null,
+        "commands": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/erp/cadastros/marcas",
+      "query": "empresa_id=1",
+      "data": {
+        "fields": {
+          "nome": "text",
+          "status": "text"
+        },
+        "agent_ready": false,
+        "agent_seen_at": null,
+        "commands": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/erp/cadastros/plano-contas",
+      "query": "empresa_id=1",
+      "data": {
+        "fields": {
+          "nome": "text",
+          "pai": "text",
+          "tipo": "text",
+          "dre": "text"
+        },
+        "agent_ready": false,
+        "agent_seen_at": null,
+        "commands": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/erp/cadastros/produtos",
+      "query": "empresa_id=1",
+      "data": {
+        "fields": {
+          "nome": "text",
+          "barras": "text",
+          "referencia": "text",
+          "departamento": "text",
+          "grupo": "text",
+          "subgrupo": "text",
+          "marca": "text",
+          "venda": "number",
+          "custo": "number",
+          "minimo": "number",
+          "status": "text"
+        },
+        "agent_ready": false,
+        "agent_seen_at": null,
+        "commands": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/erp/cadastros/subgrupos",
+      "query": "empresa_id=1",
+      "data": {
+        "fields": {
+          "nome": "text",
+          "grupo": "text",
+          "status": "text"
+        },
+        "agent_ready": false,
+        "agent_seen_at": null,
+        "commands": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/funcionarios/",
+      "query": "empresa_id=1",
+      "data": [
+        {
+          "pes_id": "201",
+          "col_pessoa": "201",
+          "usuario_id": null,
+          "login": null,
+          "nome": "Ana Vendedora",
+          "cpf": null,
+          "email": "fixture@example.invalid",
+          "telefone": null,
+          "celular": null,
+          "cargo_oficial": "Vendas",
+          "status": "ATIVO",
+          "salario": 0.0,
+          "data_admissao": "2026-10-01 00:00:00",
+          "data_afastamento": null,
+          "departamento_id": null,
+          "departamento_nome": null,
+          "vendedor": false,
+          "origem": "colaborador"
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/cheques",
+      "query": "empresa_id=1&search=&status=&page=1&page_size=25&direction=asc",
+      "data": {
+        "title": "Cheques Emitidos",
+        "group": "Financeiro",
+        "available": true,
+        "columns": [
+          {
+            "key": "codigo",
+            "label": "ID",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "numero",
+            "label": "Cheque",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "fornecedor",
+            "label": "Fornecedor",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "pessoa",
+            "label": "Pessoa (código)",
+            "type": "text",
+            "available": false
+          },
+          {
+            "key": "nominal",
+            "label": "Nominal",
+            "type": "text",
+            "available": false
+          },
+          {
+            "key": "conta",
+            "label": "Conta bancária",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "emissao",
+            "label": "Emissão",
+            "type": "date",
+            "available": true
+          },
+          {
+            "key": "vencimento",
+            "label": "Vencimento",
+            "type": "date",
+            "available": true
+          },
+          {
+            "key": "valor",
+            "label": "Valor",
+            "type": "currency",
+            "available": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "text",
+            "available": true
+          }
+        ],
+        "rows": [
+          {
+            "codigo": "1",
+            "numero": "1001",
+            "fornecedor": "102",
+            "pessoa": null,
+            "nominal": null,
+            "conta": "Conta de teste",
+            "emissao": "2026-10-16T00:00:00",
+            "vencimento": "2026-10-16T00:00:00",
+            "valor": 50.0,
+            "status": "EMITIDO",
+            "_id": "1"
+          }
+        ],
+        "total": 1,
+        "summary": {
+          "valor": 50.0
+        },
+        "missing_fields": [
+          "Pessoa (código)",
+          "Nominal"
+        ],
+        "statuses": [
+          "EMITIDO"
+        ],
+        "has_period": true
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/clientes",
+      "query": "empresa_id=1&search=&status=&page=1&page_size=25&direction=asc",
+      "data": {
+        "title": "Clientes",
+        "group": "Pessoas",
+        "available": true,
+        "columns": [
+          {
+            "key": "codigo",
+            "label": "Código",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "nome",
+            "label": "Nome / razão social",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "fantasia",
+            "label": "Nome fantasia",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "documento",
+            "label": "CPF/CNPJ",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "cadastro",
+            "label": "Cadastro",
+            "type": "date",
+            "available": true
+          }
+        ],
+        "rows": [
+          {
+            "codigo": "101",
+            "nome": "Cliente Aurora",
+            "fantasia": "Cliente Aurora",
+            "documento": null,
+            "email": "fixture@example.invalid",
+            "telefone": null,
+            "status": "ATIVO",
+            "cadastro": "2026-10-16T00:00:00",
+            "_id": "101"
+          },
+          {
+            "codigo": "102",
+            "nome": "Cliente Horizonte",
+            "fantasia": "Cliente Horizonte",
+            "documento": null,
+            "email": "fixture@example.invalid",
+            "telefone": null,
+            "status": "ATIVO",
+            "cadastro": "2026-10-16T00:00:00",
+            "_id": "102"
+          },
+          {
+            "codigo": "103",
+            "nome": "Cliente sem compras",
+            "fantasia": "Cliente sem compras",
+            "documento": null,
+            "email": "fixture@example.invalid",
+            "telefone": null,
+            "status": "ATIVO",
+            "cadastro": "2026-10-16T00:00:00",
+            "_id": "103"
+          }
+        ],
+        "total": 3,
+        "summary": {},
+        "missing_fields": [],
+        "statuses": [
+          "ATIVO"
+        ],
+        "has_period": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/departamentos",
+      "query": "empresa_id=1&search=&status=&page=1&page_size=25&direction=asc",
+      "data": {
+        "title": "Departamentos de produtos",
+        "group": "Produtos",
+        "available": true,
+        "columns": [
+          {
+            "key": "codigo",
+            "label": "Código",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "nome",
+            "label": "Departamento",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "text",
+            "available": true
+          }
+        ],
+        "rows": [
+          {
+            "codigo": "1",
+            "nome": "Departamento comercial",
+            "status": "ATIVO",
+            "_id": "1"
+          }
+        ],
+        "total": 1,
+        "summary": {},
+        "missing_fields": [],
+        "statuses": [
+          "ATIVO"
+        ],
+        "has_period": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/fechamentos",
+      "query": "empresa_id=1&search=&status=&page=1&page_size=25&direction=asc",
+      "data": {
+        "title": "Fechamentos de Caixa",
+        "group": "Financeiro",
+        "available": true,
+        "columns": [
+          {
+            "key": "codigo",
+            "label": "ID",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "caixa",
+            "label": "Caixa",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "operador",
+            "label": "Operador",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "abertura",
+            "label": "Abertura",
+            "type": "datetime",
+            "available": true
+          },
+          {
+            "key": "fechamento",
+            "label": "Fechamento",
+            "type": "datetime",
+            "available": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "text",
+            "available": true
+          }
+        ],
+        "rows": [
+          {
+            "codigo": "1",
+            "caixa": "Caixa de teste",
+            "operador": "Operador de teste",
+            "abertura": "2026-10-16T00:00:00",
+            "fechamento": "2026-10-16T00:00:00",
+            "status": "FECHADO",
+            "_id": "1"
+          }
+        ],
+        "total": 1,
+        "summary": {},
+        "missing_fields": [],
+        "statuses": [
+          "FECHADO"
+        ],
+        "has_period": true
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/fluxo-caixa",
+      "query": "empresa_id=1&search=&status=&start=2026-10-01&end=2026-10-31&page=1&page_size=25&direction=asc",
+      "data": {
+        "available": true,
+        "rows": [
+          {
+            "dia": "2026-10-01",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 0
+          },
+          {
+            "dia": "2026-10-02",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 0
+          },
+          {
+            "dia": "2026-10-03",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 0
+          },
+          {
+            "dia": "2026-10-04",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 0
+          },
+          {
+            "dia": "2026-10-05",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 0
+          },
+          {
+            "dia": "2026-10-06",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 0
+          },
+          {
+            "dia": "2026-10-07",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 0
+          },
+          {
+            "dia": "2026-10-08",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 0
+          },
+          {
+            "dia": "2026-10-09",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 0
+          },
+          {
+            "dia": "2026-10-10",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 0
+          },
+          {
+            "dia": "2026-10-11",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 0
+          },
+          {
+            "dia": "2026-10-12",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 0
+          },
+          {
+            "dia": "2026-10-13",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 0
+          },
+          {
+            "dia": "2026-10-14",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 0
+          },
+          {
+            "dia": "2026-10-15",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 0
+          },
+          {
+            "dia": "2026-10-16",
+            "entradas": 300.0,
+            "saidas": 150.0,
+            "resultado": 150.0,
+            "acumulado": 150.0
+          },
+          {
+            "dia": "2026-10-17",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 150.0
+          },
+          {
+            "dia": "2026-10-18",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 150.0
+          },
+          {
+            "dia": "2026-10-19",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 150.0
+          },
+          {
+            "dia": "2026-10-20",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 150.0
+          },
+          {
+            "dia": "2026-10-21",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 150.0
+          },
+          {
+            "dia": "2026-10-22",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 150.0
+          },
+          {
+            "dia": "2026-10-23",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 150.0
+          },
+          {
+            "dia": "2026-10-24",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 150.0
+          },
+          {
+            "dia": "2026-10-25",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 150.0
+          },
+          {
+            "dia": "2026-10-26",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 150.0
+          },
+          {
+            "dia": "2026-10-27",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 150.0
+          },
+          {
+            "dia": "2026-10-28",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 150.0
+          },
+          {
+            "dia": "2026-10-29",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 150.0
+          },
+          {
+            "dia": "2026-10-30",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 150.0
+          },
+          {
+            "dia": "2026-10-31",
+            "entradas": 0,
+            "saidas": 0,
+            "resultado": 0,
+            "acumulado": 150.0
+          }
+        ],
+        "summary": {
+          "entradas": 300.0,
+          "saidas": 150.0,
+          "resultado": 150.0
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/fornecedores/102",
+      "query": "empresa_id=1",
+      "data": {
+        "record": {
+          "codigo": "102",
+          "nome": "Cliente Horizonte",
+          "fantasia": "Cliente Horizonte",
+          "email": "fixture@example.invalid",
+          "telefone": null,
+          "status": "ATIVO"
+        },
+        "cash_payments": [],
+        "cash_payments_available": false,
+        "cash_items": {},
+        "cash_items_available": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/fornecedores",
+      "query": "empresa_id=1&search=&status=&page=1&page_size=25&direction=asc",
+      "data": {
+        "title": "Fornecedores",
+        "group": "Pessoas",
+        "available": true,
+        "columns": [
+          {
+            "key": "codigo",
+            "label": "Código",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "nome",
+            "label": "Nome / razão social",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "fantasia",
+            "label": "Nome fantasia",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "text",
+            "available": true
+          }
+        ],
+        "rows": [
+          {
+            "codigo": "102",
+            "nome": "Cliente Horizonte",
+            "fantasia": "Cliente Horizonte",
+            "email": "fixture@example.invalid",
+            "telefone": null,
+            "status": "ATIVO",
+            "_id": "102"
+          }
+        ],
+        "total": 1,
+        "summary": {},
+        "missing_fields": [],
+        "statuses": [
+          "ATIVO"
+        ],
+        "has_period": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/grupos",
+      "query": "empresa_id=1&search=&status=&page=1&page_size=25&direction=asc",
+      "data": {
+        "title": "Grupos de produtos",
+        "group": "Produtos",
+        "available": true,
+        "columns": [
+          {
+            "key": "codigo",
+            "label": "Código",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "nome",
+            "label": "Grupo",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "text",
+            "available": false
+          }
+        ],
+        "rows": [
+          {
+            "codigo": "1",
+            "nome": "Grupo de teste",
+            "status": null,
+            "_id": "1"
+          }
+        ],
+        "total": 1,
+        "summary": {},
+        "missing_fields": [
+          "Status"
+        ],
+        "statuses": [],
+        "has_period": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/marcas",
+      "query": "empresa_id=1&search=&status=&page=1&page_size=25&direction=asc",
+      "data": {
+        "title": "Marcas",
+        "group": "Produtos",
+        "available": true,
+        "columns": [
+          {
+            "key": "codigo",
+            "label": "Código",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "nome",
+            "label": "Marca",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "text",
+            "available": false
+          }
+        ],
+        "rows": [
+          {
+            "codigo": "1",
+            "nome": "Marca de teste",
+            "status": null,
+            "_id": "1"
+          }
+        ],
+        "total": 1,
+        "summary": {},
+        "missing_fields": [
+          "Status"
+        ],
+        "statuses": [],
+        "has_period": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/pagar",
+      "query": "empresa_id=1&search=&status=&page=1&page_size=25&direction=asc",
+      "data": {
+        "title": "Contas a Pagar",
+        "group": "Financeiro",
+        "available": true,
+        "columns": [
+          {
+            "key": "codigo",
+            "label": "ID",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "pessoa",
+            "label": "Fornecedor",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "documento",
+            "label": "Documento",
+            "type": "text",
+            "available": false
+          },
+          {
+            "key": "especie",
+            "label": "Espécie (código)",
+            "type": "text",
+            "available": false
+          },
+          {
+            "key": "centro_custo",
+            "label": "Centro de custo (código)",
+            "type": "text",
+            "available": false
+          },
+          {
+            "key": "plano_contas",
+            "label": "Plano de contas (código)",
+            "type": "text",
+            "available": false
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "emissao",
+            "label": "Emissão",
+            "type": "date",
+            "available": true
+          },
+          {
+            "key": "vencimento",
+            "label": "Vencimento",
+            "type": "date",
+            "available": true
+          },
+          {
+            "key": "original",
+            "label": "Valor original",
+            "type": "currency",
+            "available": true
+          },
+          {
+            "key": "baixado",
+            "label": "Valor pago",
+            "type": "currency",
+            "available": true
+          },
+          {
+            "key": "saldo",
+            "label": "Saldo atual",
+            "type": "currency",
+            "available": true
+          },
+          {
+            "key": "pagamento",
+            "label": "Data da última baixa",
+            "type": "date",
+            "available": true
+          },
+          {
+            "key": "aberto",
+            "label": "Em aberto",
+            "type": "text",
+            "available": true
+          }
+        ],
+        "rows": [
+          {
+            "codigo": "1",
+            "pessoa": "Cliente Aurora",
+            "documento": null,
+            "especie": null,
+            "centro_custo": null,
+            "plano_contas": null,
+            "status": "AB",
+            "emissao": "2026-10-01T00:00:00",
+            "vencimento": "2026-10-16T00:00:00",
+            "original": 200.0,
+            "baixado": 50.0,
+            "saldo": 150.0,
+            "pagamento": "2026-10-16T00:00:00",
+            "aberto": "S",
+            "_id": "1"
+          }
+        ],
+        "total": 1,
+        "summary": {
+          "original": 200.0,
+          "baixado": 50.0,
+          "saldo": 150.0
+        },
+        "missing_fields": [
+          "Documento",
+          "Espécie (código)",
+          "Centro de custo (código)",
+          "Plano de contas (código)"
+        ],
+        "statuses": [
+          "AB"
+        ],
+        "has_period": true
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/plano-contas",
+      "query": "empresa_id=1&search=&status=&page=1&page_size=25&direction=asc",
+      "data": {
+        "title": "Plano de Contas",
+        "group": "Diversos",
+        "available": true,
+        "columns": [
+          {
+            "key": "codigo",
+            "label": "Código",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "nome",
+            "label": "Conta",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "pai",
+            "label": "Conta superior",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "tipo",
+            "label": "Tipo",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "dre",
+            "label": "Considera na DRE",
+            "type": "text",
+            "available": true
+          }
+        ],
+        "rows": [
+          {
+            "codigo": "1",
+            "nome": "Receitas de vendas",
+            "pai": null,
+            "tipo": "RECEITA",
+            "dre": "S",
+            "_id": "1"
+          }
+        ],
+        "total": 1,
+        "summary": {},
+        "missing_fields": [],
+        "statuses": [],
+        "has_period": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/produtos",
+      "query": "empresa_id=1&search=&status=&page=1&page_size=25&direction=asc",
+      "data": {
+        "title": "Produtos",
+        "group": "Produtos",
+        "available": true,
+        "columns": [
+          {
+            "key": "codigo",
+            "label": "Código",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "nome",
+            "label": "Produto",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "barras",
+            "label": "Código de barras",
+            "type": "text",
+            "available": false
+          },
+          {
+            "key": "referencia",
+            "label": "Referência",
+            "type": "text",
+            "available": false
+          },
+          {
+            "key": "codigos_barras",
+            "label": "Códigos de barras cadastrados",
+            "type": "text",
+            "available": false
+          },
+          {
+            "key": "departamento",
+            "label": "Departamento",
+            "type": "text",
+            "available": false
+          },
+          {
+            "key": "grupo",
+            "label": "Grupo",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "subgrupo",
+            "label": "Subgrupo",
+            "type": "text",
+            "available": false
+          },
+          {
+            "key": "marca",
+            "label": "Marca",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "venda",
+            "label": "Preço de venda",
+            "type": "currency",
+            "available": true
+          },
+          {
+            "key": "custo",
+            "label": "Custo",
+            "type": "currency",
+            "available": true
+          },
+          {
+            "key": "estoque",
+            "label": "Quantidade na posição única",
+            "type": "number",
+            "available": true
+          },
+          {
+            "key": "posicoes",
+            "label": "Posições de estoque",
+            "type": "number",
+            "available": true
+          },
+          {
+            "key": "minimo",
+            "label": "Estoque mínimo",
+            "type": "number",
+            "available": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "text",
+            "available": true
+          }
+        ],
+        "rows": [
+          {
+            "codigo": "301",
+            "nome": "Produto 301",
+            "barras": null,
+            "referencia": null,
+            "codigos_barras": null,
+            "departamento": null,
+            "grupo": "1",
+            "subgrupo": null,
+            "marca": "1",
+            "venda": 100.0,
+            "custo": 40.0,
+            "estoque": 1.0,
+            "posicoes": 1,
+            "minimo": 5.0,
+            "status": "ATIVO",
+            "_id": "301"
+          },
+          {
+            "codigo": "302",
+            "nome": "Produto 302",
+            "barras": null,
+            "referencia": null,
+            "codigos_barras": null,
+            "departamento": null,
+            "grupo": "1",
+            "subgrupo": null,
+            "marca": "1",
+            "venda": 100.0,
+            "custo": 40.0,
+            "estoque": 2.0,
+            "posicoes": 1,
+            "minimo": 5.0,
+            "status": "ATIVO",
+            "_id": "302"
+          },
+          {
+            "codigo": "303",
+            "nome": "Produto 303",
+            "barras": null,
+            "referencia": null,
+            "codigos_barras": null,
+            "departamento": null,
+            "grupo": "1",
+            "subgrupo": null,
+            "marca": "1",
+            "venda": 100.0,
+            "custo": 40.0,
+            "estoque": 3.0,
+            "posicoes": 1,
+            "minimo": 5.0,
+            "status": "ATIVO",
+            "_id": "303"
+          },
+          {
+            "codigo": "304",
+            "nome": "Produto 304",
+            "barras": null,
+            "referencia": null,
+            "codigos_barras": null,
+            "departamento": null,
+            "grupo": "1",
+            "subgrupo": null,
+            "marca": "1",
+            "venda": 100.0,
+            "custo": 40.0,
+            "estoque": 4.0,
+            "posicoes": 1,
+            "minimo": 5.0,
+            "status": "ATIVO",
+            "_id": "304"
+          }
+        ],
+        "total": 4,
+        "summary": {},
+        "missing_fields": [
+          "Código de barras",
+          "Referência",
+          "Códigos de barras cadastrados",
+          "Departamento",
+          "Subgrupo"
+        ],
+        "statuses": [
+          "ATIVO"
+        ],
+        "has_period": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/receber",
+      "query": "empresa_id=1&search=&status=&page=1&page_size=25&direction=asc",
+      "data": {
+        "title": "Contas a Receber",
+        "group": "Financeiro",
+        "available": true,
+        "columns": [
+          {
+            "key": "codigo",
+            "label": "ID",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "pessoa",
+            "label": "Cliente",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "documento",
+            "label": "Documento",
+            "type": "text",
+            "available": false
+          },
+          {
+            "key": "especie",
+            "label": "Espécie (código)",
+            "type": "text",
+            "available": false
+          },
+          {
+            "key": "centro_custo",
+            "label": "Centro de custo (código)",
+            "type": "text",
+            "available": false
+          },
+          {
+            "key": "plano_contas",
+            "label": "Plano de contas (código)",
+            "type": "text",
+            "available": false
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "emissao",
+            "label": "Emissão",
+            "type": "date",
+            "available": true
+          },
+          {
+            "key": "vencimento",
+            "label": "Vencimento",
+            "type": "date",
+            "available": true
+          },
+          {
+            "key": "original",
+            "label": "Valor original",
+            "type": "currency",
+            "available": true
+          },
+          {
+            "key": "baixado",
+            "label": "Valor recebido",
+            "type": "currency",
+            "available": true
+          },
+          {
+            "key": "saldo",
+            "label": "Saldo atual",
+            "type": "currency",
+            "available": true
+          },
+          {
+            "key": "pagamento",
+            "label": "Data da última baixa",
+            "type": "date",
+            "available": true
+          },
+          {
+            "key": "aberto",
+            "label": "Em aberto",
+            "type": "text",
+            "available": true
+          }
+        ],
+        "rows": [
+          {
+            "codigo": "1",
+            "pessoa": "Cliente Aurora",
+            "documento": null,
+            "especie": null,
+            "centro_custo": null,
+            "plano_contas": null,
+            "status": "AB",
+            "emissao": "2026-10-01T00:00:00",
+            "vencimento": "2026-10-16T00:00:00",
+            "original": 500.0,
+            "baixado": 200.0,
+            "saldo": 300.0,
+            "pagamento": "2026-10-16T00:00:00",
+            "aberto": "S",
+            "_id": "1"
+          }
+        ],
+        "total": 1,
+        "summary": {
+          "original": 500.0,
+          "baixado": 200.0,
+          "saldo": 300.0
+        },
+        "missing_fields": [
+          "Documento",
+          "Espécie (código)",
+          "Centro de custo (código)",
+          "Plano de contas (código)"
+        ],
+        "statuses": [
+          "AB"
+        ],
+        "has_period": true
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/sangrias",
+      "query": "empresa_id=1&search=&status=&page=1&page_size=25&direction=asc",
+      "data": {
+        "title": "Sangrias",
+        "group": "Financeiro",
+        "available": true,
+        "columns": [
+          {
+            "key": "codigo",
+            "label": "ID",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "data",
+            "label": "Data",
+            "type": "datetime",
+            "available": true
+          },
+          {
+            "key": "caixa",
+            "label": "Caixa",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "operador",
+            "label": "Operador",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "valor",
+            "label": "Valor",
+            "type": "currency",
+            "available": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "text",
+            "available": true
+          }
+        ],
+        "rows": [
+          {
+            "codigo": "1",
+            "data": "2026-10-16T00:00:00",
+            "caixa": "1",
+            "operador": "Operador de teste",
+            "descricao": "Sangria de teste",
+            "valor": 100.0,
+            "status": "ATIVO",
+            "_id": "1"
+          }
+        ],
+        "total": 1,
+        "summary": {
+          "valor": 100.0
+        },
+        "missing_fields": [],
+        "statuses": [
+          "ATIVO"
+        ],
+        "has_period": true
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/subgrupos",
+      "query": "empresa_id=1&search=&status=&page=1&page_size=25&direction=asc",
+      "data": {
+        "title": "Subgrupos de produtos",
+        "group": "Produtos",
+        "available": true,
+        "columns": [
+          {
+            "key": "codigo",
+            "label": "Código",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "nome",
+            "label": "Subgrupo",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "grupo",
+            "label": "Grupo",
+            "type": "text",
+            "available": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "text",
+            "available": true
+          }
+        ],
+        "rows": [
+          {
+            "codigo": "1",
+            "nome": "Subgrupo de teste",
+            "grupo": "1",
+            "status": "ATIVO",
+            "_id": "1"
+          }
+        ],
+        "total": 1,
+        "summary": {},
+        "missing_fields": [],
+        "statuses": [
+          "ATIVO"
+        ],
+        "has_period": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/performance/filtros",
+      "query": "tipo=A",
+      "data": {
+        "usuarios": [],
+        "tabelas": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/performance/filtros",
+      "query": "tipo=C",
+      "data": {
+        "usuarios": [],
+        "tabelas": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/performance/filtros",
+      "query": "tipo=E",
+      "data": {
+        "usuarios": [],
+        "tabelas": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/performance/filtros",
+      "query": "tipo=I",
+      "data": {
+        "usuarios": [
+          "Equipe de teste (dev-local)"
+        ],
+        "tabelas": [
+          "Pedidos"
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/performance/registros",
+      "query": "tipo=A&data_inicial=2026-10-01&data_final=2026-10-16",
+      "data": {
+        "registros": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/performance/registros",
+      "query": "tipo=C&data_inicial=2026-10-01&data_final=2026-10-16",
+      "data": {
+        "registros": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/performance/registros",
+      "query": "tipo=E&data_inicial=2026-10-01&data_final=2026-10-16",
+      "data": {
+        "registros": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/performance/registros",
+      "query": "tipo=I&data_inicial=2026-10-01&data_final=2026-10-16",
+      "data": {
+        "registros": [
+          {
+            "usuario": "Equipe de teste (dev-local)",
+            "tabela_desc": "Pedidos",
+            "tabela": "TB_PEDIDO_VENDA",
+            "id_registro": 1,
+            "descricao_registro": "Registro sintético",
+            "data_lancamento": "2026-10-16T00:00:00",
+            "data_acao": "2026-10-16T00:00:00",
+            "acao": "Inclusao"
+          }
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/performance/visao-geral",
+      "query": "data_inicial=2026-10-01&data_final=2026-10-16",
+      "data": {
+        "filtros": {
+          "acao": null,
+          "data_inicial": "2026-10-01",
+          "data_final": "2026-10-16"
+        },
+        "resumo": {
+          "total": 1,
+          "inclusoes": 1,
+          "alteracoes": 0,
+          "exclusoes": 0,
+          "cancelamentos": 0
+        },
+        "produtividade": {
+          "dias_com_atividade": 1,
+          "media_por_dia": 1.0,
+          "hora_mais_ativa": "00h",
+          "tabela_mais_movimentada": "Pedidos"
+        },
+        "acoes_por_dia": [
+          {
+            "dia": "16/10",
+            "data_iso": "2026-10-16",
+            "total": 1
+          }
+        ],
+        "acoes_por_horario": [
+          {
+            "hora": "00h",
+            "total": 1
+          }
+        ],
+        "ranking_funcionarios": [
+          {
+            "nome": "Equipe De Teste",
+            "departamento": null,
+            "total": 1,
+            "inclusoes": 1,
+            "alteracoes": 0,
+            "exclusoes": 0,
+            "cancelamentos": 0
+          }
+        ],
+        "tabela_resumo": [
+          {
+            "funcionario": "Equipe De Teste",
+            "departamento": null,
+            "acoes": 1,
+            "inclusoes": 1,
+            "alteracoes": 0,
+            "exclusoes": 0,
+            "cancelamentos": 0
+          }
+        ],
+        "registros": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/catalog",
+      "query": "",
+      "data": {
+        "sales": {
+          "label": "Vendas",
+          "sources": {
+            "orders": {
+              "label": "Pedidos",
+              "description": "Pedidos, clientes, vendedores e valores de venda.",
+              "fields": {
+                "number": {
+                  "label": "Número do documento",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.orders.number",
+                  "description": "Identificador do documento no sistema de origem.",
+                  "format": "identifier",
+                  "icon": "hash",
+                  "color": "slate",
+                  "help": "Use para localizar ou conferir um documento específico.",
+                  "can_group": false,
+                  "can_filter": false,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "date": {
+                  "label": "Data da venda",
+                  "type": "date",
+                  "aggregations": [
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "semantic_id": "sales.orders.date",
+                  "description": "Data de emissão do pedido de venda.",
+                  "format": "date",
+                  "icon": "calendar",
+                  "color": "blue",
+                  "help": "Base para filtros e agrupamentos por período.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "customer_id": {
+                  "label": "Cliente",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.orders.customer_id",
+                  "description": "Identificador comercial do cliente.",
+                  "format": "identifier",
+                  "icon": "user",
+                  "color": "violet",
+                  "help": "Pode ser usado para filtrar ou agrupar operações do mesmo cliente.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "seller_id": {
+                  "label": "Vendedor",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.orders.seller_id",
+                  "description": "Identificador do vendedor responsável.",
+                  "format": "identifier",
+                  "icon": "briefcase",
+                  "color": "indigo",
+                  "help": "Use para análises comerciais por responsável.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "status": {
+                  "label": "Status",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.orders.status",
+                  "description": "Situação atual do registro.",
+                  "format": "status",
+                  "icon": "activity",
+                  "color": "slate",
+                  "help": "Os valores disponíveis são obtidos diretamente dos dados sincronizados.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "total": {
+                  "label": "Valor da venda",
+                  "type": "currency",
+                  "aggregations": [
+                    "sum",
+                    "avg",
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "semantic_id": "sales.orders.total",
+                  "description": "Valor líquido registrado na venda ou no item.",
+                  "format": "currency",
+                  "icon": "currency",
+                  "color": "emerald",
+                  "help": "Valor comercial já registrado pelo ERP para o documento.",
+                  "can_group": false,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "company": {
+                  "label": "Empresa",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.orders.company",
+                  "description": "Empresa ERP à qual o registro pertence.",
+                  "format": "identifier",
+                  "icon": "building",
+                  "color": "slate",
+                  "help": "Aplicado automaticamente para garantir isolamento por empresa.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                }
+              },
+              "filters": {
+                "company": {
+                  "label": "Empresa",
+                  "field": "company",
+                  "operators": [
+                    "eq"
+                  ]
+                },
+                "period": {
+                  "label": "Período",
+                  "field": "date",
+                  "operators": [
+                    "between"
+                  ]
+                },
+                "status": {
+                  "label": "Status",
+                  "field": "status",
+                  "operators": [
+                    "eq",
+                    "in"
+                  ]
+                },
+                "customer_id": {
+                  "label": "Cliente",
+                  "field": "customer_id",
+                  "operators": [
+                    "eq",
+                    "in"
+                  ]
+                },
+                "seller_id": {
+                  "label": "Vendedor",
+                  "field": "seller_id",
+                  "operators": [
+                    "eq",
+                    "in"
+                  ]
+                },
+                "total": {
+                  "label": "Valor da venda",
+                  "field": "total",
+                  "operators": [
+                    "gte",
+                    "lte"
+                  ]
+                }
+              },
+              "groupings": [
+                "date",
+                "customer_id",
+                "seller_id",
+                "status",
+                "company"
+              ]
+            },
+            "items": {
+              "label": "Itens vendidos",
+              "description": "Produtos, quantidades, custos e valores por pedido.",
+              "fields": {
+                "order_number": {
+                  "label": "Número do pedido",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.items.order_number",
+                  "description": "Identificador do pedido de venda relacionado ao item.",
+                  "format": "identifier",
+                  "icon": "receipt",
+                  "color": "blue",
+                  "help": "Permite rastrear o item até o pedido original.",
+                  "can_group": false,
+                  "can_filter": false,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "date": {
+                  "label": "Data da venda",
+                  "type": "date",
+                  "aggregations": [
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "semantic_id": "sales.items.date",
+                  "description": "Data de emissão do pedido de venda.",
+                  "format": "date",
+                  "icon": "calendar",
+                  "color": "blue",
+                  "help": "Base para filtros e agrupamentos por período.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "product_id": {
+                  "label": "Código do produto",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.items.product_id",
+                  "description": "Identificador comercial do produto.",
+                  "format": "identifier",
+                  "icon": "barcode",
+                  "color": "emerald",
+                  "help": "Código estável usado pelo ERP para identificar o produto.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "product": {
+                  "label": "Produto",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.items.product",
+                  "description": "Descrição comercial do produto.",
+                  "format": "text",
+                  "icon": "package",
+                  "color": "emerald",
+                  "help": "Nome apresentado ao usuário nos relatórios de produtos e itens.",
+                  "can_group": true,
+                  "can_filter": false,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "group": {
+                  "label": "Grupo de produtos",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.items.group",
+                  "description": "Grupo comercial ao qual o produto pertence.",
+                  "format": "text",
+                  "icon": "layers",
+                  "color": "orange",
+                  "help": "Use para consolidar produtos de uma mesma família.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "brand": {
+                  "label": "Marca",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.items.brand",
+                  "description": "Marca comercial do produto.",
+                  "format": "text",
+                  "icon": "tag",
+                  "color": "pink",
+                  "help": "A disponibilidade depende do preenchimento da marca no ERP.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "quantity": {
+                  "label": "Quantidade vendida",
+                  "type": "number",
+                  "aggregations": [
+                    "sum",
+                    "avg",
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "semantic_id": "sales.items.quantity",
+                  "description": "Quantidade comercial registrada no item da venda.",
+                  "format": "decimal",
+                  "icon": "boxes",
+                  "color": "blue",
+                  "help": "Pode ser somada para medir volume vendido.",
+                  "can_group": false,
+                  "can_filter": false,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "unit_price": {
+                  "label": "Preço unitário",
+                  "type": "currency",
+                  "aggregations": [
+                    "sum",
+                    "avg",
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "semantic_id": "sales.items.unit_price",
+                  "description": "Preço de venda por unidade do item.",
+                  "format": "currency",
+                  "icon": "currency",
+                  "color": "blue",
+                  "help": "Preço praticado no item antes da multiplicação pela quantidade.",
+                  "can_group": false,
+                  "can_filter": false,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "unit_cost": {
+                  "label": "Custo unitário",
+                  "type": "currency",
+                  "aggregations": [
+                    "sum",
+                    "avg",
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "semantic_id": "sales.items.unit_cost",
+                  "description": "Custo registrado por unidade do item.",
+                  "format": "currency",
+                  "icon": "calculator",
+                  "color": "orange",
+                  "help": "Use em análises de custo e rentabilidade autorizadas.",
+                  "can_group": false,
+                  "can_filter": false,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "total": {
+                  "label": "Valor da venda",
+                  "type": "currency",
+                  "aggregations": [
+                    "sum",
+                    "avg",
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "semantic_id": "sales.items.total",
+                  "description": "Valor líquido registrado na venda ou no item.",
+                  "format": "currency",
+                  "icon": "currency",
+                  "color": "emerald",
+                  "help": "Valor comercial já registrado pelo ERP para o documento.",
+                  "can_group": false,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "company": {
+                  "label": "Empresa",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.items.company",
+                  "description": "Empresa ERP à qual o registro pertence.",
+                  "format": "identifier",
+                  "icon": "building",
+                  "color": "slate",
+                  "help": "Aplicado automaticamente para garantir isolamento por empresa.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                }
+              },
+              "filters": {
+                "company": {
+                  "label": "Empresa",
+                  "field": "company",
+                  "operators": [
+                    "eq"
+                  ]
+                },
+                "period": {
+                  "label": "Período",
+                  "field": "date",
+                  "operators": [
+                    "between"
+                  ]
+                },
+                "product_id": {
+                  "label": "Produto",
+                  "field": "product_id",
+                  "operators": [
+                    "eq",
+                    "in"
+                  ],
+                  "option_label": "product"
+                },
+                "group": {
+                  "label": "Grupo",
+                  "field": "group",
+                  "operators": [
+                    "eq",
+                    "in"
+                  ]
+                },
+                "brand": {
+                  "label": "Marca",
+                  "field": "brand",
+                  "operators": [
+                    "eq",
+                    "in"
+                  ]
+                },
+                "total": {
+                  "label": "Valor da venda",
+                  "field": "total",
+                  "operators": [
+                    "gte",
+                    "lte"
+                  ]
+                }
+              },
+              "groupings": [
+                "date",
+                "product_id",
+                "product",
+                "group",
+                "brand",
+                "company"
+              ]
+            },
+            "customers": {
+              "label": "Clientes",
+              "description": "Cadastro, localização e vendedor associado.",
+              "fields": {
+                "customer_id": {
+                  "label": "Cliente",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.customers.customer_id",
+                  "description": "Identificador comercial do cliente.",
+                  "format": "identifier",
+                  "icon": "user",
+                  "color": "violet",
+                  "help": "Pode ser usado para filtrar ou agrupar operações do mesmo cliente.",
+                  "can_group": false,
+                  "can_filter": false,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "name": {
+                  "label": "Nome",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.customers.name",
+                  "description": "Nome ou razão social do cadastro.",
+                  "format": "text",
+                  "icon": "text",
+                  "color": "slate",
+                  "help": "Descrição amigável do registro.",
+                  "can_group": false,
+                  "can_filter": false,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "trade_name": {
+                  "label": "Nome fantasia",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.customers.trade_name",
+                  "description": "Nome fantasia ou apelido comercial.",
+                  "format": "text",
+                  "icon": "store",
+                  "color": "violet",
+                  "help": "Pode estar vazio quando o cadastro possui apenas razão social.",
+                  "can_group": false,
+                  "can_filter": false,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "city": {
+                  "label": "Cidade",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.customers.city",
+                  "description": "Cidade vinculada ao cadastro.",
+                  "format": "text",
+                  "icon": "map-pin",
+                  "color": "sky",
+                  "help": "Nome resolvido pelo catálogo de cidades, sem expor seu código interno.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "registered_at": {
+                  "label": "Data de cadastro",
+                  "type": "date",
+                  "aggregations": [
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "semantic_id": "sales.customers.registered_at",
+                  "description": "Data em que o cliente foi cadastrado.",
+                  "format": "date",
+                  "icon": "user-plus",
+                  "color": "cyan",
+                  "help": "Use para acompanhar novos clientes por período.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "seller_id": {
+                  "label": "Vendedor",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.customers.seller_id",
+                  "description": "Identificador do vendedor responsável.",
+                  "format": "identifier",
+                  "icon": "briefcase",
+                  "color": "indigo",
+                  "help": "Use para análises comerciais por responsável.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "company": {
+                  "label": "Empresa",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.customers.company",
+                  "description": "Empresa ERP à qual o registro pertence.",
+                  "format": "identifier",
+                  "icon": "building",
+                  "color": "slate",
+                  "help": "Aplicado automaticamente para garantir isolamento por empresa.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                }
+              },
+              "filters": {
+                "company": {
+                  "label": "Empresa",
+                  "field": "company",
+                  "operators": [
+                    "eq"
+                  ]
+                },
+                "period": {
+                  "label": "Período de cadastro",
+                  "field": "registered_at",
+                  "operators": [
+                    "between"
+                  ]
+                },
+                "city": {
+                  "label": "Cidade",
+                  "field": "city",
+                  "operators": [
+                    "eq",
+                    "in"
+                  ]
+                },
+                "seller_id": {
+                  "label": "Vendedor",
+                  "field": "seller_id",
+                  "operators": [
+                    "eq",
+                    "in"
+                  ]
+                }
+              },
+              "groupings": [
+                "registered_at",
+                "city",
+                "seller_id",
+                "company"
+              ]
+            },
+            "products": {
+              "label": "Produtos",
+              "description": "Catálogo de produtos, preços, custos, grupos e marcas.",
+              "fields": {
+                "product_id": {
+                  "label": "Código do produto",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.products.product_id",
+                  "description": "Identificador comercial do produto.",
+                  "format": "identifier",
+                  "icon": "barcode",
+                  "color": "emerald",
+                  "help": "Código estável usado pelo ERP para identificar o produto.",
+                  "can_group": false,
+                  "can_filter": false,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "product": {
+                  "label": "Produto",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.products.product",
+                  "description": "Descrição comercial do produto.",
+                  "format": "text",
+                  "icon": "package",
+                  "color": "emerald",
+                  "help": "Nome apresentado ao usuário nos relatórios de produtos e itens.",
+                  "can_group": false,
+                  "can_filter": false,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "group": {
+                  "label": "Grupo de produtos",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.products.group",
+                  "description": "Grupo comercial ao qual o produto pertence.",
+                  "format": "text",
+                  "icon": "layers",
+                  "color": "orange",
+                  "help": "Use para consolidar produtos de uma mesma família.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "brand": {
+                  "label": "Marca",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.products.brand",
+                  "description": "Marca comercial do produto.",
+                  "format": "text",
+                  "icon": "tag",
+                  "color": "pink",
+                  "help": "A disponibilidade depende do preenchimento da marca no ERP.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "status": {
+                  "label": "Status",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.products.status",
+                  "description": "Situação atual do registro.",
+                  "format": "status",
+                  "icon": "activity",
+                  "color": "slate",
+                  "help": "Os valores disponíveis são obtidos diretamente dos dados sincronizados.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "minimum_stock": {
+                  "label": "Estoque mínimo",
+                  "type": "number",
+                  "aggregations": [
+                    "sum",
+                    "avg",
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "semantic_id": "sales.products.minimum_stock",
+                  "description": "Quantidade mínima recomendada para reposição.",
+                  "format": "decimal",
+                  "icon": "warehouse",
+                  "color": "amber",
+                  "help": "Parâmetro cadastral utilizado no controle de estoque.",
+                  "can_group": false,
+                  "can_filter": false,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "sale_price": {
+                  "label": "Preço de venda",
+                  "type": "currency",
+                  "aggregations": [
+                    "sum",
+                    "avg",
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "semantic_id": "sales.products.sale_price",
+                  "description": "Preço de venda atual do cadastro do produto.",
+                  "format": "currency",
+                  "icon": "currency",
+                  "color": "blue",
+                  "help": "É preço cadastral, não necessariamente o preço histórico de cada venda.",
+                  "can_group": false,
+                  "can_filter": false,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "cost_price": {
+                  "label": "Preço de custo",
+                  "type": "currency",
+                  "aggregations": [
+                    "sum",
+                    "avg",
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "semantic_id": "sales.products.cost_price",
+                  "description": "Custo atual registrado no cadastro do produto.",
+                  "format": "currency",
+                  "icon": "calculator",
+                  "color": "orange",
+                  "help": "É custo cadastral e pode diferir do custo histórico do item.",
+                  "can_group": false,
+                  "can_filter": false,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "company": {
+                  "label": "Empresa",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.products.company",
+                  "description": "Empresa ERP à qual o registro pertence.",
+                  "format": "identifier",
+                  "icon": "building",
+                  "color": "slate",
+                  "help": "Aplicado automaticamente para garantir isolamento por empresa.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                }
+              },
+              "filters": {
+                "company": {
+                  "label": "Empresa",
+                  "field": "company",
+                  "operators": [
+                    "eq"
+                  ]
+                },
+                "group": {
+                  "label": "Grupo",
+                  "field": "group",
+                  "operators": [
+                    "eq",
+                    "in"
+                  ]
+                },
+                "brand": {
+                  "label": "Marca",
+                  "field": "brand",
+                  "operators": [
+                    "eq",
+                    "in"
+                  ]
+                },
+                "status": {
+                  "label": "Status",
+                  "field": "status",
+                  "operators": [
+                    "eq",
+                    "in"
+                  ]
+                }
+              },
+              "groupings": [
+                "group",
+                "brand",
+                "status",
+                "company"
+              ]
+            },
+            "sellers": {
+              "label": "Vendedores",
+              "description": "Vendedores sincronizados e seus cadastros.",
+              "fields": {
+                "seller_id": {
+                  "label": "Vendedor",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.sellers.seller_id",
+                  "description": "Identificador do vendedor responsável.",
+                  "format": "identifier",
+                  "icon": "briefcase",
+                  "color": "indigo",
+                  "help": "Use para análises comerciais por responsável.",
+                  "can_group": false,
+                  "can_filter": false,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "name": {
+                  "label": "Nome",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.sellers.name",
+                  "description": "Nome ou razão social do cadastro.",
+                  "format": "text",
+                  "icon": "text",
+                  "color": "slate",
+                  "help": "Descrição amigável do registro.",
+                  "can_group": false,
+                  "can_filter": false,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "city": {
+                  "label": "Cidade",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.sellers.city",
+                  "description": "Cidade vinculada ao cadastro.",
+                  "format": "text",
+                  "icon": "map-pin",
+                  "color": "sky",
+                  "help": "Nome resolvido pelo catálogo de cidades, sem expor seu código interno.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "company": {
+                  "label": "Empresa",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "sales.sellers.company",
+                  "description": "Empresa ERP à qual o registro pertence.",
+                  "format": "identifier",
+                  "icon": "building",
+                  "color": "slate",
+                  "help": "Aplicado automaticamente para garantir isolamento por empresa.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                }
+              },
+              "filters": {
+                "company": {
+                  "label": "Empresa",
+                  "field": "company",
+                  "operators": [
+                    "eq"
+                  ]
+                },
+                "city": {
+                  "label": "Cidade",
+                  "field": "city",
+                  "operators": [
+                    "eq",
+                    "in"
+                  ]
+                }
+              },
+              "groupings": [
+                "city",
+                "company"
+              ]
+            }
+          },
+          "planned_sources": [
+            "Comissões",
+            "Metas",
+            "Cancelamentos"
+          ]
+        },
+        "finance": {
+          "label": "Financeiro",
+          "sources": {
+            "receipts": {
+              "label": "Recebimentos",
+              "description": "Títulos emitidos, vencimentos, status e valores.",
+              "fields": {
+                "number": {
+                  "label": "Número do documento",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "finance.receipts.number",
+                  "description": "Identificador do documento no sistema de origem.",
+                  "format": "identifier",
+                  "icon": "hash",
+                  "color": "slate",
+                  "help": "Use para localizar ou conferir um documento específico.",
+                  "can_group": false,
+                  "can_filter": false,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "issue_date": {
+                  "label": "Data de emissão",
+                  "type": "date",
+                  "aggregations": [
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "semantic_id": "finance.receipts.issue_date",
+                  "description": "Data em que o título financeiro foi emitido.",
+                  "format": "date",
+                  "icon": "calendar",
+                  "color": "cyan",
+                  "help": "Use para analisar a origem dos recebimentos por período.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "due_date": {
+                  "label": "Data de vencimento",
+                  "type": "date",
+                  "aggregations": [
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "semantic_id": "finance.receipts.due_date",
+                  "description": "Data prevista para vencimento do título.",
+                  "format": "date",
+                  "icon": "calendar-clock",
+                  "color": "amber",
+                  "help": "Permite analisar vencimentos e carteira financeira.",
+                  "can_group": true,
+                  "can_filter": false,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "customer_id": {
+                  "label": "Cliente",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "finance.receipts.customer_id",
+                  "description": "Identificador comercial do cliente.",
+                  "format": "identifier",
+                  "icon": "user",
+                  "color": "violet",
+                  "help": "Pode ser usado para filtrar ou agrupar operações do mesmo cliente.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "status": {
+                  "label": "Status",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "finance.receipts.status",
+                  "description": "Situação atual do registro.",
+                  "format": "status",
+                  "icon": "activity",
+                  "color": "slate",
+                  "help": "Os valores disponíveis são obtidos diretamente dos dados sincronizados.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "open": {
+                  "label": "Em aberto",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "finance.receipts.open",
+                  "description": "Indica se o título ainda possui valor em aberto.",
+                  "format": "boolean",
+                  "icon": "circle",
+                  "color": "amber",
+                  "help": "S representa aberto e N representa liquidado/fechado.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "amount": {
+                  "label": "Valor do recebimento",
+                  "type": "currency",
+                  "aggregations": [
+                    "sum",
+                    "avg",
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "semantic_id": "finance.receipts.amount",
+                  "description": "Valor nominal do título a receber.",
+                  "format": "currency",
+                  "icon": "currency",
+                  "color": "emerald",
+                  "help": "Representa o valor registrado no título financeiro.",
+                  "can_group": false,
+                  "can_filter": false,
+                  "can_sort": true,
+                  "can_total": true
+                },
+                "company": {
+                  "label": "Empresa",
+                  "type": "text",
+                  "aggregations": [
+                    "count"
+                  ],
+                  "semantic_id": "finance.receipts.company",
+                  "description": "Empresa ERP à qual o registro pertence.",
+                  "format": "identifier",
+                  "icon": "building",
+                  "color": "slate",
+                  "help": "Aplicado automaticamente para garantir isolamento por empresa.",
+                  "can_group": true,
+                  "can_filter": true,
+                  "can_sort": true,
+                  "can_total": true
+                }
+              },
+              "filters": {
+                "company": {
+                  "label": "Empresa",
+                  "field": "company",
+                  "operators": [
+                    "eq"
+                  ]
+                },
+                "period": {
+                  "label": "Período de emissão",
+                  "field": "issue_date",
+                  "operators": [
+                    "between"
+                  ]
+                },
+                "status": {
+                  "label": "Status",
+                  "field": "status",
+                  "operators": [
+                    "eq",
+                    "in"
+                  ]
+                },
+                "open": {
+                  "label": "Em aberto",
+                  "field": "open",
+                  "operators": [
+                    "eq"
+                  ],
+                  "options": [
+                    "S",
+                    "N"
+                  ]
+                },
+                "customer_id": {
+                  "label": "Cliente",
+                  "field": "customer_id",
+                  "operators": [
+                    "eq",
+                    "in"
+                  ]
+                }
+              },
+              "groupings": [
+                "issue_date",
+                "due_date",
+                "customer_id",
+                "status",
+                "open",
+                "company"
+              ]
+            }
+          },
+          "planned_sources": [
+            "Pagamentos",
+            "Fluxo de Caixa",
+            "Carteiras",
+            "Inadimplência",
+            "Centro de Custos",
+            "Movimentações"
+          ]
+        },
+        "accounting": {
+          "label": "Contabilidade",
+          "sources": {},
+          "planned_sources": [
+            "Notas",
+            "SPED",
+            "CFOP",
+            "NCM",
+            "Impostos",
+            "Entradas",
+            "Saídas",
+            "Livros",
+            "Transportes"
+          ]
+        },
+        "other": {
+          "label": "Outros",
+          "sources": {},
+          "planned_sources": [
+            "Funcionários",
+            "Estoque",
+            "Inventário",
+            "Auditoria",
+            "Logs",
+            "Usuários",
+            "Acessos",
+            "Conferência"
+          ]
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/ready-templates",
+      "query": "category=finance",
+      "data": [
+        {
+          "key": "receipts_by_status",
+          "name": "Recebimentos por status",
+          "description": "Valores financeiros agrupados por status.",
+          "definition": {
+            "category": "finance",
+            "source": "receipts",
+            "fields": [
+              "status",
+              "amount"
+            ],
+            "filters": [],
+            "group_by": [
+              "status"
+            ],
+            "order_by": [
+              {
+                "field": "amount_sum",
+                "direction": "desc"
+              }
+            ],
+            "totals": [
+              {
+                "field": "amount",
+                "aggregation": "sum"
+              }
+            ],
+            "chart": "cards"
+          }
+        },
+        {
+          "key": "receipts_by_due_date",
+          "name": "Carteira por vencimento",
+          "description": "Valores nominais em aberto por data de vencimento.",
+          "definition": {
+            "category": "finance",
+            "source": "receipts",
+            "fields": [
+              "due_date",
+              "amount"
+            ],
+            "filters": [
+              {
+                "field": "open",
+                "operator": "eq",
+                "value": "S"
+              }
+            ],
+            "group_by": [
+              "due_date"
+            ],
+            "order_by": [
+              {
+                "field": "due_date",
+                "direction": "asc"
+              }
+            ],
+            "totals": [
+              {
+                "field": "amount",
+                "aggregation": "sum"
+              }
+            ],
+            "chart": "line"
+          }
+        },
+        {
+          "key": "receipts_by_customer",
+          "name": "Títulos em aberto por cliente",
+          "description": "Valor nominal dos títulos abertos por código de cliente; não desconta baixas parciais.",
+          "definition": {
+            "category": "finance",
+            "source": "receipts",
+            "fields": [
+              "customer_id",
+              "amount"
+            ],
+            "filters": [
+              {
+                "field": "open",
+                "operator": "eq",
+                "value": "S"
+              }
+            ],
+            "group_by": [
+              "customer_id"
+            ],
+            "order_by": [
+              {
+                "field": "amount_sum",
+                "direction": "desc"
+              }
+            ],
+            "totals": [
+              {
+                "field": "amount",
+                "aggregation": "sum"
+              }
+            ],
+            "chart": "bar"
+          }
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/ready-templates",
+      "query": "category=sales",
+      "data": [
+        {
+          "key": "sales_by_product",
+          "name": "Vendas por produto",
+          "description": "Quantidade e valor vendido por produto.",
+          "definition": {
+            "category": "sales",
+            "source": "items",
+            "fields": [
+              "product",
+              "quantity",
+              "total"
+            ],
+            "filters": [],
+            "group_by": [
+              "product"
+            ],
+            "order_by": [
+              {
+                "field": "total_sum",
+                "direction": "desc"
+              }
+            ],
+            "totals": [
+              {
+                "field": "quantity",
+                "aggregation": "sum"
+              },
+              {
+                "field": "total",
+                "aggregation": "sum"
+              }
+            ],
+            "chart": "bar"
+          }
+        },
+        {
+          "key": "sales_by_group",
+          "name": "Vendas por grupo",
+          "description": "Faturamento agrupado por grupo de produtos.",
+          "definition": {
+            "category": "sales",
+            "source": "items",
+            "fields": [
+              "group",
+              "total"
+            ],
+            "filters": [],
+            "group_by": [
+              "group"
+            ],
+            "order_by": [
+              {
+                "field": "total_sum",
+                "direction": "desc"
+              }
+            ],
+            "totals": [
+              {
+                "field": "total",
+                "aggregation": "sum"
+              }
+            ],
+            "chart": "pie"
+          }
+        },
+        {
+          "key": "customer_directory",
+          "name": "Cadastro de clientes",
+          "description": "Clientes organizados por cidade.",
+          "definition": {
+            "category": "sales",
+            "source": "customers",
+            "fields": [
+              "customer_id",
+              "name",
+              "city",
+              "registered_at"
+            ],
+            "filters": [],
+            "group_by": [],
+            "order_by": [
+              {
+                "field": "name",
+                "direction": "asc"
+              }
+            ],
+            "totals": [],
+            "chart": "table"
+          }
+        },
+        {
+          "key": "product_prices",
+          "name": "Tabela de preços",
+          "description": "Preço de venda e custo dos produtos.",
+          "definition": {
+            "category": "sales",
+            "source": "products",
+            "fields": [
+              "product_id",
+              "product",
+              "group",
+              "brand",
+              "sale_price",
+              "cost_price"
+            ],
+            "filters": [],
+            "group_by": [],
+            "order_by": [
+              {
+                "field": "product",
+                "direction": "asc"
+              }
+            ],
+            "totals": [],
+            "chart": "table"
+          }
+        },
+        {
+          "key": "sales_by_brand",
+          "name": "Vendas por marca",
+          "description": "Compare a participação das marcas nas vendas.",
+          "definition": {
+            "category": "sales",
+            "source": "items",
+            "fields": [
+              "brand",
+              "total"
+            ],
+            "filters": [],
+            "group_by": [
+              "brand"
+            ],
+            "order_by": [
+              {
+                "field": "total_sum",
+                "direction": "desc"
+              }
+            ],
+            "totals": [
+              {
+                "field": "total",
+                "aggregation": "sum"
+              }
+            ],
+            "chart": "bar"
+          }
+        },
+        {
+          "key": "sales_by_seller",
+          "name": "Vendas por vendedor",
+          "description": "Faturamento e quantidade de pedidos por código de vendedor.",
+          "definition": {
+            "category": "sales",
+            "source": "orders",
+            "fields": [
+              "seller_id",
+              "number",
+              "total"
+            ],
+            "filters": [],
+            "group_by": [
+              "seller_id"
+            ],
+            "order_by": [
+              {
+                "field": "total_sum",
+                "direction": "desc"
+              }
+            ],
+            "totals": [
+              {
+                "field": "number",
+                "aggregation": "count"
+              },
+              {
+                "field": "total",
+                "aggregation": "sum"
+              }
+            ],
+            "chart": "bar"
+          }
+        },
+        {
+          "key": "daily_sales",
+          "name": "Vendas diárias",
+          "description": "Evolução das vendas por data de emissão.",
+          "definition": {
+            "category": "sales",
+            "source": "orders",
+            "fields": [
+              "date",
+              "total"
+            ],
+            "filters": [],
+            "group_by": [
+              "date"
+            ],
+            "order_by": [
+              {
+                "field": "date",
+                "direction": "asc"
+              }
+            ],
+            "totals": [
+              {
+                "field": "total",
+                "aggregation": "sum"
+              }
+            ],
+            "chart": "line"
+          }
+        },
+        {
+          "key": "customers_by_city",
+          "name": "Clientes por cidade",
+          "description": "Distribuição geográfica da carteira de clientes.",
+          "definition": {
+            "category": "sales",
+            "source": "customers",
+            "fields": [
+              "city",
+              "customer_id"
+            ],
+            "filters": [],
+            "group_by": [
+              "city"
+            ],
+            "order_by": [
+              {
+                "field": "customer_id_count",
+                "direction": "desc"
+              }
+            ],
+            "totals": [
+              {
+                "field": "customer_id",
+                "aggregation": "count"
+              }
+            ],
+            "chart": "bar"
+          }
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports",
+      "query": "category=finance",
+      "data": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports",
+      "query": "category=sales",
+      "data": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/cheques/1",
+      "query": "empresa_id=1",
+      "data": {
+        "record": {
+          "codigo": "1",
+          "numero": "1001",
+          "fornecedor": "102",
+          "pessoa": null,
+          "nominal": null,
+          "conta": "Conta de teste",
+          "emissao": "2026-10-16T00:00:00",
+          "vencimento": "2026-10-16T00:00:00",
+          "valor": 50.0,
+          "status": "EMITIDO"
+        },
+        "cash_payments": [],
+        "cash_payments_available": false,
+        "cash_items": {},
+        "cash_items_available": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/clientes/101",
+      "query": "empresa_id=1",
+      "data": {
+        "record": {
+          "codigo": "101",
+          "nome": "Cliente Aurora",
+          "fantasia": "Cliente Aurora",
+          "documento": null,
+          "email": "fixture@example.invalid",
+          "telefone": null,
+          "status": "ATIVO",
+          "cadastro": "2026-10-16T00:00:00"
+        },
+        "cash_payments": [],
+        "cash_payments_available": false,
+        "cash_items": {},
+        "cash_items_available": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/clientes/102",
+      "query": "empresa_id=1",
+      "data": {
+        "record": {
+          "codigo": "102",
+          "nome": "Cliente Horizonte",
+          "fantasia": "Cliente Horizonte",
+          "documento": null,
+          "email": "fixture@example.invalid",
+          "telefone": null,
+          "status": "ATIVO",
+          "cadastro": "2026-10-16T00:00:00"
+        },
+        "cash_payments": [],
+        "cash_payments_available": false,
+        "cash_items": {},
+        "cash_items_available": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/clientes/103",
+      "query": "empresa_id=1",
+      "data": {
+        "record": {
+          "codigo": "103",
+          "nome": "Cliente sem compras",
+          "fantasia": "Cliente sem compras",
+          "documento": null,
+          "email": "fixture@example.invalid",
+          "telefone": null,
+          "status": "ATIVO",
+          "cadastro": "2026-10-16T00:00:00"
+        },
+        "cash_payments": [],
+        "cash_payments_available": false,
+        "cash_items": {},
+        "cash_items_available": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/departamentos/1",
+      "query": "empresa_id=1",
+      "data": {
+        "record": {
+          "codigo": "1",
+          "nome": "Departamento comercial",
+          "status": "ATIVO"
+        },
+        "cash_payments": [],
+        "cash_payments_available": false,
+        "cash_items": {},
+        "cash_items_available": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/fechamentos/1",
+      "query": "empresa_id=1",
+      "data": {
+        "record": {
+          "codigo": "1",
+          "caixa": "Caixa de teste",
+          "operador": "Operador de teste",
+          "abertura": "2026-10-16T00:00:00",
+          "fechamento": "2026-10-16T00:00:00",
+          "status": "FECHADO"
+        },
+        "cash_payments": [
+          {
+            "nome": "Cartão",
+            "entradas": "500",
+            "saidas": "0",
+            "conferencia": null,
+            "total": 500,
+            "diferenca": null
+          },
+          {
+            "nome": "Dinheiro",
+            "entradas": "1000",
+            "saidas": "100",
+            "conferencia": "890",
+            "total": 900,
+            "diferenca": -10
+          }
+        ],
+        "cash_payments_available": true,
+        "cash_items": {
+          "vendas": [
+            {
+              "tipo": "vendas",
+              "data": "2026-10-16T00:00:00",
+              "descricao": "Movimento de teste vendas",
+              "quantidade": 1.0,
+              "valor": 100.0,
+              "documento": "1",
+              "usuario": "Operador de teste"
+            }
+          ],
+          "produtos": [
+            {
+              "tipo": "produtos",
+              "data": "2026-10-16T00:00:00",
+              "descricao": "Movimento de teste produtos",
+              "quantidade": 1.0,
+              "valor": 100.0,
+              "documento": "2",
+              "usuario": "Operador de teste"
+            }
+          ],
+          "recebimentos": [
+            {
+              "tipo": "recebimentos",
+              "data": "2026-10-16T00:00:00",
+              "descricao": "Movimento de teste recebimentos",
+              "quantidade": 1.0,
+              "valor": 100.0,
+              "documento": "3",
+              "usuario": "Operador de teste"
+            }
+          ],
+          "pagamentos": [
+            {
+              "tipo": "pagamentos",
+              "data": "2026-10-16T00:00:00",
+              "descricao": "Movimento de teste pagamentos",
+              "quantidade": 1.0,
+              "valor": 100.0,
+              "documento": "4",
+              "usuario": "Operador de teste"
+            }
+          ],
+          "sangrias": [
+            {
+              "tipo": "sangrias",
+              "data": "2026-10-16T00:00:00",
+              "descricao": "Movimento de teste sangrias",
+              "quantidade": 1.0,
+              "valor": 100.0,
+              "documento": "5",
+              "usuario": "Operador de teste"
+            }
+          ],
+          "suprimentos": [
+            {
+              "tipo": "suprimentos",
+              "data": "2026-10-16T00:00:00",
+              "descricao": "Movimento de teste suprimentos",
+              "quantidade": 1.0,
+              "valor": 100.0,
+              "documento": "6",
+              "usuario": "Operador de teste"
+            }
+          ],
+          "canceladas": [
+            {
+              "tipo": "canceladas",
+              "data": "2026-10-16T00:00:00",
+              "descricao": "Movimento de teste canceladas",
+              "quantidade": 1.0,
+              "valor": 100.0,
+              "documento": "7",
+              "usuario": "Operador de teste"
+            }
+          ]
+        },
+        "cash_items_available": true,
+        "cash_items_truncated": false,
+        "cash_summary": {
+          "vendas": 1500.0,
+          "total_registrado": 1400.0,
+          "sangrias": 100.0,
+          "suprimentos": 100.0,
+          "recebimentos": "100",
+          "pagamentos": "100"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/grupos/1",
+      "query": "empresa_id=1",
+      "data": {
+        "record": {
+          "codigo": "1",
+          "nome": "Grupo de teste",
+          "status": null
+        },
+        "cash_payments": [],
+        "cash_payments_available": false,
+        "cash_items": {},
+        "cash_items_available": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/marcas/1",
+      "query": "empresa_id=1",
+      "data": {
+        "record": {
+          "codigo": "1",
+          "nome": "Marca de teste",
+          "status": null
+        },
+        "cash_payments": [],
+        "cash_payments_available": false,
+        "cash_items": {},
+        "cash_items_available": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/pagar/1",
+      "query": "empresa_id=1",
+      "data": {
+        "record": {
+          "codigo": "1",
+          "pessoa": "Cliente Aurora",
+          "documento": null,
+          "especie": null,
+          "centro_custo": null,
+          "plano_contas": null,
+          "status": "AB",
+          "emissao": "2026-10-01T00:00:00",
+          "vencimento": "2026-10-16T00:00:00",
+          "original": 200.0,
+          "baixado": 50.0,
+          "saldo": 150.0,
+          "pagamento": "2026-10-16T00:00:00",
+          "aberto": "S"
+        },
+        "cash_payments": [],
+        "cash_payments_available": false,
+        "cash_items": {},
+        "cash_items_available": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/plano-contas/1",
+      "query": "empresa_id=1",
+      "data": {
+        "record": {
+          "codigo": "1",
+          "nome": "Receitas de vendas",
+          "pai": null,
+          "tipo": "RECEITA",
+          "dre": "S"
+        },
+        "cash_payments": [],
+        "cash_payments_available": false,
+        "cash_items": {},
+        "cash_items_available": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/produtos/301",
+      "query": "empresa_id=1",
+      "data": {
+        "record": {
+          "codigo": "301",
+          "nome": "Produto 301",
+          "barras": null,
+          "referencia": null,
+          "codigos_barras": null,
+          "departamento": null,
+          "grupo": "1",
+          "subgrupo": null,
+          "marca": "1",
+          "venda": 100.0,
+          "custo": 40.0,
+          "estoque": 1.0,
+          "posicoes": 1,
+          "minimo": 5.0,
+          "status": "ATIVO"
+        },
+        "cash_payments": [],
+        "cash_payments_available": false,
+        "cash_items": {},
+        "cash_items_available": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/produtos/302",
+      "query": "empresa_id=1",
+      "data": {
+        "record": {
+          "codigo": "302",
+          "nome": "Produto 302",
+          "barras": null,
+          "referencia": null,
+          "codigos_barras": null,
+          "departamento": null,
+          "grupo": "1",
+          "subgrupo": null,
+          "marca": "1",
+          "venda": 100.0,
+          "custo": 40.0,
+          "estoque": 2.0,
+          "posicoes": 1,
+          "minimo": 5.0,
+          "status": "ATIVO"
+        },
+        "cash_payments": [],
+        "cash_payments_available": false,
+        "cash_items": {},
+        "cash_items_available": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/produtos/303",
+      "query": "empresa_id=1",
+      "data": {
+        "record": {
+          "codigo": "303",
+          "nome": "Produto 303",
+          "barras": null,
+          "referencia": null,
+          "codigos_barras": null,
+          "departamento": null,
+          "grupo": "1",
+          "subgrupo": null,
+          "marca": "1",
+          "venda": 100.0,
+          "custo": 40.0,
+          "estoque": 3.0,
+          "posicoes": 1,
+          "minimo": 5.0,
+          "status": "ATIVO"
+        },
+        "cash_payments": [],
+        "cash_payments_available": false,
+        "cash_items": {},
+        "cash_items_available": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/produtos/304",
+      "query": "empresa_id=1",
+      "data": {
+        "record": {
+          "codigo": "304",
+          "nome": "Produto 304",
+          "barras": null,
+          "referencia": null,
+          "codigos_barras": null,
+          "departamento": null,
+          "grupo": "1",
+          "subgrupo": null,
+          "marca": "1",
+          "venda": 100.0,
+          "custo": 40.0,
+          "estoque": 4.0,
+          "posicoes": 1,
+          "minimo": 5.0,
+          "status": "ATIVO"
+        },
+        "cash_payments": [],
+        "cash_payments_available": false,
+        "cash_items": {},
+        "cash_items_available": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/receber/1",
+      "query": "empresa_id=1",
+      "data": {
+        "record": {
+          "codigo": "1",
+          "pessoa": "Cliente Aurora",
+          "documento": null,
+          "especie": null,
+          "centro_custo": null,
+          "plano_contas": null,
+          "status": "AB",
+          "emissao": "2026-10-01T00:00:00",
+          "vencimento": "2026-10-16T00:00:00",
+          "original": 500.0,
+          "baixado": 200.0,
+          "saldo": 300.0,
+          "pagamento": "2026-10-16T00:00:00",
+          "aberto": "S"
+        },
+        "cash_payments": [],
+        "cash_payments_available": false,
+        "cash_items": {},
+        "cash_items_available": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/sangrias/1",
+      "query": "empresa_id=1",
+      "data": {
+        "record": {
+          "codigo": "1",
+          "data": "2026-10-16T00:00:00",
+          "caixa": "1",
+          "operador": "Operador de teste",
+          "descricao": "Sangria de teste",
+          "valor": 100.0,
+          "status": "ATIVO"
+        },
+        "cash_payments": [],
+        "cash_payments_available": false,
+        "cash_items": {},
+        "cash_items_available": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/operacoes/subgrupos/1",
+      "query": "empresa_id=1",
+      "data": {
+        "record": {
+          "codigo": "1",
+          "nome": "Subgrupo de teste",
+          "grupo": "1",
+          "status": "ATIVO"
+        },
+        "cash_payments": [],
+        "cash_payments_available": false,
+        "cash_items": {},
+        "cash_items_available": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/funcionarios/201",
+      "query": "empresa_id=1&origem=colaborador",
+      "data": {
+        "pes_id": "201",
+        "col_pessoa": "201",
+        "usuario_id": null,
+        "login": null,
+        "nome": "Ana Vendedora",
+        "cpf": null,
+        "email": "fixture@example.invalid",
+        "telefone": null,
+        "celular": null,
+        "cargo_oficial": "Vendas",
+        "status": "ATIVO",
+        "salario": 0.0,
+        "data_admissao": "2026-10-01 00:00:00",
+        "data_afastamento": null,
+        "departamento_id": null,
+        "departamento_nome": null,
+        "vendedor": false,
+        "origem": "colaborador",
+        "data_admissao_oficial": "2026-10-01 00:00:00",
+        "salario_oficial": 0.0,
+        "status_oficial": "ATIVO",
+        "erp_colaborador": {
+          "COL_PESSOA": "201",
+          "COL_EMPRESA": "1",
+          "COL_STATUS": "ATIVO"
+        },
+        "erp_pessoa": {
+          "PES_ID": "201",
+          "PES_RSOCIAL_NOME": "Ana Vendedora",
+          "PES_EMAIL": "fixture@example.invalid"
+        },
+        "erp_usuario": null
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/funcionarios/201/auditoria",
+      "query": "empresa_id=1&origem=colaborador",
+      "data": {
+        "pes_id": 201,
+        "col_pessoa": 201,
+        "usuario_ids_relacionados": [
+          "1"
+        ],
+        "tipo_filtro": null,
+        "data_inicial": null,
+        "data_final": null,
+        "limit": 100,
+        "total": 1,
+        "registros": [
+          {
+            "aud_usuario": "1",
+            "acao_sigla": "I",
+            "acao": "Inclusão",
+            "tabela_desc": "Pedidos",
+            "campo_desc": null,
+            "descricao_registro": "Registro sintético",
+            "data_hora": "2026-10-16 00:00:00",
+            "data_lancamento": "2026-10-16 00:00:00",
+            "aud_sequencia": "1",
+            "aud_id_registro": "1",
+            "aud_tabela": "TB_PEDIDO_VENDA",
+            "aud_vendedor": null,
+            "valor_antigo": null,
+            "valor_novo": null
+          }
+        ],
+        "available": true
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/reports/assistant/interpret",
+      "query": "",
+      "data": {
+        "success": true,
+        "code": "REPORT_INTENT_PARSED",
+        "intent": {
+          "intent_version": 1,
+          "category": "sales",
+          "source": "items",
+          "objects": [
+            "product",
+            "sale"
+          ],
+          "metrics": [
+            "revenue"
+          ],
+          "dimensions": [
+            "product"
+          ],
+          "filters": [],
+          "period": {
+            "type": "current_month"
+          },
+          "sort": [
+            {
+              "field": "revenue",
+              "direction": "desc"
+            }
+          ],
+          "visualization": "bar"
+        },
+        "report_definition": {
+          "category": "sales",
+          "source": "items",
+          "fields": [
+            "product",
+            "total"
+          ],
+          "filters": [
+            {
+              "field": "period",
+              "operator": "between",
+              "value": [
+                "2026-10-01",
+                "2026-10-16"
+              ]
+            }
+          ],
+          "group_by": [
+            "product"
+          ],
+          "order_by": [
+            {
+              "field": "total_sum",
+              "direction": "desc"
+            }
+          ],
+          "totals": [
+            {
+              "field": "total",
+              "aggregation": "sum"
+            }
+          ],
+          "chart": "bar"
+        },
+        "confidence": 0.99,
+        "warnings": [
+          {
+            "code": "CONFIRMATION_REQUIRED",
+            "message": "Revise a configuração antes de gerar o preview."
+          },
+          {
+            "code": "PARSE_DURATION",
+            "duration_ms": 0.65
+          }
+        ],
+        "questions": [],
+        "unavailable_concepts": [],
+        "suggestions": [],
+        "message": null,
+        "request_id": "8837f9a9-057f-4b0d-9a98-43abe55a9063"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/reports/preview",
+      "query": "",
+      "data": {
+        "success": true,
+        "partial": false,
+        "columns": [
+          {
+            "key": "product",
+            "label": "Produto",
+            "type": "text",
+            "format": "text",
+            "description": "Descrição comercial do produto.",
+            "help": "Nome apresentado ao usuário nos relatórios de produtos e itens.",
+            "semantic_id": "sales.items.product"
+          },
+          {
+            "key": "total_sum",
+            "label": "Valor da venda (sum)",
+            "type": "currency",
+            "format": "currency",
+            "description": "Valor líquido registrado na venda ou no item.",
+            "help": "Valor comercial já registrado pelo ERP para o documento.",
+            "semantic_id": "sales.items.total"
+          }
+        ],
+        "rows": [
+          {
+            "product": "Produto 301",
+            "total_sum": 790.0
+          },
+          {
+            "product": "Produto 302",
+            "total_sum": 150.0
+          },
+          {
+            "product": "Produto 303",
+            "total_sum": 40.0
+          },
+          {
+            "product": "Produto 304",
+            "total_sum": 20.0
+          }
+        ],
+        "row_count": 4,
+        "query_time_ms": 3.3,
+        "chart": "bar",
+        "cache": "miss",
+        "request_id": "58e11263-3dc9-4beb-af02-acb962a71c1f"
+      }
+    }
+  ]
+}

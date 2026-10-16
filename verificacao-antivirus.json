@@ -1,0 +1,14 @@
+{
+  "archive": "PIGO-previa-execucao-v2.zip",
+  "sha256": "8608f5add6a91b56eec70230476e14081579649d53bd8e4cdfa556db1f8ef4b4",
+  "scanner": "ClamAV1.5.4",
+  "daily": "28150",
+  "signature_date": "2026-10-11",
+  "signature_update": "official upstream previously unreachable; not retried without changed network conditions",
+  "result": "No detections by complementary scanner",
+  "windows_defender": "not yet tested; keep protection active",
+  "known_source_alert": "reportConfig.js in V2/V3 development bundles; unresolved",
+  "source_code_submitted_to_third_parties": false,
+  "actual_runtime_files_changed": true,
+  "unchanged_runtime": "Python server, synthetic samples, all XLSX/PDF snapshots"
+}
