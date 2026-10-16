@@ -1,0 +1,13 @@
+{
+  "version": "v3",
+  "purpose": "PIGO atual como servico manual de teste na VM WIN-JG1E0O7FSBS; porta 4010",
+  "app_root": "C:\\Projetos\\P.I.G.O",
+  "service_directory": "C:\\ProgramData\\PIGO Services\\PigoDashboardTest",
+  "application_source_included": false,
+  "caddy_configuration_included": false,
+  "windows_native_validation": "pending on user VM",
+  "files": 13,
+  "archive": "/workspace/artifacts/PIGO-servico-VM-v3.zip",
+  "sha256": "99b222e5ea039fbe9dda012d915fdab1ea7a6221cd9f4f84e8ab13286b4019de",
+  "bytes": 7740283
+}

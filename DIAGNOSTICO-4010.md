@@ -34,3 +34,7 @@ for route in ("/api/health", "/login"):
 ```
 
 Envie a saída desse teste e as linhas de erro que aparecerem no terminal 4010. O resultado esperado é HTTP200 em ambas as URLs. Não aumente o timeout nem pule a verificação para instalar o serviço. Não envie arquivos .env, senhas ou tokens.
+
+## Se as telas retornam404
+
+A v3 inclui a correção de navegação no launcher, sem alterar o backend ativo. Use `Iniciar-Teste-PigoVM.ps1` conforme o [README](README.md); o comando antigo `uvicorn app.main:app` não carrega essa correção.

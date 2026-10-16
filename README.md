@@ -1,22 +1,25 @@
-# PIGO: pacote de serviço para Windows Server
+# PIGO: serviço de teste no Windows Server — v3
 
-Esta branch entrega somente as ferramentas para executar o PIGO atual como serviço de teste na VM. Ela não contém o código integrado do dashboard.
+[**Baixar PIGO-servico-VM-v3.zip**](PIGO-servico-VM-v3.zip) — abra o arquivo e clique em **Download raw file**.
 
-## Baixar
+A v3 corrige o acesso direto às telas React no inicializador do teste/serviço. Na VM, `/api/health` e `/login` responderam200, mas `/dashboard/vendas` retornou404 no backend atual. O código recebido reproduz essa regra. O launcher da v3 publica o mesmo `frontend/dist/index.html` em uma lista explícita de URLs React. As chamadas da API continuam no backend atual, incluindo autenticação, licença, sincronização e ativação. Não substitui fontes da aplicação nem adiciona funcionalidades ao build.
 
-Clique em `PIGO-servico-VM-v2.zip` e depois em **Download raw file**. Outra opção é **Code > Download ZIP**, extrair esse download e então extrair o ZIP do serviço em `C:\Temp`. A pasta final deve ser `C:\Temp\PIGO-servico-VM`.
+## 1. Atualizar as ferramentas e reiniciar somente o teste
 
-O pacote usa a aplicação existente em `C:\Projetos\P.I.G.O`, sua venv e a porta local 4010. Não troca fontes da aplicação nem a configuração do Caddy. O teste manual 4010 deve permanecer aberto durante a preparação.
+Extraia o ZIP em `C:\Temp`, atualizando os arquivos de ferramentas em `C:\Temp\PIGO-servico-VM`. Mantenha os processos de produção e Caddy abertos.
 
-## Se o teste 4010 deixou de responder
+Pressione **Ctrl+C somente no terminal do teste temporário4010**. Quando o prompt voltar, execute:
 
-O timeout interrompe a preparação antes de instalar serviço. Se o navegador também não responde, recupere primeiro a instância manual conforme [Diagnóstico da porta 4010](DIAGNOSTICO-4010.md). Não encerre os processos de produção nem o Caddy.
+```powershell
+Set-Location 'C:\Temp\PIGO-servico-VM'
+.\Iniciar-Teste-PigoVM.ps1
+```
 
-O ZIP v2 mostra a URL e o status HTTP de cada etapa. A consulta usa conexão direta ao loopback, sem proxy nem redirecionamentos; mantém todos os critérios de saúde, telas e autenticação. O v1 permanece disponível no histórico e nesta branch.
+Esse comando recusa porta ocupada, carrega a configuração existente do backend e inicia o teste usando a mesma entrada que será usada no serviço. Mantenha o terminal aberto. Se faltar configuração no `.env`, informe o erro/nome da variável, nunca seu valor.
 
-## Preparar e instalar
+## 2. Preparar e instalar
 
-No PowerShell **como administrador**:
+Após **Application startup complete**, em OUTRO PowerShell **como administrador**:
 
 ```powershell
 & {
@@ -27,22 +30,28 @@ No PowerShell **como administrador**:
 }
 ```
 
-Se houver erro, pare nessa etapa e envie o retorno. Se terminar corretamente, pressione Ctrl+C somente no terminal do teste temporário4010 e execute:
+O verificador continua exigindo saúde JSON200, as cinco URLs HTML200 e API protegida401. Se falhar, não instala serviço. Envie o retorno. O serviço é registrado em modo manual/parado; nenhum processo existente é encerrado automaticamente.
+
+## 3. Testar o serviço
+
+Se aparecer **Serviço instalado em modo manual**, pressione Ctrl+C somente no terminal de `Iniciar-Teste-PigoVM.ps1`. Depois:
 
 ```powershell
 & 'C:\ProgramData\PIGO Services\PigoDashboardTest\Manage-Service.ps1' -Action Start
 ```
 
-Confira login, dados e atualização de tela com F5 no navegador da VM em `http://127.0.0.1:4010`. O serviço começa em modo manual; a troca do domínio será feita depois da validação. Mantenha Caddy e os processos de produção atuais abertos. Não reinicie o servidor nesta etapa.
+Na VM, faça login em `http://127.0.0.1:4010`, confira os dados e atualize uma tela com F5. Envie o retorno. A troca do domínio e o início automático virão depois dessa validação. Não reinicie a VM nesta etapa.
 
-A pasta inclui `LEIA-ME.txt`, licença e origem do WinSW e manifesto de hashes. O preparo verifica o binário WinSW antes de uso. Não envie `.env`, senhas ou tokens ao chat.
+## Escopo e validação
 
-## Integridade
+Esta branch entrega ferramentas de implantação; não contém o código integrado do dashboard. O launcher usa a aplicação atual de `C:\Projetos\P.I.G.O` e sua venv. Não altera fontes, banco, migrations ou configuração multi-domínio do Caddy. O backend mantém suas ações normais de startup. As permissões de LocalService são concedidas na instalação conforme o LEIA-ME.
 
-SHA256 do ZIP:
+11 testes do gerador/launcher e navegação passaram. A correção foi executada contra o backend do upload original, que antes retorna404/401 nas URLs React: depois, o verificador HTTP completo passou, mantendo a API protegida401. Os testes também conferem body/header/método da ativação, lifecycle, métodos de gravação e erros de API/assets. Ativação real, licença, conta LocalService, SCM e reboot dependem da validação na VM.
+
+Os ZIPs v1/v2 permanecem preservados. Licença e proveniência do WinSW estão incluídas. Não envie .env, senhas ou tokens ao chat.
+
+SHA256 v3:
 
 ```text
-6957e42686d6a16f6bdb40b0117f59195128b8b1779c9ebd0ddd4a2a3fe12a39
+99b222e5ea039fbe9dda012d915fdab1ea7a6221cd9f4f84e8ab13286b4019de
 ```
-
-Gerador, launcher e verificador HTTP foram validados na nuvem. Instalação nativa, permissões LocalService e reinicialização dependem da validação nesta VM.
