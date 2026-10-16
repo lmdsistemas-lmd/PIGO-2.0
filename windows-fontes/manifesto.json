@@ -1,0 +1,17 @@
+{
+  "purpose": "Tarefa nativa Windows com Python existente; somente scripts de texto",
+  "executable_included": false,
+  "external_wrapper_required": false,
+  "antivirus_scan_performed": false,
+  "windows_native_registration_tested": false,
+  "files": {
+    "run_pigo.py": "6b344d90df71fd824757b5e8d94523037d6f38f1850f55fe7e3f1d64f231415a",
+    "frontend_shell.py": "9c31d5d37519f6dd317ed333b8472a8b6cf65504bdb44a4bf05998b1e944062e",
+    "task_config.py": "c9be8ba8ca38ab69430d68b522a80a32ce6d5e285941cd339fe1c795e1852b18",
+    "Manage-Task.ps1": "ce3bf6a8f7c2a02bdae270470d86a713db2c8ec8be6392fb1587182cef9bcfa1",
+    "Test-PigoInstance.ps1": "f15d07fa3e2ebccbf422290181d6648454eb3d3864503a7941a70966dddb8326",
+    "Iniciar-Teste-PigoVM.ps1": "7d9c8e0aa0bc915fc505db421a0494ab4ec5b4a84ff80ef2f30b503eb57ba5b6",
+    "Preparar-Tarefa-PigoVM.ps1": "af2cfbeeab085693dd17db01f68dca6661d3b3f6abcbb297e9ccd603418e8b62",
+    "README.md": "b6a83113966fac9f30bd9a2979d3120e35593fe0967f90719b297f940533b181"
+  }
+}
