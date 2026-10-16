@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/kelvins/municipios-brasileiros",
+  "license": "MIT",
+  "source_sha256": "b14992cbd4a2a6b383f2165cd9b1a997df5da4d8081017bd2c83582f9996bf64",
+  "retrieved": "2026-10-16",
+  "rows": 5571,
+  "meaning": "Municipality reference points, not customer addresses or GPS"
+}
