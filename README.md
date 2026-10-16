@@ -1,5 +1,5 @@
 > **Versão visual aprovada pelo usuário em 16/10/2026.**
-> [Baixar aplicação para instalação paralela](distribuicao/PIGO-aplicacao-aprovada-20261016.zip) → Download raw file.
+> **Instalação suspensa após a conferência da VM:** [conciliação dos fontes atuais](PENDENCIA_CONCILIACAO_VM.md).
 > [Primeiro passo na VM e pendências de instalação](docs/INSTALACAO_VERSAO_APROVADA.md).
 > O ZIP contém backend real e painel compilado; não é a prévia de dados fictícios.
 > Instalação em produção e gravações no ERP ainda não foram homologadas.
