@@ -1,0 +1,75 @@
+.reference-menu-toggle{display:none}
+.reference-layout{--primary:#413bff;--primary-dark:#312bdf;--bg-main:#f7f8fb;--sidebar-width:256px}
+.reference-layout.sidebar-is-collapsed{--sidebar-width:76px}
+.reference-layout .app-content{background:var(--bg-main);min-width:0}
+.reference-layout .topbar-shell{height:auto;min-height:130px;position:relative;padding:0 28px 18px;backdrop-filter:none;background:transparent;border:0;z-index:50}
+.reference-layout .topbar-main{display:grid;grid-template-columns:1fr auto;gap:22px 16px}
+.reference-layout .reference-menu-toggle{display:flex;align-items:center;justify-content:flex-start;width:40px;height:58px;background:none;border:0;color:var(--text-main)}
+.reference-layout .topbar-actions{min-height:58px;gap:14px}
+.reference-layout .topbar-title-area{grid-row:2;grid-column:1/-1}
+.reference-layout .topbar-path{font-size:10px;font-weight:500;letter-spacing:.02em;margin-bottom:5px}
+.reference-layout .topbar-title{font-size:23px;font-weight:700;letter-spacing:-.7px;white-space:normal}
+.reference-layout .topbar-subtitle{font-size:12px;font-weight:400;margin-top:4px}
+.reference-layout .topbar-company-select{height:34px;border-radius:7px;font-size:12px;font-weight:500;max-width:310px}
+.reference-layout .topbar-theme-toggle{height:34px;width:34px;border-radius:50%;box-shadow:none}
+.reference-layout .topbar-user-avatar{border-radius:50%;box-shadow:none;background:#413bff}
+.reference-layout .topbar-user-name{font-size:12px;font-weight:500}
+.reference-layout .topbar-user-section{padding-left:12px}
+.reference-layout .dashboard-content,.reference-layout .operations-content,.reference-layout .commercial-content{padding:0 28px 28px}
+.reference-layout .chart-card,.reference-layout .table-card,.reference-layout .filter-card,.reference-layout .operations-panel,.reference-layout .summary-card{border:1px solid var(--border-color);border-radius:12px;box-shadow:0 2px 4px #14204003}
+.reference-layout .chart-title,.reference-layout .section-title{font-size:15px;font-weight:600;letter-spacing:-.2px}
+.reference-layout .sidebar{border-right:1px solid var(--border-color);box-shadow:none}
+.reference-layout .sidebar .menu-item{min-height:42px;font-size:13px;font-weight:500;border-radius:8px}
+.reference-layout .sidebar .submenu-item{font-size:12px;font-weight:400;min-height:32px}
+.reference-layout .sidebar .menu-icon{width:30px;height:30px;background:#eeedff;color:#514bff;border-radius:7px;display:flex;align-items:center;justify-content:center}
+.reference-layout .sidebar .menu-icon svg{width:18px;height:18px}
+.reference-layout table{font-size:12px}
+.reference-layout th{font-size:11px;font-weight:600;text-transform:none;letter-spacing:0}
+.reference-layout .period-button,.reference-layout .period-btn{font-size:12px;border-radius:6px}
+.access-denied{padding:40px}
+@media(max-width:1200px){.reference-layout{--sidebar-width:0px}.reference-layout .topbar-shell{padding:0 16px 16px}.reference-layout .dashboard-content,.reference-layout .operations-content{padding:0 16px 20px}}
+@media(max-width:600px){.reference-layout .topbar-main{gap:12px}.reference-layout .topbar-actions{gap:7px}.reference-layout .topbar-company-select{max-width:155px}.reference-layout .topbar-user-section{padding-left:7px;gap:7px}.reference-layout .topbar-title{font-size:21px}}
+.reference-layout .topbar-shell{padding-left:0;padding-right:0}
+.reference-layout .dashboard-page{max-width:none;padding:20px 24px 30px}
+.reference-layout .analytics-page-heading{justify-content:flex-end;margin:0 0 14px}
+.reference-layout .analytics-page-heading>div:first-child{display:none}
+.reference-layout .analytics-panel,.reference-layout .dashboard-filters,.reference-layout .chart-box,.reference-layout .table-box{background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;box-shadow:0 1px 3px #14204008;backdrop-filter:none;padding:20px}
+.reference-layout .chart-box:hover,.reference-layout .table-box:hover{transform:none}
+.reference-layout .chart-box h3,.reference-layout .table-box h3{font-size:15px}
+.reference-layout .dashboard-filters{margin-bottom:16px}
+.reference-layout .filter-btn{padding:8px 12px;border-radius:6px;font-size:12px;box-shadow:none}
+.reference-layout .filter-btn.active{background:#413bff;border-color:#413bff}
+.reference-layout .operations-table th{background:#f5f6f9;color:#334155}
+.reference-layout .operations-table :is(th,td){padding:10px 12px}
+.reference-layout .operations-table tbody tr{background:var(--bg-card)}
+.reference-layout .financial-filter-panel{background:var(--bg-card);padding:18px;margin-bottom:18px}
+.reference-layout .financial-filter-panel::after{display:none}
+.reference-layout .financial-filter-top{margin-bottom:16px}
+.reference-layout .financial-filter-top h2,.reference-layout .financial-filter-top .financial-section-kicker{display:none}
+.reference-layout .financial-filter-top p{font-size:12px}
+.reference-layout .financial-period-button{padding:8px 12px;border-radius:6px;font-size:12px}
+.reference-layout .financial-panel{padding:20px}
+.reference-layout .financial-panel-kicker{display:none}
+.reference-layout .financial-panel-heading h3{font-size:15px}
+.reference-layout .financial-panel-heading p{font-size:12px}
+.reference-layout .financial-kpi-card{border-radius:12px;padding:18px;border:0;min-height:138px;box-shadow:none}
+.reference-layout .financial-kpi-card--receivable{background:#10b981;color:white}
+.reference-layout .financial-kpi-card--payable{background:#ef4444;color:white}
+.reference-layout .financial-kpi-card--income{background:#3b82f6;color:white}
+.reference-layout .financial-kpi-card--expense{background:#f59e0b;color:white}
+.reference-layout .financial-kpi-card:not(.financial-kpi-card--delinquency) :is(h3,.financial-kpi-value,.financial-kpi-description,.financial-kpi-tag){color:inherit}
+.reference-layout .financial-kpi-card:not(.financial-kpi-card--delinquency) .financial-kpi-header h3{font-size:12px;font-weight:500;text-transform:uppercase}
+.reference-layout .financial-kpi-card:not(.financial-kpi-card--delinquency) .financial-kpi-value{font-size:24px;line-height:1.5;margin:8px 0 0}
+.reference-layout .financial-kpi-card:not(.financial-kpi-card--delinquency) .financial-kpi-description{font-size:11px;line-height:1.4;margin:5px 0 0}
+.reference-layout .financial-kpi-card:not(.financial-kpi-card--delinquency) :is(.financial-kpi-pill,.financial-kpi-footer,.financial-sparkline,.financial-kpi-tag){display:none}
+.reference-layout .dashboard-widget-grid-financeiro{grid-template-columns:repeat(12,minmax(0,1fr))}
+.reference-layout .dashboard-widget-grid-financeiro>.dashboard-widget{grid-column:span 6}
+.reference-layout .dashboard-widget-grid-financeiro>.dashboard-widget-metric{grid-column:span 3}
+.reference-layout .dashboard-widget-grid-financeiro>.dashboard-widget-wide,.reference-layout .dashboard-widget-grid-financeiro>.dashboard-widget-map{grid-column:1/-1}
+@media(max-width:700px){.reference-layout .dashboard-page{padding:14px}.reference-layout .dashboard-widget-grid-financeiro>.dashboard-widget{grid-column:1/-1}.reference-layout .dashboard-widget-grid-financeiro>.dashboard-widget-metric{grid-column:span 6}}
+.reference-layout .financial-filter-top,.reference-layout .financial-filter-help{display:none}
+.reference-layout .financial-kpi-card::before,.reference-layout .financial-kpi-card::after{display:none}
+.reference-layout .financial-chip{font-size:12px;padding:8px 12px;min-height:36px;border-radius:6px;box-shadow:none}
+.reference-layout .financial-chip--active{background:#413bff;border-color:#413bff}
+.reference-layout .financial-filter-row{align-items:center}
+.reference-layout .financial-filter-group{gap:8px}
