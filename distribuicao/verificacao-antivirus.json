@@ -1,12 +1,12 @@
 {
-  "archive": "PIGO-aplicacao-aprovada-20261016.zip",
-  "sha256": "37fe97cf3fafcc61ad387caa6b020c10dd47e8c9c0c7c608803a8fb6780b0cb0",
+  "archive": "PIGO-vm-conciliado-20261016.zip",
+  "sha256": "d79a3af22d68835ca83740da2d955721dfe3cd920fd662ad3a56291589308dce",
   "scanner": "ClamAV1.5.4",
   "daily": "28150",
   "signature_date": "2026-10-11",
-  "result": "No detections by complementary scanner",
   "signature_update": "official upstream previously unreachable",
+  "result": "No detections by complementary scanner",
   "windows_defender": "pending; keep protection active",
-  "previous_development_source_alert": "unresolved; do not assume false positive",
+  "previous_development_source_detection": "unresolved; not adjudicated as false positive",
   "source_submitted_to_external_scanners": false
 }

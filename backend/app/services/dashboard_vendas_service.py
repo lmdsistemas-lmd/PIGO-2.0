@@ -16,28 +16,34 @@ class DashboardVendasService(BaseDashboardService):
         start: str | None,
         end: str | None,
         empresa_id: int | None = None,
+        status: str | None = None,
     ) -> dict:
         date_range = self._resolve_period(period, start, end)
+        self.repository.set_status_filter(status)
         from concurrent.futures import ThreadPoolExecutor
 
         # Executa todas as consultas do dashboard em paralelo para máxima velocidade
         with ThreadPoolExecutor(max_workers=10) as executor:
-            # Each worker needs its own copy of the authenticated tenant context.
-            # A Context object cannot be entered concurrently by multiple threads.
-            def submit(function, *args):
-                return executor.submit(copy_context().run, function, *args)
+            def submit_with_context(function, *args):
+                context = copy_context()
+                return executor.submit(context.run, function, *args)
 
-            f_resumo = submit(self.repository.get_resumo_kpis, date_range, empresa_id)
-            f_historico = submit(self.repository.get_historico_vendas, empresa_id)
-            f_clientes = submit(self.repository.get_top_clientes, date_range, empresa_id)
-            f_produtos = submit(self.repository.get_top_produtos, date_range, empresa_id)
-            f_cidades = submit(self.repository.get_vendas_por_cidade, date_range, empresa_id)
-            f_vendedores = submit(self.repository.get_vendas_por_vendedor, date_range, empresa_id)
-            f_grupos = submit(self.repository.get_vendas_por_grupo, date_range, empresa_id)
-            f_marcas = submit(self.repository.get_vendas_por_marca, date_range, empresa_id)
-            f_horas = submit(self.repository.get_media_por_faixa_horaria, date_range, empresa_id)
-            f_dias = submit(self.repository.get_media_por_dia_semana, date_range, empresa_id)
-            f_variation = submit(self._get_faturamento_variation, date_range, empresa_id)
+            f_resumo = submit_with_context(self.repository.get_resumo_kpis, date_range, empresa_id)
+            f_historico = submit_with_context(
+                self.repository.get_historico_vendas, date_range, empresa_id
+            )
+            f_clientes = submit_with_context(self.repository.get_top_clientes, date_range, empresa_id)
+            f_novos_clientes = submit_with_context(
+                self.repository.get_novos_clientes_count, date_range, empresa_id
+            )
+            f_produtos = submit_with_context(self.repository.get_top_produtos, date_range, empresa_id)
+            f_cidades = submit_with_context(self.repository.get_vendas_por_cidade, date_range, empresa_id)
+            f_vendedores = submit_with_context(self.repository.get_vendas_por_vendedor, date_range, empresa_id)
+            f_grupos = submit_with_context(self.repository.get_vendas_por_grupo, date_range, empresa_id)
+            f_marcas = submit_with_context(self.repository.get_vendas_por_marca, date_range, empresa_id)
+            f_horas = submit_with_context(self.repository.get_media_por_faixa_horaria, date_range, empresa_id)
+            f_dias = submit_with_context(self.repository.get_media_por_dia_semana, date_range, empresa_id)
+            f_variation = submit_with_context(self._get_faturamento_variation, date_range, empresa_id)
 
             # Coleta os resultados
             resumo = f_resumo.result()
@@ -46,12 +52,6 @@ class DashboardVendasService(BaseDashboardService):
             itens = resumo["itens"]
             custo = resumo["custo"]
             
-            # Fallback para Sync se necessário
-            if faturamento == 0 and pedidos == 0:
-                sync_data = self._load_sync_data()
-                if sync_data and "VENDAS" in sync_data:
-                    return self._apply_sync_data(sync_data["VENDAS"], period, date_range)
-
         ticket_medio = faturamento / pedidos if pedidos > 0 else 0
         itens_por_venda = itens / pedidos if pedidos > 0 else 0
         lucro_bruto = faturamento - custo
@@ -62,6 +62,7 @@ class DashboardVendasService(BaseDashboardService):
             "resumo": {
                 "faturamento": faturamento,
                 "pedidos": pedidos,
+                "novosClientes": f_novos_clientes.result(),
                 "ticketMedio": round(ticket_medio, 2),
                 "itensPorVenda": round(itens_por_venda, 2),
                 "custoTotal": custo,

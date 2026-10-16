@@ -1,10 +1,9 @@
-> **Versão visual aprovada pelo usuário em 16/10/2026.**
-> **Instalação suspensa após a conferência da VM:** [conciliação dos fontes atuais](PENDENCIA_CONCILIACAO_VM.md).
-> [Primeiro passo na VM e pendências de instalação](docs/INSTALACAO_VERSAO_APROVADA.md).
-> O ZIP contém backend real e painel compilado; não é a prévia de dados fictícios.
-> Instalação em produção e gravações no ERP ainda não foram homologadas.
-> Os fontes de desenvolvimento ficam neste repositório; o alerta anterior do Defender
-> em reportConfig.js permanece sem adjudicação. Mantenha a proteção ativa.
+> **Backend conciliado com os 129 arquivos recebidos da VM.**
+> [Baixar aplicação conciliada](distribuicao/PIGO-vm-conciliado-20261016.zip) → Download raw file.
+> [Conciliação e testes](docs/CONCILIACAO_BACKEND_VM.md) · [Primeiro passo na VM](docs/INSTALACAO_VERSAO_APROVADA.md).
+> O pacote contém backend real e painel compilado com o layout aprovado.
+> A instalação em produção ainda não foi realizada. O primeiro comando somente inspeciona o ambiente.
+> Manter o Defender ativo. A varredura complementar não substitui a verificação no Windows.
 
 # P.I.G.O Dashboard
 

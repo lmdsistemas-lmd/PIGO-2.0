@@ -5,6 +5,7 @@ from typing import List
 class VendasResumo(BaseModel):
     faturamento: float
     pedidos: int
+    novosClientes: int
     ticketMedio: float
     itensPorVenda: float
     custoTotal: float

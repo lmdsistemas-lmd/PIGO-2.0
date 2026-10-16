@@ -1,78 +1,84 @@
-# Instalação paralela da versão aprovada
+# PIGO conciliado com o backend da VM
 
-Repositório confirmado pelo usuário: Suporte-Lmd-Sistemas/PIGO-DASHBOARD, main.
-Base: 667934a2b938f10d4cbf55eb8c1bffae90d77556 (22/07/2026).
-Os 108 arquivos de backend desta base são idênticos ao ZIP original recebido.
+Base recebida: ZIP PIGO-backend-VM-20261016-203041-221132.zip, 129 arquivos,
+coletado em WIN-JG1E0O7FSBS. Os fontes do backend em execução foram comparados
+com a main do GitHub e com as alterações do painel aprovado. A ativação do
+agente, a API/campos de caixa, as coordenadas e a sincronização atuais foram
+integrados, preservando a configuração por backend/.env.
 
-A entrega instalável contém backend Python, migrações e painel compilado com o
-visual aprovado. Usa banco e autenticação reais após configuração; não contém
-previa.py, snapshots, usuários demo ou credenciais. Não substitui o ERP nem o
-instalador do agente. O código-fonte completo fica na branch de entrega;
-o ZIP de execução não contém fontes de desenvolvimento React.
+## O que está nesta entrega
 
-## Primeiro passo na VM
+Backend real e painel compilado com o layout aprovado. O adaptador do mapa
+reconhece também as coordenadas confirmadas e correções manuais da VM; as folhas
+de estilo continuam idênticas às aprovadas. O pacote não inclui dados de clientes,
+credenciais, banco, ambiente virtual, fontes React ou instalador do agente.
 
-Baixar e verificar o ZIP com a proteção Windows ativa. Extrair a pasta
-PIGO-APROVADO-20261016 em C:\Projetos, ao lado de P.I.G.O. Não extrair sobre a
-produção. A porta4022 continua pertencendo à prévia visual; esta conferência
-não inicia servidor nem ocupa portas.
+A API legada /api/cash-register foi preservada. O detalhamento do fechamento novo
+usa um adaptador separado, evitando substituir a classe do caixa existente.
+A ativação continua usando o LicenseControl atual; revogação e regeneração de
+token são limitadas ao tenant autenticado e à permissão administrativa.
+Instalação revogada continua bloqueada na sincronização. Campos/chaves físicos
+do caixa reconhecem erp_company_id e o campo de empresa correspondente.
 
-No PowerShell da VM WIN-JG1E0O7FSBS:
+As migrações da VM 006 e 009–011 foram preservadas. As adições são:
+
+- 012_sales_goals.sql: metas;
+- 013_erp_commands.sql: fila de comandos;
+- 014_pigo_access.sql: usuários e perfis próprios PIGO.
+
+Nenhuma rotina de reconstrução de espelho, seed ou ativação é executada na
+inicialização. Essas rotinas de manutenção permanecem nos fontes para revisão,
+fora do pacote de execução. Gravações no ERP seguem dependendo da homologação
+dos procedimentos e regras reais; não habilitar writeback nesta etapa.
+
+## Primeiro passo na VM: conferir o ambiente
+
+Após verificar o ZIP com o Defender ativo, extrair a pasta
+PIGO-VM-CONCILIADO-20261016 em C:\Projetos, ao lado de P.I.G.O.
+A pasta atual e a tarefa 4010 permanecem como estão. Executar:
 
 ```powershell
-& 'C:\Projetos\P.I.G.O\backend\venv\Scripts\python.exe' 'C:\Projetos\PIGO-APROVADO-20261016\conferir_base.py' --current-root 'C:\Projetos\P.I.G.O'
+& 'C:\Projetos\P.I.G.O\backend\venv\Scripts\python.exe' 'C:\Projetos\PIGO-VM-CONCILIADO-20261016\inspecionar_vm.py' --current-root 'C:\Projetos\P.I.G.O'
 ```
 
-O comando calcula hashes de app/migrações/requirements e lista diferenças com a
-base declarada no GitHub. Não importa o backend nem lê o conteúdo do .env,
-não se conecta ao banco, não envia dados e não altera processos ou arquivos.
-BASE_CONFERE confirma somente essa igualdade. REVISAR_DIFERENCAS identifica
-arquivos que precisam ser conciliados antes de qualquer substituição. A saída
-pode ser compartilhada; não contém configuração ou credenciais.
+O comando confere os fontes da VM com os 129 hashes recebidos e inspeciona os
+pré-requisitos. Lê a configuração existente para uma conexão PostgreSQL com
+transação somente de leitura, consultando apenas versão e nomes de tabelas.
+Não exibe senhas, tokens ou a URL de conexão. Também localiza pg_dump/pg_restore
+instalados e verifica a disponibilidade local da porta 4023. Não inicia o painel,
+não aplica migrações, não copia banco e não altera o Caddy. Compartilhar somente
+a saída JSON, sem anexar o .env.
 
-## Instalação após conferir a base e o banco
+## Etapa seguinte: homologação e instalação
 
-1. Manter a produção em funcionamento e preservar backend/.env, JWT, parâmetros
-   de licença, tarefa4010 e o Caddyfile.production completo. A pasta P.I.G.O não
-   deve ser renomeada: tarefa e ambiente Python dependem dela.
-2. Fazer backup PostgreSQL com a ferramenta da instalação atual e testar a
-   restauração numa base de homologação. Configurar a instância nova com um .env
-   próprio apontando para essa cópia, sem reutilizar produção para os primeiros
-   testes. Não enviar o .env, backup ou senhas ao GitHub/chat.
-3. Criar um venv próprio no backend novo e instalar requirements.txt. O pacote
-   não inclui o venv antigo, Node.js ou binários baixados por terceiros. Aplicar
-   migrações somente na cópia restaurada e conferir a011 de Acesso.
-4. Iniciar a nova API apenas em127.0.0.1 numa porta livre confirmada. Conferir
-   login ERP, licença, dados por empresa, Equipe, Performance, IA, Acesso e as
-   consultas de Gestão/Financeiro. O painel deve usar /api no mesmo servidor.
-5. Antes de apontar a nova instância para produção, revisar migrações aplicadas,
-   backup válido e compatibilidade com sincronização do agente. Programar a troca
-   somente do domínioPIGO no Caddy, mantendo os outros domínios e uma configuração
-   anterior pronta para retorno. Nenhuma troca é feita por este pacote.
-6. Configurar a inicialização automática da nova instância após validação. A
-   tarefa antiga permanece como está até a troca e a verificação externa.
+Com a conferência concluída, criar um backup privado PostgreSQL e verificar sua
+restauração em uma base separada. Usar um venv novo e um .env próprio da pasta
+nova, apontando para essa cópia; preservar JWT e parâmetros de integração, sem
+publicar valores. Aplicar as migrações na cópia e iniciar a nova API somente
+em 127.0.0.1 numa porta livre, como 4023 se confirmada.
 
-O comando de migração existente percorre os arquivos SQL. Ele não valida backup,
-não detecta automaticamente deriva de schema e não deve ser executado como parte
-desta primeira conferência de arquivos.
+Conferir login do ERP, licença, consultas, Equipe, Performance, IA, Acesso e caixa.
+A conexão ao LicenseControl externo não foi exercitada com credenciais reais nos
+testes da nuvem; foi simulada. Preservar o agente instalado e não enviar cargas
+reais ao ambiente de teste sem configurar o destino deliberadamente.
 
-## Limites existentes que continuam explícitos
+Depois da homologação, planejar a aplicação das novas migrações e a troca do
+backend de produção. Atualizar apenas a rota do domínio PIGO no Caddy, mantendo
+os outros domínios, o backup e a configuração anterior disponíveis para retorno.
+Configurar a tarefa automática da nova instância após validar o processo.
+Nenhuma dessas alterações é efetuada por baixar ou inspecionar o pacote.
 
-O agente recebido chama POST /api/agent/activate; essa rota não existe na base
-main confirmada. Esta entrega não inventa um contrato de ativação nem substitui
-o LicenseControl. Preservar a instalação e as credenciais atuais do agente;
-novas ativações e o fluxo de licenciamento devem ser homologados separadamente.
-A ausência da rota é uma limitação da própria base, não uma rota removida por
-esta revisão.
+## Validação e limites
 
-Não atualizar automaticamente o agente nem habilitar gravações no ERP. A fila e
-o executor preparados dependem dos procedimentos e regras reais de cadastro do
-ERP. Consolidação de estoque por local/variação ainda depende dessa definição;
-valores sem regra confirmada continuam indisponíveis. Mapas usam centros
-municipais; ruas dependem da internet/OpenStreetMap. A aprovação visual não
-substitui esses testes de integração.
+Testes em PostgreSQL descartável verificaram a ativação simulada, bloqueio de
+instalação revogada, isolamento entre tenants, caixa legado e detalhamento novo,
+exportações XLSX/PDF, chaves físicas e preservação dos dados ao reaplicar as
+migrações, vendas/status/datas e catálogo municipal. O frontend passou pelos
+testes funcionais e de navegação com dados sintéticos. Windows, banco real,
+Caddy e o agente instalado ainda precisam da homologação na VM.
 
 O alerta anterior do Defender em fontes de desenvolvimento React permanece sem
-adjudicação; a separação entre fontes e execução não comprova falso positivo.
-Manter a proteção ativa, verificar a distribuição de execução e suspender o uso
-se houver novo alerta. A varredura complementar não substitui o Defender.
+adjudicação. A distribuição convencional separa fontes e execução; isso não
+confirma falso positivo nem liberação pelo Defender. Manter a proteção ativa e
+suspender o uso se houver nova detecção. A varredura complementar não substitui
+a proteção do Windows.

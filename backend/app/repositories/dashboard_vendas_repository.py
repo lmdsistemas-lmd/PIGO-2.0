@@ -1,4 +1,5 @@
 from __future__ import annotations
+from datetime import date, timedelta
 from typing import TYPE_CHECKING
 from app.repositories.base_dashboard_repository import BaseDashboardRepository
 
@@ -6,6 +7,46 @@ if TYPE_CHECKING:
     from app.services.erp_query_service import DateRange
 
 class DashboardVendasRepository(BaseDashboardRepository):
+    REVENUE_DATE_FIELD = "PEV_DT_FATURAMENTO"
+    REVENUE_VALUE_FIELD = "PEV_VALOR_TOTAL"
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._selected_status = "TODOS"
+
+    def set_status_filter(self, status: str | None) -> None:
+        self._selected_status = str(status or "TODOS").upper()
+
+    def _status_condition(self, alias: str) -> str:
+        mapped = {"ABERTO": "A", "FATURADO": "F", "CANCELADO": "C", "ORCAMENTO": "O"}
+        value = mapped.get(self._selected_status)
+        return f"{alias}.PEV_STATUS = '{value}'" if value else f"{alias}.PEV_STATUS <> 'C'"
+
+    @classmethod
+    def _revenue_value(cls, alias: str) -> str:
+        return f"{alias}.{cls.REVENUE_VALUE_FIELD}"
+
+    @classmethod
+    def _revenue_date(cls, alias: str) -> str:
+        return f"{alias}.{cls.REVENUE_DATE_FIELD}"
+
+    @classmethod
+    def _revenue_period_condition(
+        cls,
+        alias: str,
+        start_param: str = "start_date",
+        end_param: str = "end_date_exclusive",
+    ) -> str:
+        field = cls._revenue_date(alias)
+        return f"{field} >= :{start_param} AND {field} < :{end_param}"
+
+    @staticmethod
+    def _date_range_params(date_range: DateRange) -> dict:
+        return {
+            "start_date": date_range.start,
+            "end_date_exclusive": date_range.end + timedelta(days=1),
+        }
+
     def get_resumo_kpis(self, date_range: DateRange, empresa_id: int | None) -> dict:
         empresa_sql, empresa_params = self._empresa_filter("PV.PEV_EMPRESA", empresa_id)
         # Keep each query flat so the SaaS adapter can apply tenant guards to
@@ -15,8 +56,8 @@ class DashboardVendasRepository(BaseDashboardRepository):
             SELECT CAST(SUM(PV.PEV_VALOR_TOTAL) AS NUMERIC(18,2)) AS FATURAMENTO,
                    COUNT(*) AS PEDIDOS
             FROM TB_PEDIDO_VENDA PV
-            WHERE PV.PEV_DT_FATURAMENTO BETWEEN :start_date AND :end_date
-              AND PV.PEV_STATUS <> 'C'
+            WHERE {self._revenue_period_condition('PV')}
+              AND {self._status_condition('PV')}
               {empresa_sql}
         """
         items_sql = f"""
@@ -26,11 +67,11 @@ class DashboardVendasRepository(BaseDashboardRepository):
             INNER JOIN TB_PEDIDO_VENDA PV
                 ON PV.PEV_ID = I.PEVI_PEDIDO_VENDA
                AND PV.PEV_EMPRESA = I.PEVI_EMPRESA
-            WHERE PV.PEV_DT_FATURAMENTO BETWEEN :start_date AND :end_date
-              AND PV.PEV_STATUS <> 'C'
+            WHERE {self._revenue_period_condition('PV')}
+              AND {self._status_condition('PV')}
               {empresa_sql}
         """
-        params = {"start_date": date_range.start, "end_date": date_range.end, **empresa_params}
+        params = {**self._date_range_params(date_range), **empresa_params}
         row = self._fetch_one(orders_sql, dict(params)) or {}
         items = self._fetch_one(items_sql, dict(params)) or {}
             
@@ -53,6 +94,21 @@ class DashboardVendasRepository(BaseDashboardRepository):
         res = self.get_resumo_kpis(date_range, empresa_id)
         return res["itens"]
 
+    def get_novos_clientes_count(self, date_range: DateRange, empresa_id: int | None) -> int:
+        empresa_sql, empresa_params = self._empresa_filter("C.CLI_EMPRESA", empresa_id)
+        sql = f"""
+            SELECT COUNT(DISTINCT C.CLI_PESSOA) AS TOTAL
+            FROM TB_CLIENTE C
+            INNER JOIN TB_PESSOA P ON P.PES_ID = C.CLI_PESSOA
+            WHERE P.PES_DT_CADASTRO BETWEEN :start_date AND :end_date
+              {empresa_sql}
+        """
+        row = self._fetch_one(
+            sql,
+            {"start_date": date_range.start, "end_date": date_range.end, **empresa_params},
+        )
+        return self._safe_int(row.get("TOTAL")) if row else 0
+
     def get_custo_total(self, date_range: DateRange, empresa_id: int | None) -> float:
         res = self.get_resumo_kpis(date_range, empresa_id)
         return res["custo"]
@@ -67,7 +123,7 @@ class DashboardVendasRepository(BaseDashboardRepository):
             FROM TB_PEDIDO_VENDA PV
             INNER JOIN TB_PESSOA P ON P.PES_ID = PV.PEV_CLIENTE
             WHERE PV.PEV_DT_FATURAMENTO BETWEEN :start_date AND :end_date
-              AND PV.PEV_STATUS <> 'C'
+              AND {self._status_condition('PV')}
               {empresa_sql}
             GROUP BY 1
             ORDER BY 3 DESC
@@ -87,7 +143,7 @@ class DashboardVendasRepository(BaseDashboardRepository):
             INNER JOIN TB_PEDIDO_VENDA PV ON PV.PEV_ID = I.PEVI_PEDIDO_VENDA
             INNER JOIN TB_PRODUTO PR ON PR.PRD_ID = I.PEVI_PRODUTO
             WHERE PV.PEV_DT_FATURAMENTO BETWEEN :start_date AND :end_date
-              AND PV.PEV_STATUS <> 'C'
+              AND {self._status_condition('PV')}
               {empresa_sql}
             GROUP BY 1
             ORDER BY 3 DESC
@@ -109,13 +165,13 @@ class DashboardVendasRepository(BaseDashboardRepository):
             INNER JOIN TB_CLIENTE C ON C.CLI_PESSOA = PV.PEV_CLIENTE
             INNER JOIN TB_PESSOA P ON P.PES_ID = C.CLI_PESSOA
             INNER JOIN TB_CIDADE CID ON CID.CID_ID = P.PES_CIDADE
-            WHERE PV.PEV_DT_FATURAMENTO BETWEEN :start_date AND :end_date
-              AND PV.PEV_STATUS <> 'C'
+            WHERE {self._revenue_period_condition('PV')}
+              AND {self._status_condition('PV')}
               {empresa_sql}
             GROUP BY CID.CID_NOME{group_code}
             ORDER BY QTD DESC
         """
-        params = {"start_date": date_range.start, "end_date": date_range.end, **empresa_params}
+        params = {**self._date_range_params(date_range), **empresa_params}
         rows = self._fetch_all(sql, params)
         return [{"codigo_ibge":str(r["CODIGO_IBGE"]).strip() if r.get("CODIGO_IBGE") else None,"cidade": r.get("CIDADE"), "quantidade": self._safe_int(r.get("QTD"))} for r in rows]
 
@@ -130,7 +186,7 @@ class DashboardVendasRepository(BaseDashboardRepository):
             LEFT JOIN TB_VENDEDOR V ON V.vdr_pessoa = PV.PEV_VENDEDOR
             LEFT JOIN TB_PESSOA P ON P.PES_ID = V.vdr_pessoa
             WHERE PV.PEV_DT_FATURAMENTO BETWEEN :start_date AND :end_date
-              AND PV.PEV_STATUS <> 'C'
+              AND {self._status_condition('PV')}
               {empresa_sql}
             GROUP BY 1
             ORDER BY 3 DESC
@@ -150,7 +206,7 @@ class DashboardVendasRepository(BaseDashboardRepository):
             INNER JOIN TB_PRODUTO PR ON PR.PRD_ID = I.PEVI_PRODUTO
             INNER JOIN TB_PROD_GRUPO G ON G.PGRU_ID = PR.PRD_GRUPO
             WHERE PV.PEV_DT_FATURAMENTO BETWEEN :start_date AND :end_date
-              AND PV.PEV_STATUS <> 'C'
+              AND {self._status_condition('PV')}
               {empresa_sql}
             GROUP BY 1
             ORDER BY 2 DESC
@@ -170,7 +226,7 @@ class DashboardVendasRepository(BaseDashboardRepository):
             INNER JOIN TB_PRODUTO PR ON PR.PRD_ID = I.PEVI_PRODUTO
             INNER JOIN TB_PROD_MARCA M ON M.PMAR_ID = PR.PRD_MARCA
             WHERE PV.PEV_DT_FATURAMENTO BETWEEN :start_date AND :end_date
-              AND PV.PEV_STATUS <> 'C'
+              AND {self._status_condition('PV')}
               {empresa_sql}
             GROUP BY 1
             ORDER BY 2 DESC
@@ -188,7 +244,7 @@ class DashboardVendasRepository(BaseDashboardRepository):
                 COUNT(PV.PEV_ID) AS PEDIDOS
             FROM TB_PEDIDO_VENDA PV
             WHERE PV.PEV_DT_LANCAMENTO BETWEEN :start_date AND :end_date
-              AND COALESCE(PV.PEV_STATUS, '') <> 'CANCELADO'
+              AND {self._status_condition('PV')}
               {empresa_sql}
             GROUP BY 1
             ORDER BY 1
@@ -207,7 +263,7 @@ class DashboardVendasRepository(BaseDashboardRepository):
                 COUNT(PV.PEV_ID) AS PEDIDOS
             FROM TB_PEDIDO_VENDA PV
             WHERE PV.PEV_DT_LANCAMENTO BETWEEN :start_date AND :end_date
-              AND COALESCE(PV.PEV_STATUS, '') <> 'CANCELADO'
+              AND {self._status_condition('PV')}
               {empresa_sql}
             GROUP BY 1
             ORDER BY 1
@@ -217,24 +273,52 @@ class DashboardVendasRepository(BaseDashboardRepository):
         labels = {1: "Dom", 2: "Seg", 3: "Ter", 4: "Qua", 5: "Qui", 6: "Sex", 7: "Sab"}
         return [{"dia": labels.get(self._safe_int(r.get("DIA_NUM")), str(r.get("DIA_NUM"))), "valor": self._safe_float(r.get("VALOR")), "pedidos": self._safe_int(r.get("PEDIDOS"))} for r in rows]
 
-    def get_historico_vendas(self, empresa_id: int | None) -> list[dict]:
+    def get_historico_vendas(
+        self, date_range: DateRange, empresa_id: int | None
+    ) -> list[dict]:
         empresa_sql, empresa_params = self._empresa_filter("PV.PEV_EMPRESA", empresa_id)
+        revenue_date = self._revenue_date("PV")
+        history_start = date(date_range.end.year - 1, 1, 1)
+        history_end_exclusive = date_range.end + timedelta(days=1)
+
         sql = f"""
             SELECT
-                EXTRACT(YEAR FROM PV.PEV_DT_LANCAMENTO) AS ANO,
-                EXTRACT(MONTH FROM PV.PEV_DT_LANCAMENTO) AS MES_NUM,
-                CAST(SUM(PV.PEV_VALOR_TOTAL) AS NUMERIC(18,2)) AS VALOR,
+                EXTRACT(YEAR FROM {revenue_date}) AS ANO,
+                EXTRACT(MONTH FROM {revenue_date}) AS MES_NUM,
+                CAST(SUM({self._revenue_value('PV')}) AS NUMERIC(18,2)) AS VALOR,
                 COUNT(PV.PEV_ID) AS PEDIDOS
             FROM TB_PEDIDO_VENDA PV
-            WHERE PV.PEV_DT_LANCAMENTO >= CURRENT_DATE - INTERVAL '2 years'
-              AND COALESCE(PV.PEV_STATUS, '') <> 'CANCELADO'
+            WHERE {self._revenue_period_condition('PV', 'history_start', 'history_end_exclusive')}
+              AND {self._status_condition('PV')}
               {empresa_sql}
-            GROUP BY 1, 2
-            ORDER BY 1 DESC, 2 ASC
+            GROUP BY
+                EXTRACT(YEAR FROM {revenue_date}),
+                EXTRACT(MONTH FROM {revenue_date})
+            ORDER BY
+                ANO DESC,
+                MES_NUM ASC
         """
-        rows = self._fetch_all(sql, empresa_params)
-        labels = {1: "Jan", 2: "Fev", 3: "Mar", 4: "Abr", 5: "Mai", 6: "Jun", 7: "Jul", 8: "Ago", 9: "Set", 10: "Out", 11: "Nov", 12: "Dez"}
-        return [{"ano": int(r.get("ANO")), "label": labels.get(int(r.get("MES_NUM")), str(r.get("MES_NUM"))), "valor": self._safe_float(r.get("VALOR")), "pedidos": self._safe_int(r.get("PEDIDOS"))} for r in rows]
+        params = {
+            "history_start": history_start,
+            "history_end_exclusive": history_end_exclusive,
+            **empresa_params,
+        }
+        rows = self._fetch_all(sql, params)
+        labels = {
+            1: "Jan", 2: "Fev", 3: "Mar", 4: "Abr", 5: "Mai", 6: "Jun",
+            7: "Jul", 8: "Ago", 9: "Set", 10: "Out", 11: "Nov", 12: "Dez",
+        }
+        return [
+            {
+                "ano": self._safe_int(r.get("ANO")),
+                "label": labels.get(
+                    self._safe_int(r.get("MES_NUM")), str(r.get("MES_NUM"))
+                ),
+                "valor": self._safe_float(r.get("VALOR")),
+                "pedidos": self._safe_int(r.get("PEDIDOS")),
+            }
+            for r in rows
+        ]
 
     def get_detalhes_pedidos(self, date_range: DateRange, empresa_id: int | None, page: int = 1, page_size: int = 10, status: str | None = None) -> dict:
         empresa_sql, empresa_params = self._empresa_filter("PV.PEV_EMPRESA", empresa_id)
@@ -260,7 +344,7 @@ class DashboardVendasRepository(BaseDashboardRepository):
         count_sql = f"""
             SELECT COUNT(*) AS TOTAL 
             FROM TB_PEDIDO_VENDA PV 
-            WHERE PV.PEV_DT_EMISSAO BETWEEN :start_date AND :end_date 
+            WHERE PV.PEV_DT_FATURAMENTO BETWEEN :start_date AND :end_date 
               {status_sql}
               {empresa_sql}
         """
@@ -268,7 +352,7 @@ class DashboardVendasRepository(BaseDashboardRepository):
         sql = f"""
             SELECT
                 PV.PEV_ID AS ID,
-                PV.PEV_DT_EMISSAO AS DATA,
+                PV.PEV_DT_FATURAMENTO AS DATA,
                 COALESCE(NULLIF(TRIM(P.PES_FANTASIA_APELIDO), ''), P.PES_RSOCIAL_NOME) AS CLIENTE,
                 CAST(COALESCE(PV.PEV_VALOR_TOTAL, 0) AS NUMERIC(18,2)) AS VALOR,
                 CASE PV.PEV_STATUS
@@ -281,10 +365,10 @@ class DashboardVendasRepository(BaseDashboardRepository):
             FROM TB_PEDIDO_VENDA PV
             INNER JOIN TB_CLIENTE C ON C.CLI_PESSOA = PV.PEV_CLIENTE
             INNER JOIN TB_PESSOA P ON P.PES_ID = C.CLI_PESSOA
-            WHERE PV.PEV_DT_EMISSAO BETWEEN :start_date AND :end_date
+            WHERE PV.PEV_DT_FATURAMENTO BETWEEN :start_date AND :end_date
               {status_sql}
               {empresa_sql}
-            ORDER BY PV.PEV_DT_EMISSAO DESC
+            ORDER BY PV.PEV_DT_FATURAMENTO DESC
             ROWS {offset + 1} TO {offset + page_size}
         """
         

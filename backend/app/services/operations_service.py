@@ -7,7 +7,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 from sqlalchemy import text
-from app.services.cash_register_service import CashRegisterService
+from app.services.cash_closing_details_service import CashClosingDetailsService
 
 
 def field(key, label, column, kind="text"):
@@ -259,7 +259,7 @@ class OperationsService:
             for item in items[:10000]:
                 result["cash_items"].setdefault(item["tipo"], []).append(dict(item))
         if resource == "fechamentos":
-            result = CashRegisterService(self.db, self.schema, self.tenant, company, record_id).enrich(result)
+            result = CashClosingDetailsService(self.db, self.schema, self.tenant, company, record_id).enrich(result)
         return result
 
     def forecast(self, company, start, end):

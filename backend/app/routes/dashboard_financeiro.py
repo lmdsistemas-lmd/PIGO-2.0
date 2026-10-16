@@ -23,4 +23,5 @@ def get_dashboard_financeiro(
         start=start,
         end=end,
         empresa_id=empresa_id,
+        user_scope=str(current_user.get("sub") or current_user.get("id") or ""),
     )

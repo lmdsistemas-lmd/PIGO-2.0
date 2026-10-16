@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 
 class ContasResumo(BaseModel):
@@ -50,13 +50,27 @@ class EstoqueCriticoItem(BaseModel):
 
 
 class CidadeClienteItem(BaseModel):
-    cidade: str
-    quantidade: int
     codigo_ibge: str | None = None
     uf: str | None = None
-    x: int | None = None
-    y: int | None = None
+    ibgeCode: Optional[str] = None
+    receivedIbgeCode: Optional[str] = None
+    cidade: str
+    city: Optional[str] = None
+    quantidade: int
+    customers: Optional[int] = None
+    x: int
+    y: int
     cor: str
+    state: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    coordinateSource: str = "NOT_FOUND"
+    resolutionSource: str = "NOT_FOUND"
+    coordinateConfidence: float = 0
+    coordinateWarning: Optional[str] = None
+    receivableAmount: float = 0
+    overdueAmount: float = 0
+    percentage: float = 0
 
 
 class DashboardFinanceiroResponse(BaseModel):

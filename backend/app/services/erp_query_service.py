@@ -20,21 +20,26 @@ _saas_mode_cache: dict[str, bool] = {}
 
 # Cache de resultados de query (SQL + Params -> Resultado)
 # Estrutura: { key: (timestamp, result) }
-_query_result_cache: dict[str, tuple[float, Any]] = {}
+_query_result_cache: dict[str, tuple[float, Any, str | None]] = {}
 _CACHE_TTL = 30
 _query_cache_lock = threading.RLock()
 _query_cache_revision = 0
+_table_exists_cache: dict[str, bool] = {}
 
 
-def clear_erp_query_cache():
-    """Invalidate after a committed sync; in-flight old reads cannot refill it."""
+def clear_erp_query_cache(tenant_id: str | None = None) -> None:
+    """Invalidate committed data; an older in-flight query cannot refill cache."""
     global _query_cache_revision
     with _query_cache_lock:
         _query_cache_revision += 1
-        _query_result_cache.clear()
+        if tenant_id is None:
+            _query_result_cache.clear()
+        else:
+            expected = str(tenant_id)
+            for key in [key for key, value in _query_result_cache.items() if len(value) < 3 or value[2] == expected]:
+                _query_result_cache.pop(key, None)
         _table_exists_cache.clear()
 
-_table_exists_cache: dict[str, bool] = {}
 
 class ERPQueryService:
     def table_columns(self, table_name: str) -> set[str]:
@@ -50,6 +55,7 @@ class ERPQueryService:
             return {str(name).strip() for name in db.execute(text('SELECT RDB$FIELD_NAME FROM RDB$RELATION_FIELDS WHERE RDB$RELATION_NAME=:table'), {'table': table_name}).scalars()}
         finally:
             db_gen.close()
+
 
     def table_exists(self, table_name: str) -> bool:
         if not self._is_saas_mode():
@@ -207,15 +213,49 @@ class ERPQueryService:
         if ":tenant_id_filter" in sql and "tenant_id" in sql:
             return sql
 
-        if "WHERE " in sql.upper():
-            return re.sub(r'WHERE\s+', f'WHERE {tenant_col} = :tenant_id_filter AND ', sql, count=1, flags=re.IGNORECASE)
-        if "GROUP BY" in sql.upper():
-            return re.sub(r'GROUP BY', f'WHERE {tenant_col} = :tenant_id_filter GROUP BY', sql, count=1, flags=re.IGNORECASE)
-        if "ORDER BY" in sql.upper():
-            return re.sub(r'ORDER BY', f'WHERE {tenant_col} = :tenant_id_filter ORDER BY', sql, count=1, flags=re.IGNORECASE)
-        if "LIMIT" in sql.upper():
-            return re.sub(r'LIMIT', f'WHERE {tenant_col} = :tenant_id_filter LIMIT', sql, count=1, flags=re.IGNORECASE)
+        positions = self._top_level_keywords(sql, ("WHERE", "GROUP BY", "ORDER BY", "LIMIT"))
+        for keyword in ("WHERE", "GROUP BY", "ORDER BY", "LIMIT"):
+            if keyword not in positions:
+                continue
+            index = positions[keyword]
+            if keyword == "WHERE":
+                end = index + len(keyword)
+                return f"{sql[:end]} {tenant_col} = :tenant_id_filter AND{sql[end:]}"
+            return f"{sql[:index]}WHERE {tenant_col} = :tenant_id_filter {sql[index:]}"
         return f"{sql} WHERE {tenant_col} = :tenant_id_filter"
+
+    def _top_level_keywords(self, sql: str, keywords: tuple[str, ...]) -> dict[str, int]:
+        """Localiza cláusulas da consulta externa, ignorando subqueries."""
+        upper = sql.upper()
+        depth = 0
+        quote = None
+        positions: dict[str, int] = {}
+        index = 0
+        while index < len(sql):
+            char = sql[index]
+            if quote:
+                if char == quote:
+                    quote = None
+                index += 1
+                continue
+            if char in {"'", '"'}:
+                quote = char
+                index += 1
+                continue
+            if char == "(":
+                depth += 1
+            elif char == ")":
+                depth = max(0, depth - 1)
+            elif depth == 0:
+                for keyword in keywords:
+                    if upper.startswith(keyword, index):
+                        before_ok = index == 0 or not upper[index - 1].isalnum()
+                        after = index + len(keyword)
+                        after_ok = after >= len(upper) or not upper[after].isalnum()
+                        if before_ok and after_ok and keyword not in positions:
+                            positions[keyword] = index
+            index += 1
+        return positions
 
     def _translate_sql(self, sql: str) -> str:
         """Traduz sintaxe Firebird para PostgreSQL (SaaS)"""
@@ -345,32 +385,6 @@ class ERPQueryService:
             root_alias = self._root_table_alias(sql)
             sql = self._inject_join_tenant_guards(sql, root_alias)
             sql = self._inject_root_tenant_filter(sql, tenant_id, params)
-            tenant_id = None
-            if tenant_id:
-                params["tenant_id_filter"] = tenant_id
-                prefix = ""
-                alias_match = re.search(
-                    r'FROM\s+("TB_[A-Z0-9_]+"|TB_[A-Z0-9_]+)(?:\s+(AS\s+)?([A-Z0-9_]+))?',
-                    sql,
-                    flags=re.IGNORECASE,
-                )
-                if alias_match:
-                    possible_alias = alias_match.group(3)
-                    if possible_alias and possible_alias.upper() not in ["WHERE", "INNER", "LEFT", "RIGHT", "JOIN", "ON", "ORDER", "GROUP"]:
-                        prefix = f"{possible_alias}."
-                    else:
-                        prefix = f"{alias_match.group(1)}."
-
-                tenant_col = f"{prefix}tenant_id"
-                if "WHERE " in sql.upper():
-                    sql = re.sub(r'WHERE\s+', f'WHERE {tenant_col} = :tenant_id_filter AND ', sql, count=1, flags=re.IGNORECASE)
-                else:
-                    if "GROUP BY" in sql.upper():
-                        sql = re.sub(r'GROUP BY', f'WHERE {tenant_col} = :tenant_id_filter GROUP BY', sql, count=1, flags=re.IGNORECASE)
-                    elif "ORDER BY" in sql.upper():
-                        sql = re.sub(r'ORDER BY', f'WHERE {tenant_col} = :tenant_id_filter ORDER BY', sql, count=1, flags=re.IGNORECASE)
-                    else:
-                        sql += f" WHERE {tenant_col} = :tenant_id_filter"
             
             # --- LÓGICA DE CACHE ---
             try:
@@ -386,55 +400,71 @@ class ERPQueryService:
                 cache_key = None
 
             # --- EXECUÇÃO NO POSTGRES ---
+            connection_started_at = time.perf_counter()
             db = SessionLocal()
             try:
+                db.connection()
+                connection_duration_ms = round(
+                    (time.perf_counter() - connection_started_at) * 1000,
+                    2,
+                )
+                query_id = hashlib.md5(sql.encode()).hexdigest()[:12]
+                logger.info(
+                    "SQL SaaS conexao adquirida: query_id=%s duration_ms=%s",
+                    query_id,
+                    connection_duration_ms,
+                )
                 missing_tables = self._has_missing_tables(sql, db)
                 if missing_tables:
                     logger.warning(
-                        "Consulta ignorada por tabela nao sincronizada. tables=%s sql=%s params=%s",
+                        "Consulta ignorada por tabela nao sincronizada. query_id=%s tables=%s",
+                        query_id,
                         missing_tables,
-                        sql,
-                        params,
                     )
                     return []
 
                 started_at = time.perf_counter()
-                logger.info("SQL SaaS executando: sql=%s params=%s", sql, params)
                 query_result = db.execute(text(sql), params)
                 rows = query_result.mappings().all()
+                sql_duration_ms = round((time.perf_counter() - started_at) * 1000, 2)
+
+                normalization_started_at = time.perf_counter()
                 normalized_rows = []
                 for row in rows:
                     normalized_row = {str(k).upper(): v for k, v in dict(row).items()}
                     normalized_rows.append(normalized_row)
 
-                duration_ms = round((time.perf_counter() - started_at) * 1000, 2)
+                normalization_duration_ms = round(
+                    (time.perf_counter() - normalization_started_at) * 1000,
+                    2,
+                )
                 logger.info(
-                    "SQL SaaS concluido: registros=%s duration_ms=%s",
+                    "SQL SaaS concluido: query_id=%s registros=%s sql_ms=%s normalization_ms=%s",
+                    query_id,
                     len(normalized_rows),
-                    duration_ms,
+                    sql_duration_ms,
+                    normalization_duration_ms,
                 )
 
                 if cache_key:
                     with _query_cache_lock:
                         if cache_revision == _query_cache_revision:
-                            _query_result_cache[cache_key] = (now, normalized_rows)
+                            _query_result_cache[cache_key] = (now, normalized_rows, tenant_id)
                 return normalized_rows
             except Exception as e:
                 db.rollback()
                 if self._is_schema_error(e):
                     logger.warning(
-                        "Consulta ignorada por incompatibilidade de schema. error=%s sql=%s params=%s",
-                        e,
-                        sql,
-                        params,
+                        "Consulta ignorada por incompatibilidade de schema. query_id=%s error_type=%s",
+                        locals().get("query_id", "unknown"),
+                        type(e).__name__,
                     )
                     return []
 
                 logger.error(
-                    "Erro em query SaaS: %s sql=%s params=%s\n%s",
-                    e,
-                    sql,
-                    params,
+                    "Erro em query SaaS: query_id=%s error_type=%s\n%s",
+                    locals().get("query_id", "unknown"),
+                    type(e).__name__,
                     traceback.format_exc(),
                 )
                 raise e

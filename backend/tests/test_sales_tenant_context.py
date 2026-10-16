@@ -27,6 +27,7 @@ class SalesTenantContextTests(unittest.TestCase):
                 repository.get_resumo_kpis.side_effect = result({
                     'faturamento': amount, 'pedidos': 1, 'itens': 1, 'custo': 10})
                 repository.get_faturamento_total.side_effect = result(amount)
+                repository.get_novos_clientes_count.side_effect = result(3)
                 series = ['get_historico_vendas', 'get_top_clientes', 'get_top_produtos',
                           'get_vendas_por_cidade', 'get_vendas_por_vendedor', 'get_vendas_por_grupo',
                           'get_vendas_por_marca', 'get_media_por_faixa_horaria', 'get_media_por_dia_semana']
@@ -36,6 +37,8 @@ class SalesTenantContextTests(unittest.TestCase):
                 barrier.wait(timeout=5)
                 data = service.get_dashboard_vendas('month', None, None, 1)
                 self.assertEqual(data['resumo']['faturamento'], amount)
+                self.assertEqual(data['resumo']['novosClientes'], 3)
+                repository.get_novos_clientes_count.assert_called_once()
                 repository.get_resumo_kpis.assert_called_once()
                 for name in series:
                     getattr(repository, name).assert_called_once()

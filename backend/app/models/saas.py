@@ -36,6 +36,24 @@ class Tenant(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     reseller_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
 
+
+class AgentInstallation(Base):
+    __tablename__ = "agent_installations"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="SET NULL"))
+    installation_id = Column(String(100), unique=True, nullable=False)
+    machine_name = Column(String(255), nullable=False)
+    machine_fingerprint = Column(String(128), nullable=False)
+    agent_version = Column(String(50), nullable=False)
+    status = Column(String(20), nullable=False, default="ACTIVE")
+    activated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    last_seen_at = Column(DateTime(timezone=True))
+    revoked_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+
 class LegacyUser(Base):
     __tablename__ = "legacy_users"
 

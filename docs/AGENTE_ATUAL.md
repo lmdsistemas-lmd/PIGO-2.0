@@ -70,9 +70,9 @@ Contratos completos de agentes antigos continuam reconhecidos. Quando a chave re
 
 Se um espelho antigo não tiver sequências, a carga é bloqueada com `MIRROR_KEY_MIGRATION_REQUIRED` (HTTP 409). Nenhuma sequência é inventada e nenhum registro é apagado. Nesse caso, preserve o espelho e homologue uma carga/migração com as sequências reais do ERP antes de atualizar a instalação. Não misture versões com chaves diferentes no mesmo espelho. O exportador avulso não altera esse espelho.
 
-## Ativação e homologação pendentes
+## Ativação integrada e homologação na VM
 
-O agente recebido chama `POST /api/agent/activate`. A implementação dessa rota não está no backend do ZIP inicial. O fluxo cliente de ativação foi preservado; não foi criado um substituto para as validações do LicenseControl. O usuário confirmou a main de Suporte-Lmd-Sistemas/PIGO-DASHBOARD como repositório do backend: os 108 arquivos da base 667934a2b938f10d4cbf55eb8c1bffae90d77556 são idênticos ao ZIP original. A ausência da rota já existe nessa base; esta revisão não a remove nem inventa um contrato de licenciamento. Conferir os arquivos atuais da VM antes da instalação e preservar o agente já instalado. Novas ativações ainda precisam do contrato/implementação oficial para homologação.
+A rota `POST /api/agent/activate` e seu serviço foram recebidos no ZIP do backend da VM em 16/10/2026 e integrados. O contrato existente com o LicenseControl, as instalações, limites de tentativas e bloqueio da sincronização após revogação foram preservados. A administração de instalações foi limitada ao tenant autenticado e às permissões do PIGO. Os testes usam resposta simulada do LicenseControl; a ativação externa real ainda precisa ser homologada na VM. A ausência da rota no ZIP inicial e na main do GitHub foi resolvida obtendo o código atual em execução.
 
 O diagnóstico da instalação real foi recebido. Ainda dependemos das rotinas/regras de cadastro para implementar o procedimento de gravação do cliente. Os testes com procedimentos sintéticos não resolvem essa dependência.
 

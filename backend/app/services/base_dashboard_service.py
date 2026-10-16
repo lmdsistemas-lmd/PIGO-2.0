@@ -42,7 +42,8 @@ class BaseDashboardService:
 
         if period == "year":
             year_start = today.replace(month=1, day=1)
-            return DateRange(start=year_start, end=today)
+            year_end = today.replace(month=12, day=31)
+            return DateRange(start=year_start, end=year_end)
 
         if period == "custom" and start and end:
             return DateRange(

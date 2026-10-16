@@ -8,6 +8,8 @@ from app.services.tenant_access_service import get_tenant_by_cnpj, validate_tena
 
 
 LICENSED_PATH_PREFIXES = (
+    "/api/cash-register",
+    "/api/agent/installations",
     "/api/acesso",
     "/api/operacoes",
     "/api/erp/cadastros",

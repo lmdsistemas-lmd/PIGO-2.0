@@ -20,7 +20,7 @@ senhas ou hashes. Alterações de usuários e perfis geram registro de auditoria
 com tenant e autor, sem senha. Dados financeiros em relatórios exigem também
 finance.read, mesmo quando outra permissão de edição foi atribuída.
 
-A migração 011_pigo_access.sql é proposta para homologação. Antes de implantação,
+A migração 014_pigo_access.sql é proposta para homologação. Antes de implantação,
 concilie sua numeração e o schema com a versão efetivamente instalada na VM,
 faça backup do PostgreSQL e teste restauração e compatibilidade. A prévia visual
 não aplica migrações, cria contas reais ou usa o banco de produção.

@@ -13,3 +13,15 @@ test('accent-insensitive unique names work; unknown codes remain unlocated', () 
   assert.equal(locateCity({cidade:'São Paulo',codigo_ibge:'0000000'},cities),null);
   assert.equal(locateCity({cidade:'Cidade inexistente'},cities),null);
 });
+test('VM-confirmed municipality coordinates and manual overrides survive the merge', () => {
+  const point=locateCity({ibgeCode:'1721000',city:'Palmas',state:'TO',customers:3,
+    latitude:-10.2,longitude:-48.4,resolutionSource:'MANUAL_OVERRIDE'},cities);
+  assert.equal(point.lat,-10.2);
+  assert.equal(point.lng,-48.4);
+  assert.equal(point.cidade,'Palmas');
+  assert.equal(point.quantidade,3);
+  assert.equal(point.codigo_ibge,'1721000');
+  assert.equal(locateCity({cidade:'Desconhecida',latitude:-10,longitude:-48,resolutionSource:'NOT_FOUND'},cities),null);
+  assert.equal(locateCity({cidade:'Desconhecida',latitude:999,longitude:999,resolutionSource:'MANUAL_OVERRIDE'},cities),null);
+  assert.equal(locateCity({cidade:'Desconhecida',latitude:null,longitude:null,resolutionSource:'MANUAL_OVERRIDE'},cities),null);
+});

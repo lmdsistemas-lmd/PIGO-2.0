@@ -58,6 +58,9 @@ def live_local_payload(payload):
 def permission_for(path,method):
     if path in {'/api/auth/me','/api/me/tenant','/api/empresas','/api/health'}:return ''
     if path.startswith('/api/acesso'):return 'access.manage'
+    if path.startswith('/api/agent/installations/'):return 'access.manage'
+    if path.startswith('/api/cash-register/'):
+        return 'finance.read' if method in {'GET','HEAD'} else None
     if path.startswith('/api/dashboard/financeiro'):return 'finance.read'
     if path.startswith('/api/dashboard/estoque'):return 'inventory.read'
     if path.startswith('/api/dashboard/metas') and method not in {'GET','HEAD'}:return 'management.manage'

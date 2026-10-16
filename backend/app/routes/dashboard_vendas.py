@@ -12,6 +12,7 @@ def get_dashboard_vendas(
     start: str | None = Query(default=None),
     end: str | None = Query(default=None),
     empresa_id: int | None = Query(default=None),
+    status: str | None = Query(default="TODOS"),
     current_user: dict = Depends(get_current_user),
 ):
     service = DashboardVendasService()
@@ -21,6 +22,7 @@ def get_dashboard_vendas(
         start=start,
         end=end,
         empresa_id=empresa_id,
+        status=status,
     )
 
 

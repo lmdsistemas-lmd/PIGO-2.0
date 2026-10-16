@@ -15,6 +15,21 @@ from app.middlewares.license_control_auth import is_license_control_integration_
 logger = logging.getLogger("pigo.request")
 
 
+def _is_remote_sync_path(path: str) -> bool:
+    normalized = path.rstrip("/")
+    return normalized == "/api/sync" or normalized.startswith("/api/sync/")
+
+
+def _sanitized_params(request: Request) -> dict[str, str]:
+    params = dict(request.query_params)
+    if "cnpj" in params:
+        digits = "".join(char for char in params["cnpj"] if char.isdigit())
+        params["cnpj"] = (
+            f"{digits[:2]}********{digits[-2:]}" if len(digits) == 14 else "(invalid)"
+        )
+    return params
+
+
 def _safe_user_from_request(request: Request) -> dict[str, str | None]:
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
@@ -37,13 +52,24 @@ async def request_logging_middleware(request: Request, call_next):
     request.state.trace_id = trace_id
     started_at = time.perf_counter()
     is_integration = is_license_control_integration_path(request.url.path)
-    user = None if is_integration else _safe_user_from_request(request)
-    params = dict(request.query_params)
+    is_remote_sync = _is_remote_sync_path(request.url.path)
+    user = None if is_integration or is_remote_sync else _safe_user_from_request(request)
+    params = _sanitized_params(request)
 
     if is_integration:
         logger.info(
             "request.start trace_id=%s method=%s endpoint=%s "
             "auth_type=integration integration_source=license-control empresa_id=%s params=%s",
+            trace_id,
+            request.method,
+            request.url.path,
+            params.get("empresa_id"),
+            params,
+        )
+    elif is_remote_sync:
+        logger.info(
+            "request.start trace_id=%s method=%s endpoint=%s "
+            "auth_type=remote-sync credential_type=bearer empresa_id=%s params=%s",
             trace_id,
             request.method,
             request.url.path,
@@ -69,6 +95,8 @@ async def request_logging_middleware(request: Request, call_next):
         auth_context = (
             "auth_type=integration integration_source=license-control"
             if is_integration
+            else "auth_type=remote-sync"
+            if is_remote_sync
             else f"user={user}"
         )
         logger.error(

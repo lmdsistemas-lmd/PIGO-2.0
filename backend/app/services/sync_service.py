@@ -13,6 +13,21 @@ logger = logging.getLogger(__name__)
 
 
 class SyncService:
+    STRICT_PK_TABLES = {
+        "TB_PEDIDO_VENDA_ITEM",
+        "TB_PEDIDO_VENDA_FIN",
+        "TB_FECHAMENTO_CAIXA",
+        "TB_FECHAMENTO_CAIXA_ITEM",
+        "TB_FECHAMENTO_CAIXA_VENDA",
+        "TB_MOVIMENTO_CAIXA",
+    }
+    ERP_COMPANY_ALIAS_TABLES = {
+        "TB_FECHAMENTO_CAIXA",
+        "TB_FECHAMENTO_CAIXA_ITEM",
+        "TB_FECHAMENTO_CAIXA_VENDA",
+        "TB_MOVIMENTO_CAIXA",
+    }
+
     TABLE_PK_MAP = {
         "TB_EMPRESA": ["EMP_ID"],
         "TB_PESSOA": ["PES_ID"],
@@ -20,7 +35,7 @@ class SyncService:
         "TB_VENDEDOR": ["VDR_PESSOA"],
         "TB_CIDADE": ["CID_ID"],
         "TB_PEDIDO_VENDA": ["PEV_ID"],
-        "TB_PEDIDO_VENDA_ITEM": ["PEVI_PEDIDO_VENDA", "PEVI_EMPRESA", "PEVI_PRODUTO"],
+        "TB_PEDIDO_VENDA_ITEM": ["PEVI_EMPRESA", "PEVI_PEDIDO_VENDA", "PEVI_SEQUENCIA"],
         "TB_PRODUTO": ["PRD_ID"],
         "TB_PRODUTO_ESTOQUE": ["PRDE_PRODUTO", "PRDE_EMPRESA"],
         "TB_PROD_CODIGO_BARRAS": ["PRDC_PRODUTO", "PRDC_COD_BARRAS"],
@@ -36,16 +51,16 @@ class SyncService:
         "TB_PROD_DEPARTAMENTO": ["PDEP_ID"],
         "TB_PROD_SUBGRUPO": ["PSGR_ID"],
         "TB_PLANO_CONTA": ["PLC_ID"],
-        "TB_FECHAMENTO_CAIXA": ["FCX_ID", "FCX_EMPRESA"],
         "TB_FECHAMENTO_CAIXA_FORMA": ["FCF_ID", "FCF_EMPRESA"],
-        "TB_FECHAMENTO_CAIXA_ITEM": ["FCXI_EMPRESA", "FCXI_FECHAMENTO", "FCXI_SEQUENCIA"],
-        "TB_FECHAMENTO_CAIXA_VENDA": ["FCXV_EMPRESA", "FCXV_FECHAMENTO", "FCXV_SEQUENCIA"],
-        "TB_MOVIMENTO_CAIXA": ["MOV_EMPRESA", "MOV_ID"],
         "TB_PIGO_CAIXA_MOVIMENTO": ["FCI_ID", "FCI_EMPRESA"],
         "TB_CAIXA_SANGRIA": ["SAN_ID", "SAN_EMPRESA"],
         "TB_CHEQUE_EMITIDO": ["CHQ_ID", "CHQ_EMPRESA"],
         "TB_ESPECIE_MOEDA": ["ESP_ID"],
-        "TB_PEDIDO_VENDA_FIN": ["PEVF_PEDIDO_VENDA", "PEVF_EMPRESA", "PEVF_ESPECIE_MOEDA"],
+        "TB_PEDIDO_VENDA_FIN": ["PEVF_EMPRESA", "PEVF_PEDIDO_VENDA", "PEVF_SEQUENCIA"],
+        "TB_FECHAMENTO_CAIXA": ["erp_company_id", "FCX_ID"],
+        "TB_FECHAMENTO_CAIXA_ITEM": ["erp_company_id", "FCXI_FECHAMENTO", "FCXI_SEQUENCIA"],
+        "TB_FECHAMENTO_CAIXA_VENDA": ["erp_company_id", "FCXV_FECHAMENTO", "FCXV_SEQUENCIA"],
+        "TB_MOVIMENTO_CAIXA": ["erp_company_id", "MOV_ID"],
     }
     TABLE_KEY_VARIANTS = {
         "TB_PEDIDO_VENDA": [["PEV_EMPRESA", "PEV_ID"], ["PEV_ID"]],
@@ -97,13 +112,14 @@ class SyncService:
             job.finished_at = datetime.now()
             db.commit()
 
-            from app.services.report_engine import clear_report_cache
-
-            clear_report_cache(str(tenant.id))
+            # A invalidação ocorre somente após a persistência e o job terem commitado.
             from app.services.erp_query_service import clear_erp_query_cache
             from app.services.dashboard_financeiro_service import clear_dashboard_financeiro_cache
-            clear_erp_query_cache()
+            from app.services.report_engine import clear_report_cache
+
+            clear_erp_query_cache(str(tenant.id))
             clear_dashboard_financeiro_cache(str(tenant.id))
+            clear_report_cache(str(tenant.id))
 
             logger.info(
                 "[SYNC] completed tenant_id=%s tenant_cnpj=%s data_type=%s destination=%s "
@@ -174,6 +190,7 @@ class SyncService:
             if not isinstance(row, dict):
                 SyncService._increment_ignored(stats, "row_not_object")
                 continue
+            row = SyncService._normalize_row_contract(table_name, row)
             dict_rows.append(row)
             for column in row.keys():
                 if not isinstance(column, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,62}", column):
@@ -351,6 +368,8 @@ class SyncService:
 
     @staticmethod
     def _resolve_pk_columns(table_name: str, sample_row: Dict, legacy_pk: List[str] | None = None) -> List[str]:
+        if not legacy_pk and table_name in SyncService.ERP_COMPANY_ALIAS_TABLES and "erp_company_id" in sample_row:
+            return list(SyncService.TABLE_PK_MAP[table_name])
         if not legacy_pk and table_name == "TB_PRODUTO_ESTOQUE" and {"PRDE_LOCAL", "PRDE_VARIACAO"} & set(sample_row):
             physical = SyncService.TABLE_KEY_VARIANTS[table_name][0]
             if not set(physical) <= set(sample_row):
@@ -361,6 +380,10 @@ class SyncService:
                     return candidate
             raise ValueError(f"Chave física incompleta para {table_name}.")
         configured = legacy_pk or SyncService.TABLE_PK_MAP.get(table_name, ["ID"])
+        # A tabela de itens não possui um identificador artificial. A chave
+        # física completa deve ser preservada mesmo quando o payload vier
+        # incompleto, para que a linha seja rejeitada em vez de sofrer upsert
+        # por uma chave parcial.
         available = set(sample_row.keys())
         resolved = [pk for pk in configured if pk in available]
         if resolved:
@@ -374,3 +397,24 @@ class SyncService:
         fallback = list(sample_row.keys())[:5]
         logger.warning("[SYNC] PK nao encontrada para %s. Usando fallback: %s", table_name, fallback)
         return fallback
+
+    @staticmethod
+    def _normalize_row_contract(table_name: str, row: Dict) -> Dict:
+        normalized = dict(row)
+        if table_name not in SyncService.ERP_COMPANY_ALIAS_TABLES:
+            return normalized
+
+        upper_value = normalized.pop("ERP_COMPANY_ID", None)
+        lower_value = normalized.get("erp_company_id")
+        if lower_value is not None and upper_value is not None and str(lower_value) != str(upper_value):
+            raise ValueError(
+                f"{table_name}: ERP_COMPANY_ID diverge de erp_company_id"
+            )
+        company_column = {"TB_FECHAMENTO_CAIXA": "FCX_EMPRESA", "TB_FECHAMENTO_CAIXA_ITEM": "FCXI_EMPRESA", "TB_FECHAMENTO_CAIXA_VENDA": "FCXV_EMPRESA", "TB_MOVIMENTO_CAIXA": "MOV_EMPRESA"}[table_name]
+        values = [value for value in (lower_value, upper_value, normalized.get(company_column)) if value is not None]
+        if values and any(str(value) != str(values[0]) for value in values):
+            raise ValueError(f"{table_name}: empresa fisica diverge de erp_company_id")
+        if values:
+            normalized["erp_company_id"] = values[0]
+            normalized[company_column] = values[0]
+        return normalized

@@ -30,6 +30,8 @@ from app.routes.commercial_analytics import router as commercial_analytics_route
 from app.routes.operations import router as operations_router
 from app.routes.erp_commands import router as erp_commands_router
 from app.routes.pigo_access import router as pigo_access_router
+from app.routes.agent_activation import router as agent_activation_router
+from app.routes.cash_register import router as cash_register_router
 from app.middlewares.pigo_access import pigo_access_middleware
 from app.core.config import BACKEND_CORS_ORIGINS
 from app.database.erp_connection import current_cnpj, current_tenant_id
@@ -64,6 +66,7 @@ async def multi_company_middleware(request: Request, call_next):
     if (
         auth_header.startswith("Bearer ")
         and not is_license_control_integration_path(request.url.path)
+        and not request.url.path.rstrip("/").startswith("/api/sync")
     ):
         try:
             token = auth_header.replace("Bearer ", "").strip()
@@ -129,6 +132,8 @@ app.include_router(commercial_analytics_router, prefix="/api")
 app.include_router(operations_router, prefix="/api")
 app.include_router(erp_commands_router, prefix="/api")
 app.include_router(pigo_access_router, prefix='/api')
+app.include_router(agent_activation_router, prefix='/api')
+app.include_router(cash_register_router, prefix='/api')
 
 
 @app.get("/health", tags=["Sistema"])

@@ -1,57 +1,16 @@
 from __future__ import annotations
 
-from typing import Any
-import unicodedata
 from datetime import date
+from typing import Any
 
 from app.repositories.base_dashboard_repository import BaseDashboardRepository
 from app.services.base_dashboard_service import DateRange
+from app.services.municipality_coordinate_resolver import (
+    MunicipalityCoordinateResolver,
+)
 
 
 class DashboardFinanceiroRepository(BaseDashboardRepository):
-    # =========================
-    # Helpers
-    # =========================
-
-    def _normalize_city_name(self, value: str | None) -> str:
-        if not value:
-            return ""
-
-        normalized = unicodedata.normalize("NFKD", value)
-        normalized = "".join(ch for ch in normalized if not unicodedata.combining(ch))
-        normalized = normalized.upper().strip()
-        normalized = " ".join(normalized.split())
-        return normalized
-
-    def _get_city_position(self, city_name: str) -> dict[str, Any]:
-        map_positions = {
-            "SAO PAULO": {"x": 312, "y": 202, "cor": "#1d4ed8"},
-            "RIO DE JANEIRO": {"x": 338, "y": 214, "cor": "#0f766e"},
-            "BELO HORIZONTE": {"x": 318, "y": 182, "cor": "#2563eb"},
-            "CURITIBA": {"x": 290, "y": 248, "cor": "#f59e0b"},
-            "GOIANIA": {"x": 270, "y": 176, "cor": "#06b6d4"},
-            "PORTO ALEGRE": {"x": 268, "y": 286, "cor": "#ef4444"},
-            "SALVADOR": {"x": 350, "y": 185, "cor": "#7c3aed"},
-            "BRASILIA": {"x": 284, "y": 170, "cor": "#0891b2"},
-            "CAMPINAS": {"x": 304, "y": 198, "cor": "#2563eb"},
-            "SANTOS": {"x": 316, "y": 216, "cor": "#0ea5e9"},
-            "LEOPOLDINA": {"x": 345, "y": 188, "cor": "#1d4ed8"},
-            "CATAGUASES": {"x": 337, "y": 183, "cor": "#0f766e"},
-            "SAO JOAO NEPOMUCENO": {"x": 324, "y": 191, "cor": "#7c3aed"},
-            "ALEM PARAIBA": {"x": 360, "y": 182, "cor": "#2563eb"},
-            "MURIAE": {"x": 346, "y": 198, "cor": "#f59e0b"},
-            "MAR DE ESPANHA": {"x": 318, "y": 196, "cor": "#06b6d4"},
-            "RECREIO": {"x": 352, "y": 191, "cor": "#ef4444"},
-            "ASTOLFO DUTRA": {"x": 333, "y": 189, "cor": "#0ea5e9"},
-            "RIO NOVO": {"x": 316, "y": 187, "cor": "#0891b2"},
-            "NAO INFORMADA": {"x": 250, "y": 160, "cor": "#64748b"},
-        }
-
-        return map_positions.get(
-            self._normalize_city_name(city_name),
-            {"x": 250, "y": 160, "cor": "#64748b"},
-        )
-
     def _receber_valor_aberto_sql(self, alias: str, ref_date_sql: str = "CURRENT_DATE") -> str:
         return f"""
             CASE {alias}.REC_ABERTO
@@ -908,18 +867,28 @@ class DashboardFinanceiroRepository(BaseDashboardRepository):
         report_type: str,
     ) -> list[dict]:
         empresa_sql, empresa_params = self._empresa_filter("R.REC_EMPRESA", empresa_id)
-        _, filtro_sql, data_sql = self._receber_metric_sql("R", report_type)
-
+        valor_sql, filtro_sql, data_sql = self._receber_metric_sql("R", report_type)
         city_columns = self.erp.table_columns('TB_CIDADE')
         ibge_select = 'CID.CID_CODIGO_MUNICIPIO' if 'CID_CODIGO_MUNICIPIO' in city_columns else 'NULL'
-        ibge_group = ', CID.CID_CODIGO_MUNICIPIO' if 'CID_CODIGO_MUNICIPIO' in city_columns else ''
+        ibge_group = 'CID.CID_CODIGO_MUNICIPIO,' if 'CID_CODIGO_MUNICIPIO' in city_columns else ''
+        overdue_sql = (
+            f"CASE WHEN R.REC_DT_VENCIMENTO < CURRENT_DATE "
+            f"THEN CAST({valor_sql} AS NUMERIC(18,2)) ELSE 0 END"
+            if report_type == "aberto"
+            else "CAST(0 AS NUMERIC(18,2))"
+        )
 
         sql = f"""
             SELECT
+                {ibge_select} AS IBGE_CODE,
                 CID.CID_ID AS CIDADE_ID,
                 CID.CID_NOME AS CIDADE_NOME,
-                {ibge_select} AS CODIGO_IBGE,
-                COUNT(DISTINCT P.PES_ID) AS QUANTIDADE
+                COUNT(DISTINCT P.PES_ID) AS QUANTIDADE,
+                COALESCE(
+                    SUM(CAST({valor_sql} AS NUMERIC(18,2))),
+                    0
+                ) AS VALOR_RECEBER,
+                COALESCE(SUM({overdue_sql}), 0) AS VALOR_VENCIDO
             FROM TB_RECEBIMENTO R
             INNER JOIN TB_PESSOA P
                 ON P.PES_ID = R.REC_PESSOA
@@ -930,7 +899,10 @@ class DashboardFinanceiroRepository(BaseDashboardRepository):
               AND COALESCE(R.REC_STATUS, '') <> 'CANCELADO'
               AND {filtro_sql}
               {empresa_sql}
-            GROUP BY CID.CID_ID, CID.CID_NOME{ibge_group}
+            GROUP BY
+                {ibge_group}
+                CID.CID_ID,
+                CID.CID_NOME
             ORDER BY QUANTIDADE DESC
             ROWS 10
         """
@@ -946,14 +918,52 @@ class DashboardFinanceiroRepository(BaseDashboardRepository):
         result = []
         for row in rows:
             city_name = row.get("CIDADE_NOME") or "Nao informada"
+            raw_ibge_code = row.get("IBGE_CODE")
+            resolution = MunicipalityCoordinateResolver().resolve(
+                ibge_code=raw_ibge_code,
+                city_name=city_name,
+            )
 
             result.append(
                 {
-                    "cidade": city_name,
+                    "ibgeCode": resolution.ibge_code,
+                    "codigo_ibge": resolution.ibge_code,
+                    "uf": resolution.state,
+                    "receivedIbgeCode": (
+                        str(raw_ibge_code).strip()
+                        if raw_ibge_code is not None
+                        else None
+                    ),
+                    "cidade": resolution.city or city_name,
+                    "city": resolution.city or city_name,
                     "quantidade": self._safe_int(row.get("QUANTIDADE")),
-                    "codigo_ibge": str(row['CODIGO_IBGE']).strip() if row.get('CODIGO_IBGE') else None,
-                    "cor": ['#2563eb','#0d9488','#7c3aed','#d97706','#dc2626'][len(result) % 5],
+                    "customers": self._safe_int(row.get("QUANTIDADE")),
+                    "x": 0,
+                    "y": 0,
+                    "cor": "#2563eb",
+                    "state": resolution.state,
+                    "latitude": resolution.latitude,
+                    "longitude": resolution.longitude,
+                    "coordinateSource": (
+                        "IBGE"
+                        if resolution.resolution_source
+                        in {"IBGE_CODE", "CITY_STATE"}
+                        else resolution.resolution_source
+                    ),
+                    "resolutionSource": resolution.resolution_source,
+                    "coordinateConfidence": resolution.confidence,
+                    "coordinateWarning": resolution.warning,
+                    "receivableAmount": self._safe_float(row.get("VALOR_RECEBER")),
+                    "overdueAmount": self._safe_float(row.get("VALOR_VENCIDO")),
                 }
+            )
+
+        total_customers = sum(item["customers"] for item in result)
+        for item in result:
+            item["percentage"] = (
+                round((item["customers"] / total_customers) * 100, 2)
+                if total_customers
+                else 0
             )
 
         return result
