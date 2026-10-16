@@ -139,21 +139,24 @@ Baixe [Conferir-Caddy-Pigo.ps1](Conferir-Caddy-Pigo.ps1) pelo botão Download ra
 
 Esse diagnóstico é somente leitura: consulta a configuração HTTP atual pela API local2019 do Caddy e imprime apenas os destinos loopback do domínio PIGO, se encontrados. Não imprime cabeçalhos, tokens ou configuração completa e não altera arquivos/processos/rotas. Também identifica grupos que compartilham PIGO e outros hosts e imprime somente o hash do Caddyfile já localizado. Ausência de API2019 ou de correspondência exata não prova que o site está fora do ar; exige diagnóstico da configuração efetiva antes de preparar qualquer troca. Envie o resumo para preparar a mudança somente do PIGO.
 
-## Trocar somente o encaminhamento do PIGO
+## Entrega da troca do Caddy suspensa
 
-A VM confirmou PigoDashboardTest Running e disparo ao iniciar o Windows com30s habilitado. O diagnóstico do Caddy encontrou um grupo exclusivo PIGO, com destinos127.0.0.1:4000/5176, e hashB5B3CC32BCC33999C647B75459F9FEFD795B0E924892D3D91D2F9773DD6F619C no Caddyfile.production.
+Em 16/10/2026, o usuario informou que o navegador bloqueou tambem
+PIGO-Caddy-troca-v1.zip com a mensagem "Virus detectado". O pacote e seus
+scripts de troca foram retirados da arvore atual desta branch. O manifesto
+permanece apenas para auditoria de integridade. O historico Git conserva as
+versoes anteriores, que nao devem ser restauradas ou executadas.
 
-[Baixar PIGO-Caddy-troca-v1.zip](PIGO-Caddy-troca-v1.zip), somente scripts; [revisar código/instruções](caddy-troca). Extraia em C:\Temp, formando C:\Temp\PIGO-Caddy-troca. No PowerShell como administrador:
+Nao ha identificacao da ameaca nem confirmacao de falso positivo. A revisao
+de fontes e hashes nao equivale a uma varredura antivirus. Nao desative a
+protecao nem crie exclusoes para executar o material bloqueado.
 
-```powershell
-& {
-    $ErrorActionPreference = 'Stop'
-    Set-Location 'C:\Temp\PIGO-Caddy-troca'
-    .\Change-CaddyPigo.ps1 -Action Preparar
-    .\Change-CaddyPigo.ps1 -Action Aplicar
-}
-```
+Estado confirmado na VM: PigoDashboardTest Running, verificacoes HTTP
+aprovadas e disparo ao iniciar o Windows configurado com atraso de 30s.
+O teste apos reboot ainda nao foi feito. O Caddy continua encaminhando PIGO
+para 127.0.0.1:4000 e 127.0.0.1:5176; nenhuma troca foi aplicada.
 
-O preparo não muda a configuração ativa: compara o arquivo à configuração carregada e aceita somente a troca de dois destinos exclusivos do PIGO para127.0.0.1:4010. Aplicar persiste o arquivo e recarrega a configuração por API com ETag, conferindo HTTPS público e tentando retorno automático em falha. Se algum passo falhar, o bloco para. Envie somente o resumo; backups/logs privados podem conter credenciais e não devem ser enviados.
-
-Mantenha Caddy, VSCode e processos antigos abertos; não reinicie a VM. Após sucesso, teste login/dados/F5 no domínio público e também seus outros domínios. A execução automática do Caddy continua pendente.
+Mantenha Caddy e processos de producao abertos e nao reinicie a VM nesta
+etapa. O proximo diagnostico e consultar somente o nome da ameaca no
+Historico de protecao do antivirus no computador que bloqueou o download.
+Nao envie URLs de download com tokens, configuracoes completas ou segredos.
