@@ -1,0 +1,302 @@
+/* Toolbar e Filtros */
+.funcionarios-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  background: var(--card-bg, #ffffff);
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color, rgba(0,0,0,0.05));
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.funcionarios-toolbar-left {
+  flex: 1;
+}
+
+.funcionarios-search {
+  width: 100%;
+  max-width: 400px;
+  padding: 12px 18px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 14px;
+  background: var(--input-bg, #f8fafc);
+  color: var(--text-primary, #1e293b);
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.funcionarios-search:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: white;
+}
+
+.funcionarios-toolbar-right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.funcionarios-ordem-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text-secondary, #64748b);
+  font-weight: 500;
+}
+
+.funcionarios-select {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--card-bg, #ffffff);
+  color: var(--text-primary, #1e293b);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+/* Grid de Funcionários */
+.funcionarios-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+/* Card do Funcionário */
+.funcionario-card {
+  background: var(--card-bg, #ffffff);
+  border-radius: 24px;
+  padding: 24px;
+  border: 1px solid var(--border-color, rgba(0,0,0,0.05));
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.funcionario-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.funcionario-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.funcionario-card:hover::before {
+  opacity: 1;
+}
+
+.funcionario-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.funcionario-avatar-wrapper {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.funcionario-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 28px;
+  font-weight: bold;
+  border: 4px solid white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.funcionario-status-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 3px solid white;
+  background: #10b981;
+}
+
+.funcionario-status-badge.inativo {
+  background: #94a3b8;
+}
+
+.funcionario-nome {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.funcionario-id {
+  font-size: 12px;
+  color: var(--text-secondary, #94a3b8);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* Info Box Estilizado */
+.funcionario-info-box {
+  background: var(--bg-accent, #f8fafc);
+  border-radius: 16px;
+  padding: 4px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border-color, rgba(0,0,0,0.03));
+}
+
+.funcionario-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-color, rgba(0,0,0,0.04));
+}
+
+.funcionario-info-row:last-child {
+  border-bottom: none;
+}
+
+.funcionario-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.funcionario-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #334155);
+}
+
+.funcionario-tags {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: auto;
+}
+
+.tag-button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.tag-button-blue {
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.tag-button-blue:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(59, 130, 246, 0.3);
+}
+
+/* Footer e Paginação */
+.funcionarios-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0;
+  border-top: 1px solid var(--border-color, rgba(0,0,0,0.05));
+}
+
+/* Responsividade Mobile */
+@media (max-width: 768px) {
+  .funcionarios-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+  }
+
+  .funcionarios-toolbar-right {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .funcionarios-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .funcionario-card {
+    padding: 20px;
+  }
+
+  .funcionarios-footer {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+}
+
+/* Dark Mode Support */
+[data-theme="dark"] .funcionario-card {
+  background: #1e1e2d;
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .funcionario-info-box {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] .funcionario-value {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .funcionario-avatar {
+  background: #2d2d3f;
+  border-color: #1e1e2d;
+}
+
+[data-theme="dark"] .funcionarios-toolbar {
+  background: #1e1e2d;
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .funcionarios-search,
+[data-theme="dark"] .funcionarios-select {
+  background: #151521;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}

@@ -1,0 +1,12 @@
+{
+  "archive": "PIGO-previa-mesclada-v3.zip",
+  "sha256": "e91d1ff25aa37c4d1aeb06df42e9feed837280bce1907233781af1da6b2a0862",
+  "scanner": "ClamAV1.5.4",
+  "signature_date": "2026-10-11",
+  "daily": "28150",
+  "result": "No detections by this complementary scanner",
+  "network": "disabled while scanning",
+  "package_executed": false,
+  "microsoft_defender": "Not tested here; keep protection active and require Windows verification before execution",
+  "signature_update": "Official upstream unreachable; existing verified image definitions used"
+}
