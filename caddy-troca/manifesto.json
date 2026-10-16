@@ -1,0 +1,12 @@
+{
+  "purpose": "Trocar somente os destinos do PIGO no Caddy atual, com snapshots privados e retorno",
+  "binaries_included": false,
+  "windows_replacefile_acl_and_public_https_tested": false,
+  "unit_tests_passed": 8,
+  "real_caddy_linux_functional_groups_passed": 5,
+  "files": {
+    "caddy_cutover.py": "59f143c581a022ee707e3670d6da6e5b52f17d6bf9d6ffa8567b7ab5cf81e1e3",
+    "Change-CaddyPigo.ps1": "927057b25c06b1e14729d795222ba190cbd689cc34ff9037762ecb7ea42d4934",
+    "README.md": "5cffc4561a5f3677fc1ae83d8e81de4beb31bd0c5072b37d80986a568a23b141"
+  }
+}

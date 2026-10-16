@@ -1,1 +1,2 @@
 f572cf98580b178dccd07b772fd34963238f6d19ed73c566af1c0fd8adceb832  PIGO-Windows-fontes-v1.zip
+786b2ccd38ed1744eba4f9af086406c01c71af5c27f8d46bac509f5c523c80a7  PIGO-Caddy-troca-v1.zip
