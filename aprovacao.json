@@ -1,0 +1,16 @@
+{
+  "approval_scope": "Visual preview and layout revisions only",
+  "user_statement": "perfeito. podemos finalizar",
+  "date": "2026-10-16",
+  "timezone": "America/Araguaina",
+  "approved_runtime_commit": "e66803d82e58310b247e8cb32f43c16fecdcc53d",
+  "archive": "PIGO-previa-execucao-v2.zip",
+  "sha256": "d509c1847b7d49207c3c6672642c111471b6980aad551f6b3b3d22a1c6dca731",
+  "browser_groups_passed": 11,
+  "layout_combinations_passed": 35,
+  "production_deployed": false,
+  "erp_writeback_homologated": false,
+  "current_vm_backend_required": true,
+  "reason": "Original backend upload lacks POST /api/agent/activate used by the current remote agent",
+  "antivirus": "No Windows Defender adjudication; complementary exact ZIP ClamAV scan already recorded; no archive changes for approval"
+}

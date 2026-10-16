@@ -1,3 +1,7 @@
+> **Revisão visual aprovada pelo usuário em 16/10/2026.**
+> [Entrega aprovada e pendências de instalação](ENTREGA_APROVADA.md).
+> A aprovação da prévia não registra implantação em produção.
+
 # PIGO — ajustes finais da prévia
 
 [**Baixar PIGO-previa-execucao-v2.zip**](PIGO-previa-execucao-v2.zip) → Download raw file.
