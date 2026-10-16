@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from contextvars import copy_context
+
 from app.repositories.dashboard_vendas_repository import DashboardVendasRepository
 from app.services.base_dashboard_service import BaseDashboardService
 
@@ -20,17 +22,22 @@ class DashboardVendasService(BaseDashboardService):
 
         # Executa todas as consultas do dashboard em paralelo para máxima velocidade
         with ThreadPoolExecutor(max_workers=10) as executor:
-            f_resumo = executor.submit(self.repository.get_resumo_kpis, date_range, empresa_id)
-            f_historico = executor.submit(self.repository.get_historico_vendas, empresa_id)
-            f_clientes = executor.submit(self.repository.get_top_clientes, date_range, empresa_id)
-            f_produtos = executor.submit(self.repository.get_top_produtos, date_range, empresa_id)
-            f_cidades = executor.submit(self.repository.get_vendas_por_cidade, date_range, empresa_id)
-            f_vendedores = executor.submit(self.repository.get_vendas_por_vendedor, date_range, empresa_id)
-            f_grupos = executor.submit(self.repository.get_vendas_por_grupo, date_range, empresa_id)
-            f_marcas = executor.submit(self.repository.get_vendas_por_marca, date_range, empresa_id)
-            f_horas = executor.submit(self.repository.get_media_por_faixa_horaria, date_range, empresa_id)
-            f_dias = executor.submit(self.repository.get_media_por_dia_semana, date_range, empresa_id)
-            f_variation = executor.submit(self._get_faturamento_variation, date_range, empresa_id)
+            # Each worker needs its own copy of the authenticated tenant context.
+            # A Context object cannot be entered concurrently by multiple threads.
+            def submit(function, *args):
+                return executor.submit(copy_context().run, function, *args)
+
+            f_resumo = submit(self.repository.get_resumo_kpis, date_range, empresa_id)
+            f_historico = submit(self.repository.get_historico_vendas, empresa_id)
+            f_clientes = submit(self.repository.get_top_clientes, date_range, empresa_id)
+            f_produtos = submit(self.repository.get_top_produtos, date_range, empresa_id)
+            f_cidades = submit(self.repository.get_vendas_por_cidade, date_range, empresa_id)
+            f_vendedores = submit(self.repository.get_vendas_por_vendedor, date_range, empresa_id)
+            f_grupos = submit(self.repository.get_vendas_por_grupo, date_range, empresa_id)
+            f_marcas = submit(self.repository.get_vendas_por_marca, date_range, empresa_id)
+            f_horas = submit(self.repository.get_media_por_faixa_horaria, date_range, empresa_id)
+            f_dias = submit(self.repository.get_media_por_dia_semana, date_range, empresa_id)
+            f_variation = submit(self._get_faturamento_variation, date_range, empresa_id)
 
             # Coleta os resultados
             resumo = f_resumo.result()

@@ -26,6 +26,11 @@ from app.routes.dashboard_consolidado import router as dashboard_consolidado_rou
 from app.routes.dashboard_estoque import router as dashboard_estoque_router
 from app.routes.sync import router as sync_router
 from app.routes.internal_license_control import router as internal_license_control_router
+from app.routes.commercial_analytics import router as commercial_analytics_router
+from app.routes.operations import router as operations_router
+from app.routes.erp_commands import router as erp_commands_router
+from app.routes.pigo_access import router as pigo_access_router
+from app.middlewares.pigo_access import pigo_access_middleware
 from app.core.config import BACKEND_CORS_ORIGINS
 from app.database.erp_connection import current_cnpj, current_tenant_id
 from app.core.security import decode_access_token
@@ -46,6 +51,7 @@ app = FastAPI(
 
 app.middleware("http")(request_logging_middleware)
 app.middleware("http")(license_middleware)
+app.middleware('http')(pigo_access_middleware)
 
 @app.middleware("http")
 async def multi_company_middleware(request: Request, call_next):
@@ -119,6 +125,10 @@ app.include_router(dashboard_consolidado_router, prefix="/api")
 app.include_router(dashboard_estoque_router, prefix="/api")
 app.include_router(sync_router, prefix="/api")
 app.include_router(internal_license_control_router, prefix="/api")
+app.include_router(commercial_analytics_router, prefix="/api")
+app.include_router(operations_router, prefix="/api")
+app.include_router(erp_commands_router, prefix="/api")
+app.include_router(pigo_access_router, prefix='/api')
 
 
 @app.get("/health", tags=["Sistema"])
@@ -165,31 +175,9 @@ def serve_frontend_root():
 
 @app.get("/{full_path:path}", include_in_schema=False)
 def serve_frontend_spa(full_path: str):
-    blocked_prefixes = (
-        "docs",
-        "redoc",
-        "openapi.json",
-        "assets",
-        "health",
-        "auth",
-        "license",
-        "funcionarios",
-        "erp_test",
-        "erp_pessoas",
-        "erp_colaboradores",
-        "indicadores",
-        "performance",
-        "dashboard_financeiro",
-        "dashboard_vendas",
-        "relatorio",
-        "empresa",
-        "departamentos",
-        "cargos",
-        "dashboard",
-        "sync",
-    )
-
-    if full_path.startswith(blocked_prefixes):
+    # React owns its URLs, including refreshes on dashboards and team pages.
+    # API/doc/static paths must still return real errors instead of index.html.
+    if full_path.split("/", 1)[0] in {"api", "docs", "redoc", "openapi.json", "assets", "health"}:
         return JSONResponse(
             status_code=404,
             content={"success": False, "message": "Rota não encontrada"}

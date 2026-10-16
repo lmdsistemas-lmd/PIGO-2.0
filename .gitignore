@@ -39,6 +39,8 @@ uvicorn-test*.log
 backend/sync_error.txt
 remote-sync-agent/agent.log
 remote-sync-agent/sync_state.json
+remote-sync-agent/operations-map.json
+schema_diagnostics.json
 
 # Local databases and archives
 *.fdb

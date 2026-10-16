@@ -1,3 +1,4 @@
+import DashboardWorkspace, { DashboardBlock } from "../components/DashboardWorkspace";
 import { useState, useEffect } from "react";
 import Topbar from "../components/Topbar";
 import api from "../services/api";
@@ -20,9 +21,9 @@ export default function DashboardEstoque({ onToggleSidebar, isMobileOrTablet, th
   const [lastUpdate, setLastUpdate] = useState(new Date());
 
   const formatCurrency = (val) =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(val || 0);
+    val == null ? "—" : new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(val);
   const formatNumber = (val) =>
-    new Intl.NumberFormat("pt-BR").format(val || 0);
+    val == null ? "—" : new Intl.NumberFormat("pt-BR").format(val);
 
   useEffect(() => {
     async function fetchData() {
@@ -93,7 +94,7 @@ export default function DashboardEstoque({ onToggleSidebar, isMobileOrTablet, th
   ];
 
   return (
-    <div className="dashboard-page">
+    <DashboardWorkspace dashboard="estoque"><div className="dashboard-page">
       <Topbar
         titulo="Dashboard de Estoque"
         caminho="Dashboard / Estoque"
@@ -110,14 +111,16 @@ export default function DashboardEstoque({ onToggleSidebar, isMobileOrTablet, th
         {error && <span style={{ marginLeft: '10px', color: '#ef4444' }}>{error}</span>}
       </div>
 
+      {data.estoqueDisponivel === false && <p role="status" className="analytics-notice">Há produtos com múltiplas posições ou quantidades desconhecidas. Valores, alertas e tabelas que dependem do estoque total aguardam a regra de consolidação do ERP. Consulte as posições em Cadastros / Produtos.</p>}
+
       <div className="cards-grid">
         {stockKPIs.map((kpi, idx) => (
-          <div key={idx} className="card-kpi" style={{ backgroundColor: kpi.color, border: 'none', position: 'relative' }}>
+          <DashboardBlock key={kpi.label} id={"estoque-0-"+kpi.label} title={kpi.label} kind="metric"><div key={idx} className="card-kpi" style={{ backgroundColor: kpi.color, border: 'none', position: 'relative' }}>
             <h3 style={{ color: 'rgba(255,255,255,0.9)', marginBottom: '8px' }}>{kpi.label}</h3>
             <p style={{ color: '#fff', fontSize: isMobileOrTablet ? '22px' : '28px', marginBottom: '8px' }}>{kpi.value}</p>
             {kpi.sub && <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px' }}>{kpi.sub}</span>}
             <span style={{ position: 'absolute', right: '20px', bottom: '20px', fontSize: '24px', opacity: 0.5 }}>{kpi.icon}</span>
-          </div>
+          </div></DashboardBlock>
         ))}
       </div>
 
@@ -131,16 +134,16 @@ export default function DashboardEstoque({ onToggleSidebar, isMobileOrTablet, th
         }}
       >
         {purchaseKPIs.map((kpi, idx) => (
-          <div key={idx} className="card-kpi" style={{ backgroundColor: kpi.color, border: 'none', position: 'relative', padding: '24px' }}>
+          <DashboardBlock key={kpi.label} id={"estoque-1-"+kpi.label} title={kpi.label} kind="metric"><div key={idx} className="card-kpi" style={{ backgroundColor: kpi.color, border: 'none', position: 'relative', padding: '24px' }}>
             <h3 style={{ color: 'rgba(255,255,255,0.9)', marginBottom: '8px' }}>{kpi.label}</h3>
             <p style={{ color: '#fff', fontSize: isMobileOrTablet ? '22px' : '28px', marginBottom: '0' }}>{kpi.value}</p>
             <span style={{ position: 'absolute', right: '24px', top: '50%', transform: 'translateY(-50%)', fontSize: '28px', opacity: 0.5 }}>{kpi.icon}</span>
-          </div>
+          </div></DashboardBlock>
         ))}
       </div>
 
       <div className="two-columns">
-        <div className="chart-box premium-box" style={{ padding: '0' }}>
+        <DashboardBlock id="estoque-2" title="Produtos por Maior Rotatividade (30 dias)" kind="table" rows={data.rotatividade} labelKey="produto" series={[{"key":"vendida","label":"Quantidade vendida"},{"key":"estoque","label":"Estoque"}]}><div className="chart-box premium-box" style={{ padding: '0' }}>
           <div style={{ padding: '24px 24px 12px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Produtos por Maior Rotatividade (30 dias)</h3>
           </div>
@@ -171,9 +174,9 @@ export default function DashboardEstoque({ onToggleSidebar, isMobileOrTablet, th
           <div style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)' }}>
             Mostrando primeiros {data.rotatividade.length} itens
           </div>
-        </div>
+        </div></DashboardBlock>
 
-        <div className="chart-box premium-box" style={{ padding: '0' }}>
+        <DashboardBlock id="estoque-3" title="Produtos com Estoque Zerado ou Abaixo do Mínimo" kind="table" rows={data.criticos} labelKey="produto" series={[{"key":"estoque","label":"Valor"}]}><div className="chart-box premium-box" style={{ padding: '0' }}>
           <div style={{ padding: '24px 24px 12px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Produtos com Estoque Zerado ou Abaixo do Mínimo</h3>
           </div>
@@ -190,7 +193,7 @@ export default function DashboardEstoque({ onToggleSidebar, isMobileOrTablet, th
               <tbody>
                 {data.criticos.length === 0 ? (
                    <tr>
-                     <td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Nenhum alerta de estoque</td>
+                     <td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>{data.estoqueDisponivel === false ? "Avaliação de estoque indisponível até confirmar a consolidação das posições." : "Nenhum alerta de estoque"}</td>
                    </tr>
                 ) : data.criticos.map((item, idx) => (
                   <tr key={idx}>
@@ -208,9 +211,9 @@ export default function DashboardEstoque({ onToggleSidebar, isMobileOrTablet, th
           <div style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)' }}>
             Mostrando primeiros {data.criticos.length} itens
           </div>
-        </div>
+        </div></DashboardBlock>
       </div>
-    </div>
+    </div></DashboardWorkspace>
   );
 }
 

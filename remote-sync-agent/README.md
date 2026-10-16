@@ -1,83 +1,37 @@
-# P.I.G.O Dashboard Remote Sync Agent
+# PIGO Remote Sync Agent
 
-Este agente deve rodar na maquina do cliente onde o ERP/Firebird esta acessivel.
-Ele nao precisa ficar na mesma maquina do P.I.G.O Dashboard.
+Este diretório contém a versão atual enviada pelo usuário, integrada ao dashboard e ao desktop Electron. Preserva o cofre de credenciais, os drivers Firebird, o proprietário de execução único, o serviço Windows e a comunicação IPC autenticada.
 
-## Configuracao
+Consulte [AGENTE_ATUAL.md](../docs/AGENTE_ATUAL.md) para configuração, compatibilidade e pendências da ativação. Consulte [GRAVACAO_ERP.md](../docs/GRAVACAO_ERP.md) para o contrato de gravação.
 
-1. Copie `.env.example` para `.env`.
-2. Configure os dados reais do ERP:
-   - `FB_HOST`
-   - `FB_PORT`
-   - `FB_DATABASE`
-   - `FB_USER`
-   - `FB_PASS`
-   - `FB_CLIENT_PATH`
-3. Configure a API oficial:
-   - `API_BASE_URL=https://pigo.lmdsistemasdev.qzz.io/api`
-   - `API_TOKEN=<token exclusivo do tenant fornecido pela LMD>`
-   - `COMPANY_CNPJ=<cnpj somente numeros>`
-4. Execute `run.bat`.
+## Diagnóstico para concluir a integração
 
-A configuracao ativa sempre vem do arquivo `.env` ao lado de `agent.py`; ele tem
-precedencia sobre variaveis herdadas pelo processo. Para validar URL, TLS,
-autenticacao e tenant sem coletar ou enviar dados do ERP, execute:
+O arquivo `export_schema.py` funciona também com o agente original recebido. Copie apenas esse arquivo para a pasta do agente já instalado e execute:
 
-```bat
-venv\Scripts\python.exe agent.py --diagnose
+```powershell
+.\venv\Scripts\python.exe .\export_schema.py
 ```
 
-Depois de trocar servidor ou token, atualize `API_BASE_URL` e `API_TOKEN` nesse
-arquivo e reinicie o processo/servico. O `run.bat` recria automaticamente um
-ambiente virtual copiado de outra maquina ou ligado a um Python removido.
+Ele gera `schema_diagnostics.json` e informa o caminho completo, normalmente em `C:\ProgramData\PIGO Remote Sync\diagnostics`. São exportados somente metadados: campos, tipos, obrigatoriedade, chaves, nomes de geradores/triggers e parâmetros de procedimentos. Não lê registros comerciais, não altera o ERP e não inicia sincronização ou ativação.
 
-## Tabelas
+Na versão integrada também há `agent.py --export-schema` e o botão **Teste → Exportar estrutura do ERP** no desktop.
 
-O agente sincroniza as tabelas espelhadas do ERP, incluindo `TB_USUARIO` com:
+## Configuração atual
 
-- `USU_ID`
-- `USU_LOGIN`
-- `USU_NOME`
-- `USU_SENHA`
-- `USU_ADMINISTRADOR`
+Quando existe `config.json` em `C:\ProgramData\PIGO Remote Sync` (ou `PIGO_REMOTE_SYNC_DATA_DIR`), o modo desktop usa esse arquivo e o cofre `credentials.dat`. Senha Firebird, chave de licença e token permanecem protegidos com DPAPI LocalMachine no Windows. Sem configuração desktop, o modo legado usa os nomes de `.env.example` e o cofre compatível. Não envie esses arquivos de credenciais ao repositório.
 
-Esses campos sao usados pelo dashboard para autenticar com as mesmas credenciais do ERP.
+O agente atual oferece `--owner`, `--activate`, `--reactivate`, `--diagnose`, `--test-firebird`, `--sync-once`, `--export-schema` e os testes IPC já existentes. A rota de ativação `/api/agent/activate` precisa ser confirmada no backend correspondente; ela não veio no backend inicial desta tarefa.
 
-## Financeiro adaptativo
+## Caixa e gravação
 
-Antes de sincronizar o financeiro, o agente le o schema real do Firebird e gera
-`schema_diagnostics.json` com:
+As tabelas físicas FCX/FCXI/FCXV/MOV e as sequências PEVI/PEVF foram mantidas. O backend reconhece essas chaves para conservar linhas repetidas. O formato operacional normalizado de movimentos usa `TB_PIGO_CAIXA_MOVIMENTO` para evitar confundir movimentos com os itens financeiros físicos do fechamento.
 
-- todas as tabelas;
-- campos das tabelas usadas;
-- chaves primarias;
-- chaves estrangeiras.
+A fila de cadastros roda no worker do proprietário, respeita pausa e usa o mesmo token/cabeçalho de instalação. A gravação permanece desativada por padrão: depende de procedimento de negócio específico e homologado para o ERP. Não executa SQL recebido do PIGO nem substitui uma confirmação no ERP por edição local do espelho.
 
-Para contas a receber, o agente envia sempre o formato canonico `TB_RECEBIMENTO`.
-Se `TB_CONTAS_RECEBER` nao existir, ele procura automaticamente equivalentes como:
+## Testes na nuvem
 
-- `TB_RECEBIMENTO`
-- `TB_CONTA_RECEBER`
-- `TB_TITULO_RECEBER`
-- `TB_RECEBER`
+```bash
+PIGO_REMOTE_SYNC_DATA_DIR=/workspace/.local/pigo-agent-tests API_TOKEN=test-agent-token COMPANY_CNPJ=00000000000191 API_BASE_URL=https://pigo.example.invalid/api python -m unittest
+```
 
-Para contas a pagar, o agente envia sempre o formato canonico `TB_PAGAMENTO`.
-Ele procura equivalentes como:
-
-- `TB_PAGAMENTO`
-- `TB_CONTAS_PAGAR`
-- `TB_CONTA_PAGAR`
-- `TB_TITULO_PAGAR`
-- `TB_PAGAR`
-
-O mapeamento tambem valida campos usados em pessoas, recebimentos, pagamentos,
-contas, plano de contas, borderos e movimentos financeiros. Quando uma tabela
-esperada nao existe, o log informa a tabela equivalente encontrada.
-
-## Logs
-
-O agente grava `agent.log`. O log nao deve conter senha ou token. Em caso de erro, valide porta,
-caminho do `.FDB`, DLL do Firebird e conectividade HTTPS com `https://pigo.lmdsistemasdev.qzz.io/health`.
-
-Os logs financeiros incluem identificador hash da consulta, tabela utilizada,
-quantidade de registros e tempo de execucao, sem SQL, parametros ou payloads.
+Esses valores são fictícios e as chamadas da suíte unitária são simuladas. A exportação e o executor também foram testados em Firebird descartável; isso não homologa as regras de negócio do cliente. DPAPI e IPC reais exigem Windows e os runtimes da instalação.

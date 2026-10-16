@@ -1,9 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "../styles/bottom-navigation.css";
+import { OPERATIONS, OPERATION_GROUPS } from "../config/operations";
+
+import { useAuth } from "../context/AuthContext";
+import { allowedPage } from "../utils/access";
+import MenuIcon from "./MenuIcon";
 
 function BottomNavigation() {
   const location = useLocation();
+  const { user } = useAuth();
   const [outrosOpen, setOutrosOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -22,54 +28,60 @@ function BottomNavigation() {
   }, []);
 
   const isOutrosActive =
+    OPERATIONS.some((item) => item.path === location.pathname) ||
     location.pathname.startsWith("/funcionarios") ||
     location.pathname.startsWith("/performance") ||
-    location.pathname.startsWith("/relatorios");
+    location.pathname.startsWith("/relatorios") ||
+    ["/dashboard/clientes", "/dashboard/metas", "/dashboard/curva-abc"].includes(location.pathname);
 
   const mainItems = [
     {
       path: "/dashboard/vendas",
       label: "Vendas",
-      icon: "/icons/painel.svg",
+      icon: "gestao",
       active: location.pathname.startsWith("/dashboard/vendas"),
     },
     {
       path: "/dashboard/financeiro",
       label: "Financeiro",
-      icon: "/icons/painel.svg",
+      icon: "financeiro",
       active: location.pathname.startsWith("/dashboard/financeiro"),
     },
     {
       path: "/dashboard/estoque",
       label: "Estoque",
-      icon: "/icons/painel.svg",
+      icon: "estoque",
       active: location.pathname.startsWith("/dashboard/estoque"),
     },
     {
       path: "/dashboard/consolidado",
       label: "Consolidado",
-      icon: "/icons/painel.svg",
+      icon: "consolidado",
       active: location.pathname.startsWith("/dashboard/consolidado"),
     },
   ];
 
   const outrosItems = [
+    ...OPERATIONS.filter((item) => item.group === "Financeiro").map((item) => ({ path: item.path, label: item.title, icon: "financeiro", active: location.pathname === item.path })),
+    ...[["clientes", "Clientes"], ["metas", "Metas de Vendas"], ["curva-abc", "Curva ABC"]].map(([path, label]) => ({
+      path: `/dashboard/${path}`, label, icon: "gestao", active: location.pathname === `/dashboard/${path}`,
+    })),
     {
       path: "/funcionarios",
       label: "Equipe",
-      icon: "/icons/funcionario.svg",
+      icon: "equipe",
       active: location.pathname.startsWith("/funcionarios"),
     },
     {
       path: "/performance",
       label: "Performance",
-      icon: "/icons/performance.svg",
+      icon: "performance",
       active: location.pathname.startsWith("/performance"),
     },
     {
       path: "/relatorios",
       label: "Relatórios",
-      icon: "/icons/relatorio.svg",
+      icon: "relatorios",
       active: location.pathname.startsWith("/relatorios"),
     },
   ];
@@ -81,7 +93,7 @@ function BottomNavigation() {
       )}
 
       <nav className="bottom-nav" ref={menuRef}>
-        {mainItems.map((item) => (
+        {mainItems.filter(item => allowedPage(user,item.path)).map((item) => (
           <Link
             key={item.path}
             to={item.path}
@@ -90,7 +102,7 @@ function BottomNavigation() {
             onClick={() => setOutrosOpen(false)}
           >
             <div className="bottom-nav-icon">
-              <img src={item.icon} alt="" aria-hidden="true" />
+              <MenuIcon name={item.icon} />
             </div>
             <span className="bottom-nav-label">{item.label}</span>
           </Link>
@@ -111,7 +123,11 @@ function BottomNavigation() {
 
           {outrosOpen && (
             <div className="bottom-nav-popup">
-              {outrosItems.map((item) =>
+              {allowedPage(user,'/cadastros/clientes') && <details className="bottom-registration-group" open={location.pathname.startsWith('/cadastros/') || undefined}>
+                <summary><MenuIcon name="cadastros" />Cadastros</summary>
+                {OPERATION_GROUPS.filter((group) => group.title !== 'Financeiro').map((group) => <div key={group.title}><h3>{group.title}</h3>{group.items.map(([resource, label]) => <Link key={resource} to={`${group.prefix}/${resource}`} className="bottom-nav-popup-item" onClick={() => setOutrosOpen(false)}>{label}</Link>)}</div>)}
+              </details>}
+              {[...outrosItems,{path:'/acesso/usuarios',label:'Acesso',icon:'acesso',active:location.pathname.startsWith('/acesso')}].filter(item => allowedPage(user,item.path)).map((item) =>
                   <Link
                     key={item.path}
                     to={item.path}
@@ -119,7 +135,7 @@ function BottomNavigation() {
                     onClick={() => setOutrosOpen(false)}
                   >
                     <div className="bottom-nav-popup-icon">
-                      <img src={item.icon} alt="" aria-hidden="true" />
+                      <MenuIcon name={item.icon} />
                     </div>
                     <span className="bottom-nav-popup-label">{item.label}</span>
                   </Link>

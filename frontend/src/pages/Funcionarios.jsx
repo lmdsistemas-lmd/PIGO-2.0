@@ -36,6 +36,8 @@ function Funcionarios({ onToggleSidebar, isMobileOrTablet, theme, toggleTheme })
           col_pessoa: item.col_pessoa,
           usuario_id: item.usuario_id,
           login: item.login,
+          origem: item.origem,
+          vendedor: item.vendedor,
           nome: item.nome || "FUNCIONÁRIO SEM NOME",
           cargo_oficial: item.cargo_oficial || "Não informado",
           departamento_nome: item.departamento_nome || "Não informado",

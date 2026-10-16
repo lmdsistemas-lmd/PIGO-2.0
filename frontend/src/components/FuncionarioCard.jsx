@@ -8,7 +8,6 @@ function FuncionarioCard({ funcionario }) {
   const idErp = funcionario?.col_pessoa || "-";
   const cargoOficial = funcionario?.cargo_oficial || "Não informado";
   const status = funcionario?.status || "Sem status";
-  const vendedor = Boolean(funcionario?.vendedor);
 
   function abrirAnalise() {
     if (!funcionarioId) {
@@ -16,7 +15,8 @@ function FuncionarioCard({ funcionario }) {
       return;
     }
 
-    navigate(`/funcionarios/${funcionarioId}/analise`);
+    const origin = funcionario?.origem || (funcionario?.usuario_id ? 'usuario_erp' : 'colaborador');
+    navigate(`/funcionarios/${encodeURIComponent(funcionarioId)}/analise?origem=${origin}`);
   }
 
 

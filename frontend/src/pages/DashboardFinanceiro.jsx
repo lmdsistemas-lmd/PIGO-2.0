@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import DashboardWorkspace, { DashboardBlock } from "../components/DashboardWorkspace";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Topbar from "../components/Topbar";
 import api from "../services/api";
 import { maskCnpj, resolveEmpresaErpId } from "../services/empresaIdentity";
@@ -45,13 +46,7 @@ const PERIOD_OPTIONS = [
   },
 ];
 
-const MAP_CONNECTIONS = [
-  { x1: 312, y1: 202, x2: 338, y2: 214 },
-  { x1: 312, y1: 202, x2: 318, y2: 182 },
-  { x1: 312, y1: 202, x2: 290, y2: 248 },
-  { x1: 312, y1: 202, x2: 270, y2: 176 },
-  { x1: 290, y1: 248, x2: 268, y2: 286 },
-];
+const FinancialMap = lazy(() => import('../components/FinancialMap'));
 
 const EMPTY_DATA = {
   contasPagar: {
@@ -135,6 +130,8 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
   const [error, setError] = useState("");
   const [retryVersion, setRetryVersion] = useState(0);
   const requestIdRef = useRef(0);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState(null);
+  const [snapshotPreview, setSnapshotPreview] = useState(false);
   const activeControllerRef = useRef(null);
 
   const selectedEmpresaId = useMemo(() => {
@@ -204,11 +201,14 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
       return () => controller.abort();
     }
 
-    async function loadDashboard() {
+    let inFlight = false;
+    async function loadDashboard(background = false) {
+      if (inFlight) return;
+      inFlight = true;
       const requestStartedAt = performance.now();
 
       try {
-        setLoading(true);
+        if (!background) setLoading(true);
         setError("");
 
         const params = new URLSearchParams({
@@ -243,6 +243,8 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
         const data = response.data;
 
         if (requestId === requestIdRef.current) {
+          setLastRefreshedAt(new Date());
+          setSnapshotPreview(response.headers["x-pigo-preview"] === "synthetic-snapshot");
           setFinancialData({
             ...EMPTY_DATA,
             ...data,
@@ -279,6 +281,7 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
           setError(`${message}${err?.requestId ? ` Código: ${err.requestId}` : ""}`);
         }
       } finally {
+        inFlight = false;
         if (requestId === requestIdRef.current) {
           setLoading(false);
         }
@@ -286,8 +289,13 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
     }
 
     loadDashboard();
+    const refresh = () => { if (!document.hidden) loadDashboard(true); };
+    const timer = window.setInterval(refresh, 60000);
+    window.addEventListener("focus", refresh);
 
     return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refresh);
       controller.abort();
     };
   }, [
@@ -393,12 +401,12 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
     selectedType === "aberto" ? "Aberto" : "Faturados";
 
   return (
-    <div
+    <DashboardWorkspace dashboard="financeiro"><div
       aria-busy={loading}
       className="dashboard-page financial-dashboard-page"
     >
       <Topbar
-        titulo="Dashboard"
+        titulo="Dashboard Financeiro"
         caminho="Dashboard / Financeiro"
         onToggleSidebar={onToggleSidebar}
         isMobileOrTablet={isMobileOrTablet}
@@ -531,52 +539,7 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
       </section>
 
       <section className="financial-top-grid">
-        <article className="financial-kpi-card financial-kpi-card--payable">
-          <div className="financial-kpi-header">
-            <div>
-              <span className="financial-kpi-tag">
-                {selectedType === "aberto" ? "Saida prevista" : "Saida realizada"}
-              </span>
-              <h3>Contas a Pagar</h3>
-            </div>
-
-            <span className="financial-kpi-pill financial-kpi-pill--warm">
-              {financialData.contasPagar.variation}
-            </span>
-          </div>
-
-          <strong className="financial-kpi-value">
-            {formatCurrency(financialData.contasPagar.total)}
-          </strong>
-
-          <p className="financial-kpi-description">
-            {financialData.contasPagar.subtitle}
-          </p>
-
-          <div className="financial-sparkline">
-            {financialData.contasPagar.history.map((value, index) => (
-              <div
-                className="financial-sparkline-bar financial-sparkline-bar--payable"
-                key={`payable-${index}`}
-                style={{
-                  height: `${getHeight(
-                    Number(value || 0),
-                    Math.max(...financialData.contasPagar.history, 1),
-                    78
-                  )}px`,
-                }}
-                title={formatCurrency(value)}
-              ></div>
-            ))}
-          </div>
-
-          <div className="financial-kpi-footer">
-            <span>{financialData.contasPagar.highlight}</span>
-            <strong>{formatNumber(financialData.contasPagar.history.length)}</strong>
-          </div>
-        </article>
-
-        <article className="financial-kpi-card financial-kpi-card--receivable">
+        <DashboardBlock id="financeiro-1" title="Contas a Receber" kind="metric"><article className="financial-kpi-card financial-kpi-card--receivable">
           <div className="financial-kpi-header">
             <div>
               <span className="financial-kpi-tag">
@@ -619,62 +582,60 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
             <span>{financialData.contasReceber.highlight}</span>
             <strong>{formatNumber(financialData.contasReceber.history.length)}</strong>
           </div>
-        </article>
+        </article></DashboardBlock>
 
-        <article className="financial-kpi-card financial-kpi-card--delinquency">
+        <DashboardBlock id="financeiro-0" title="Contas a Pagar" kind="metric"><article className="financial-kpi-card financial-kpi-card--payable">
           <div className="financial-kpi-header">
             <div>
-              <span className="financial-kpi-tag">Indicadores críticos</span>
-              <h3>Inadimplência</h3>
+              <span className="financial-kpi-tag">
+                {selectedType === "aberto" ? "Saida prevista" : "Saida realizada"}
+              </span>
+              <h3>Contas a Pagar</h3>
             </div>
 
-            <span className="financial-kpi-pill financial-kpi-pill--alert">
-              Acompanhamento
+            <span className="financial-kpi-pill financial-kpi-pill--warm">
+              {financialData.contasPagar.variation}
             </span>
           </div>
 
-          <div className="financial-delinquency-rate">
-            <strong>{formatPercent(financialData.inadimplencia.taxa)}</strong>
-            <span>
-              {selectedType === "aberto" ? "da carteira" : "do total filtrado"}
-            </span>
-          </div>
+          <strong className="financial-kpi-value">
+            {formatCurrency(financialData.contasPagar.total)}
+          </strong>
 
           <p className="financial-kpi-description">
-            {selectedType === "aberto"
-              ? "Tenha total controle sobre sua carteira financeira com uma visão clara, rápida e estratégica. Acompanhe em tempo real os valores em aberto, atrasados e a recuperação no mês, facilitando a tomada de decisão."
-              : "Acompanhe os valores já recebidos dentro do recorte selecionado, permitindo comparar a performance financeira e a recuperação registrada no período."}
+            {financialData.contasPagar.subtitle}
           </p>
 
-          <div className="financial-delinquency-grid">
-            <div className="financial-delinquency-metric">
-              <span>Total vencido</span>
-              <strong>
-                {formatCurrency(financialData.inadimplencia.totalVencido)}
-              </strong>
-            </div>
-
-            <div className="financial-delinquency-metric">
-              <span>
-                {selectedType === "aberto" ? "Total a receber" : "Total faturado"}
-              </span>
-              <strong>
-                {formatCurrency(financialData.inadimplencia.totalReceber)}
-              </strong>
-            </div>
-
-            <div className="financial-delinquency-metric">
-              <span>{selectedType === "aberto" ? "Recuperado" : "Recebido"}</span>
-              <strong>
-                {formatCurrency(financialData.inadimplencia.recuperadoMes)}
-              </strong>
-            </div>
+          <div className="financial-sparkline">
+            {financialData.contasPagar.history.map((value, index) => (
+              <div
+                className="financial-sparkline-bar financial-sparkline-bar--payable"
+                key={`payable-${index}`}
+                style={{
+                  height: `${getHeight(
+                    Number(value || 0),
+                    Math.max(...financialData.contasPagar.history, 1),
+                    78
+                  )}px`,
+                }}
+                title={formatCurrency(value)}
+              ></div>
+            ))}
           </div>
-        </article>
+
+          <div className="financial-kpi-footer">
+            <span>{financialData.contasPagar.highlight}</span>
+            <strong>{formatNumber(financialData.contasPagar.history.length)}</strong>
+          </div>
+        </article></DashboardBlock>
+
+        <DashboardBlock id="financeiro-receitas" title="Receitas" kind="metric"><article className="financial-kpi-card financial-kpi-card--income"><div className="financial-kpi-header"><h3>Receitas</h3></div><strong className="financial-kpi-value">{formatCurrency(totalReceitas)}</strong><p className="financial-kpi-description">{selectedType==='aberto'?'Valores previstos por vencimento':'Valores baixados no período'}</p></article></DashboardBlock>
+        <DashboardBlock id="financeiro-despesas" title="Despesas" kind="metric"><article className="financial-kpi-card financial-kpi-card--expense"><div className="financial-kpi-header"><h3>Despesas</h3></div><strong className="financial-kpi-value">{formatCurrency(totalDespesas)}</strong><p className="financial-kpi-description">{selectedType==='aberto'?'Valores previstos por vencimento':'Valores baixados no período'}</p></article></DashboardBlock>
+
       </section>
 
       <section className="financial-core-grid">
-        <article className="chart-box financial-panel">
+        <DashboardBlock id="financeiro-3" title="Receitas x Despesas" kind="wide" rows={financialData.receitasDespesas} labelKey="label" series={[{key:"receitas",label:"Receitas"},{key:"despesas",label:"Despesas"}]}><article className="chart-box financial-panel">
           <div className="financial-panel-heading">
             <div>
               <span className="financial-panel-kicker">Bloco central</span>
@@ -764,13 +725,64 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
               ))}
             </div>
           </div>
-        </article>
+        </article></DashboardBlock>
 
-        <article className="chart-box financial-panel">
+        <DashboardBlock id="financeiro-2" title="Inadimplência" kind="wide"><article className="financial-kpi-card financial-kpi-card--delinquency">
+          <div className="financial-kpi-header">
+            <div>
+              <span className="financial-kpi-tag">Indicadores críticos</span>
+              <h3>Inadimplência</h3>
+            </div>
+
+            <span className="financial-kpi-pill financial-kpi-pill--alert">
+              Acompanhamento
+            </span>
+          </div>
+
+          <div className="financial-delinquency-rate">
+            <strong>{formatPercent(financialData.inadimplencia.taxa)}</strong>
+            <span>
+              {selectedType === "aberto" ? "da carteira" : "do total filtrado"}
+            </span>
+          </div>
+
+          <p className="financial-kpi-description">
+            {selectedType === "aberto"
+              ? "Tenha total controle sobre sua carteira financeira com uma visão clara, rápida e estratégica. Acompanhe em tempo real os valores em aberto, atrasados e a recuperação no mês, facilitando a tomada de decisão."
+              : "Acompanhe os valores já recebidos dentro do recorte selecionado, permitindo comparar a performance financeira e a recuperação registrada no período."}
+          </p>
+
+          <div className="financial-delinquency-grid">
+            <div className="financial-delinquency-metric">
+              <span>Total vencido</span>
+              <strong>
+                {formatCurrency(financialData.inadimplencia.totalVencido)}
+              </strong>
+            </div>
+
+            <div className="financial-delinquency-metric">
+              <span>
+                {selectedType === "aberto" ? "Total a receber" : "Total faturado"}
+              </span>
+              <strong>
+                {formatCurrency(financialData.inadimplencia.totalReceber)}
+              </strong>
+            </div>
+
+            <div className="financial-delinquency-metric">
+              <span>{selectedType === "aberto" ? "Recuperado" : "Recebido"}</span>
+              <strong>
+                {formatCurrency(financialData.inadimplencia.recuperadoMes)}
+              </strong>
+            </div>
+          </div>
+        </article></DashboardBlock>
+
+        <DashboardBlock id="financeiro-4" title="Análise de Inadimplência" kind="wide" rows={financialData.aging} labelKey="faixa" series={[{"key":"valor","label":"Valor"}]}><article className="chart-box financial-panel">
           <div className="financial-panel-heading">
             <div>
               <span className="financial-panel-kicker">Bloco central</span>
-              <h3>Analise de Aging</h3>
+              <h3>Análise de Inadimplência</h3>
               <p>
                 {selectedType === "aberto"
                   ? "Leitura da concentracao da carteira por faixa de atraso e titulos a vencer."
@@ -813,11 +825,11 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
               </div>
             ))}
           </div>
-        </article>
+        </article></DashboardBlock>
       </section>
 
       <section className="financial-support-grid">
-        <article className="chart-box financial-panel">
+        <DashboardBlock id="financeiro-5" title="Melhores Clientes" kind="chart" rows={financialData.melhoresClientes} labelKey="nome" series={[{"key":"valor","label":"Valor"}]}><article className="chart-box financial-panel">
           <div className="financial-panel-heading">
             <div>
               <span className="financial-panel-kicker">Blocos inferiores</span>
@@ -870,9 +882,9 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
               </div>
             ))}
           </div>
-        </article>
+        </article></DashboardBlock>
 
-        <article className="chart-box financial-panel">
+        <DashboardBlock id="financeiro-6" title="Melhores Fornecedores" kind="chart" rows={financialData.melhoresFornecedores} labelKey="nome" series={[{"key":"volume","label":"Valor"}]}><article className="chart-box financial-panel">
           <div className="financial-panel-heading">
             <div>
               <span className="financial-panel-kicker">Blocos inferiores</span>
@@ -922,14 +934,14 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
               </div>
             ))}
           </div>
-        </article>
+        </article></DashboardBlock>
 
-        <article className="table-box financial-panel financial-stock-panel">
+        <DashboardBlock id="financeiro-7" title="Produtos com estoque critico" kind="table"><article className="table-box financial-panel financial-stock-panel">
           <div className="financial-panel-heading">
             <div>
               <span className="financial-panel-kicker">Blocos inferiores</span>
               <h3>Produtos com estoque critico</h3>
-              <p>Itens com cobertura abaixo do minimo operacional definido.</p>
+              <p>{financialData.estoqueDisponivel === false ? "Avaliação indisponível: há múltiplas posições ou quantidades desconhecidas. Consulte o estoque por local e variação em Cadastros / Produtos." : "Itens com cobertura abaixo do minimo operacional definido."}</p>
             </div>
           </div>
 
@@ -972,11 +984,11 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
               </tbody>
             </table>
           </div>
-        </article>
+        </article></DashboardBlock>
       </section>
 
       <section className="financial-geo-grid">
-        <article className="table-box financial-panel">
+        <DashboardBlock id="financeiro-8" title="Clientes por cidades" kind="table"><article className="table-box financial-panel">
           <div className="financial-panel-heading">
             <div>
               <span className="financial-panel-kicker">Bloco final</span>
@@ -1018,16 +1030,15 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
               </tbody>
             </table>
           </div>
-        </article>
+        </article></DashboardBlock>
 
-        <article className="chart-box financial-panel financial-map-panel">
+        <DashboardBlock id="financeiro-9" title="Mapa geográfico" kind="map"><article className="chart-box financial-panel financial-map-panel">
           <div className="financial-panel-heading">
             <div>
               <span className="financial-panel-kicker">Bloco final</span>
-              <h3>Mapa geografico</h3>
+              <h3>Mapa geográfico</h3>
               <p>
-                Concentracao dos clientes por praca com destaque para o eixo
-                Sudeste.
+                Clientes com títulos no período e tipo selecionados, localizados por município.
               </p>
             </div>
 
@@ -1039,65 +1050,8 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
             </div>
           </div>
 
-          <div className="table-responsive">
-            <div className="financial-map-shell">
-              <svg
-                aria-label="Mapa de distribuicao de clientes"
-                className="financial-map-svg"
-                viewBox="0 0 520 340"
-              >
-                <path
-                  className="financial-map-shape"
-                  d="M129 78 L176 58 L216 72 L250 58 L292 78 L342 72 L392 102 L412 140 L402 190 L432 232 L406 278 L364 290 L338 314 L286 306 L250 280 L208 272 L178 242 L154 208 L146 170 L112 136 Z"
-                />
-
-                {MAP_CONNECTIONS.map((line, index) => (
-                  <line
-                    className="financial-map-connection"
-                    key={`connection-${index}`}
-                    x1={line.x1}
-                    x2={line.x2}
-                    y1={line.y1}
-                    y2={line.y2}
-                  />
-                ))}
-
-                {financialData.cidadesClientes.map((item) => (
-                  <g
-                    key={item.cidade}
-                    transform={`translate(${Number(item.x || 0)}, ${Number(
-                      item.y || 0
-                    )})`}
-                  >
-                    <circle
-                      cx="0"
-                      cy="0"
-                      fill={item.cor || "#2563eb"}
-                      fillOpacity="0.16"
-                      r={16 + Number(item.quantidade || 0) / 18}
-                    />
-                    <circle
-                      className="financial-map-marker-ring"
-                      cx="0"
-                      cy="0"
-                      r="12"
-                      stroke={item.cor || "#2563eb"}
-                      strokeWidth="3"
-                    />
-                    <circle
-                      cx="0"
-                      cy="0"
-                      fill={item.cor || "#2563eb"}
-                      r="4.5"
-                    />
-                    <text className="financial-map-label" x="18" y="5">
-                      {item.cidade}
-                    </text>
-                  </g>
-                ))}
-              </svg>
-            </div>
-          </div>
+          <p className="financial-map-refresh">{snapshotPreview ? 'Prévia: fotografia de dados fictícios, sem atualização do ERP.' : `Consulta automática a cada minuto · ${lastRefreshedAt ? `atualizada às ${lastRefreshedAt.toLocaleTimeString('pt-BR')}` : 'aguardando consulta'}. Os valores acompanham a última sincronização do agente.`}</p>
+          <Suspense fallback={<p role="status">Carregando mapa geográfico…</p>}><FinancialMap cities={financialData.cidadesClientes} /></Suspense>
 
           <div className="financial-map-legend">
             {!financialData.cidadesClientes.length ? (
@@ -1134,9 +1088,9 @@ function DashboardFinanceiro({ onToggleSidebar, isMobileOrTablet, theme, toggleT
               </div>
             ))}
           </div>
-        </article>
+        </article></DashboardBlock>
       </section>
-    </div>
+    </div></DashboardWorkspace>
   );
 }
 

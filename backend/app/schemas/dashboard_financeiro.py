@@ -52,12 +52,15 @@ class EstoqueCriticoItem(BaseModel):
 class CidadeClienteItem(BaseModel):
     cidade: str
     quantidade: int
-    x: int
-    y: int
+    codigo_ibge: str | None = None
+    uf: str | None = None
+    x: int | None = None
+    y: int | None = None
     cor: str
 
 
 class DashboardFinanceiroResponse(BaseModel):
+    estoqueDisponivel: bool = True
     contasPagar: ContasResumo
     contasReceber: ContasResumo
     inadimplencia: InadimplenciaResumo

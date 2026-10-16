@@ -1,0 +1,35 @@
+{
+  "name": "pigo-remote-sync-desktop",
+  "version": "0.2.12-rc.2",
+  "private": true,
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "concurrently \"vite\" \"wait-on http://localhost:5174 && electron .\"",
+    "build": "vite build",
+    "start": "electron .",
+    "test": "node --test electron/*.test.cjs electron/*.integration.cjs",
+    "dist": "npm run build && electron-builder --win nsis"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "vite": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {
+    "concurrently": "latest",
+    "electron": "latest",
+    "electron-builder": "latest",
+    "wait-on": "latest"
+  },
+  "build": {
+    "appId": "br.com.lmdsistemas.pigo.remote-sync",
+    "productName": "PIGO Remote Sync",
+    "files": ["dist/**/*", "electron/**/*", "package.json"],
+    "asarUnpack": ["electron/preload.cjs"],
+    "extraResources": [{"from": "../remote-sync-agent", "to": "agent", "filter": ["**/*", "!venv/**/*", "!__pycache__/**/*", "!.env", "!.env.*", "!*.log"]}, {"from": "runtime/python-x86", "to": "runtime/python-x86"}, {"from": "runtime/python-x64", "to": "runtime/python-x64"}, {"from": "resources", "to": "resources"}],
+    "directories": {"output": "release"},
+    "win": {"target": "nsis"},
+    "nsis": {"oneClick": false, "allowToChangeInstallationDirectory": true, "deleteAppDataOnUninstall": false}
+  }
+}

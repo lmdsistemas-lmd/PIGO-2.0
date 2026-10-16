@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
+import { useEmpresa } from "../context/EmpresaContext";
+import { resolveEmpresaErpId } from "../services/empresaIdentity";
 import Topbar from "../components/Topbar";
 import api from "../services/api";
 import "../styles/dashboard.css";
@@ -11,6 +13,10 @@ const REGISTROS_POR_PAGINA = 500;
 function FuncionarioAnalise({ onToggleSidebar, isMobileOrTablet, theme, toggleTheme }) {
   const { pes_id } = useParams();
   const funcionarioId = pes_id;
+  const [searchParams] = useSearchParams();
+  const origem = searchParams.get('origem') || undefined;
+  const { empresaAtual, loadingEmpresas } = useEmpresa();
+  const empresaId = resolveEmpresaErpId(empresaAtual) || undefined;
 
   function obterDataHoje() {
     const hoje = new Date();
@@ -84,6 +90,7 @@ function FuncionarioAnalise({ onToggleSidebar, isMobileOrTablet, theme, toggleTh
   const [auditoria, setAuditoria] = useState([]);
   const [loadingAuditoria, setLoadingAuditoria] = useState(false);
   const [erroAuditoria, setErroAuditoria] = useState("");
+  const [auditoriaInfo, setAuditoriaInfo] = useState('');
 
   const limitesAuditoria = [
     { label: "100 registros", value: "100" },
@@ -96,7 +103,9 @@ function FuncionarioAnalise({ onToggleSidebar, isMobileOrTablet, theme, toggleTh
   ];
 
   useEffect(() => {
+    const controller = new AbortController();
     async function carregarDadosIniciais() {
+      if (loadingEmpresas) return;
       if (!funcionarioId) {
         setErro("ID do funcionário não foi encontrado na rota.");
         setLoading(false);
@@ -107,21 +116,25 @@ function FuncionarioAnalise({ onToggleSidebar, isMobileOrTablet, theme, toggleTh
         setLoading(true);
         setErro("");
 
-        const funcionarioResponse = await api.get(`/funcionarios/${funcionarioId}`);
-        setFuncionario(funcionarioResponse.data);
+        const funcionarioResponse = await api.get(`/funcionarios/${funcionarioId}`, { signal: controller.signal, params: { empresa_id: empresaId, origem } });
+        if (!controller.signal.aborted) setFuncionario(funcionarioResponse.data);
       } catch (error) {
+        if (controller.signal.aborted) return;
         console.error("Erro ao carregar análise do funcionário:", error);
-        setErro("Não foi possível carregar os dados do funcionário.");
+        setErro(error?.response?.data?.detail || "Não foi possível carregar os dados do funcionário.");
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     }
 
     carregarDadosIniciais();
-  }, [funcionarioId]);
+    return () => controller.abort();
+  }, [funcionarioId, empresaId, origem, loadingEmpresas]);
 
   useEffect(() => {
+    const controller = new AbortController();
     async function carregarAuditoria() {
+      if (loadingEmpresas) return;
       if (!funcionarioId) {
         return;
       }
@@ -129,8 +142,11 @@ function FuncionarioAnalise({ onToggleSidebar, isMobileOrTablet, theme, toggleTh
       try {
         setLoadingAuditoria(true);
         setErroAuditoria("");
+        setAuditoriaInfo('');
 
         const queryParams = {
+          empresa_id: empresaId,
+          origem,
           limit: Number(filtrosAplicados.limit || 100),
         };
 
@@ -143,18 +159,21 @@ function FuncionarioAnalise({ onToggleSidebar, isMobileOrTablet, theme, toggleTh
         }
 
         const response = await api.get(`/funcionarios/${funcionarioId}/auditoria`, {
-          params: queryParams,
+          params: queryParams, signal: controller.signal,
         });
 
+        if (controller.signal.aborted) return;
         const registros = Array.isArray(response.data?.registros)
           ? response.data.registros
           : [];
 
         setAuditoria(registros);
+        setAuditoriaInfo(response.data?.available === false ? response.data.message : '');
         setFiltroCardSelecionado("TOTAL");
         setFiltroTabelaSelecionada("");
         setPaginaAtual(1);
       } catch (error) {
+        if (controller.signal.aborted) return;
         console.error("Erro ao carregar auditoria:", error);
         const mensagem =
           error?.response?.data?.detail ||
@@ -163,12 +182,13 @@ function FuncionarioAnalise({ onToggleSidebar, isMobileOrTablet, theme, toggleTh
         setAuditoria([]);
         setPaginaAtual(1);
       } finally {
-        setLoadingAuditoria(false);
+        if (!controller.signal.aborted) setLoadingAuditoria(false);
       }
     }
 
     carregarAuditoria();
-  }, [funcionarioId, filtrosAplicados]);
+    return () => controller.abort();
+  }, [funcionarioId, filtrosAplicados, empresaId, origem, loadingEmpresas]);
 
   useEffect(() => {
     setPaginaAtual(1);
@@ -351,6 +371,7 @@ function FuncionarioAnalise({ onToggleSidebar, isMobileOrTablet, theme, toggleTh
       <div className="dashboard-page">
         <Topbar
           titulo="Análise de Produtividade"
+          subtitulo={funcionario?.nome ? `${funcionario.nome} · ERP ${funcionarioId}` : "Dados do funcionário"}
           caminho="Dashboard / Auditoria"
           onToggleSidebar={onToggleSidebar}
           isMobileOrTablet={isMobileOrTablet}
@@ -367,6 +388,7 @@ function FuncionarioAnalise({ onToggleSidebar, isMobileOrTablet, theme, toggleTh
       <div className="dashboard-page">
         <Topbar
           titulo="Análise de Produtividade"
+          subtitulo={funcionario?.nome ? `${funcionario.nome} · ERP ${funcionarioId}` : "Dados do funcionário"}
           caminho="Dashboard / Auditoria"
           onToggleSidebar={onToggleSidebar}
           isMobileOrTablet={isMobileOrTablet}
@@ -383,6 +405,7 @@ function FuncionarioAnalise({ onToggleSidebar, isMobileOrTablet, theme, toggleTh
       <div className="dashboard-page">
         <Topbar
           titulo="Análise de Produtividade"
+          subtitulo={funcionario?.nome ? `${funcionario.nome} · ERP ${funcionarioId}` : "Dados do funcionário"}
           caminho="Dashboard / Auditoria"
           onToggleSidebar={onToggleSidebar}
           isMobileOrTablet={isMobileOrTablet}
@@ -398,6 +421,7 @@ function FuncionarioAnalise({ onToggleSidebar, isMobileOrTablet, theme, toggleTh
     <div className="dashboard-page">
       <Topbar
         titulo="Análise de Produtividade"
+          subtitulo={funcionario?.nome ? `${funcionario.nome} · ERP ${funcionarioId}` : "Dados do funcionário"}
         caminho="Dashboard / Auditoria"
         onToggleSidebar={onToggleSidebar}
         isMobileOrTablet={isMobileOrTablet}
@@ -559,6 +583,7 @@ function FuncionarioAnalise({ onToggleSidebar, isMobileOrTablet, theme, toggleTh
           </div>
         </div>
 
+        {auditoriaInfo && <p className="analise-feedback" role="status">{auditoriaInfo}</p>}
         {loadingAuditoria && (
           <div className="analise-feedback">Carregando auditoria...</div>
         )}

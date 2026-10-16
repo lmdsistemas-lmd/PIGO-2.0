@@ -759,6 +759,10 @@ class DashboardFinanceiroRepository(BaseDashboardRepository):
     # =========================
 
     def get_estoque_critico(self, empresa_id: int | None) -> list[dict]:
+        from app.repositories.stock_availability import stock_requires_consolidation
+        self.stock_requires_rule = stock_requires_consolidation(self, empresa_id)
+        if self.stock_requires_rule:
+            return []
         resultado_com_minimo = self._get_estoque_critico_com_minimo(empresa_id)
         if resultado_com_minimo:
             return resultado_com_minimo
@@ -906,10 +910,15 @@ class DashboardFinanceiroRepository(BaseDashboardRepository):
         empresa_sql, empresa_params = self._empresa_filter("R.REC_EMPRESA", empresa_id)
         _, filtro_sql, data_sql = self._receber_metric_sql("R", report_type)
 
+        city_columns = self.erp.table_columns('TB_CIDADE')
+        ibge_select = 'CID.CID_CODIGO_MUNICIPIO' if 'CID_CODIGO_MUNICIPIO' in city_columns else 'NULL'
+        ibge_group = ', CID.CID_CODIGO_MUNICIPIO' if 'CID_CODIGO_MUNICIPIO' in city_columns else ''
+
         sql = f"""
             SELECT
                 CID.CID_ID AS CIDADE_ID,
                 CID.CID_NOME AS CIDADE_NOME,
+                {ibge_select} AS CODIGO_IBGE,
                 COUNT(DISTINCT P.PES_ID) AS QUANTIDADE
             FROM TB_RECEBIMENTO R
             INNER JOIN TB_PESSOA P
@@ -921,7 +930,7 @@ class DashboardFinanceiroRepository(BaseDashboardRepository):
               AND COALESCE(R.REC_STATUS, '') <> 'CANCELADO'
               AND {filtro_sql}
               {empresa_sql}
-            GROUP BY CID.CID_ID, CID.CID_NOME
+            GROUP BY CID.CID_ID, CID.CID_NOME{ibge_group}
             ORDER BY QUANTIDADE DESC
             ROWS 10
         """
@@ -937,15 +946,13 @@ class DashboardFinanceiroRepository(BaseDashboardRepository):
         result = []
         for row in rows:
             city_name = row.get("CIDADE_NOME") or "Nao informada"
-            position = self._get_city_position(city_name)
 
             result.append(
                 {
                     "cidade": city_name,
                     "quantidade": self._safe_int(row.get("QUANTIDADE")),
-                    "x": position["x"],
-                    "y": position["y"],
-                    "cor": position["cor"],
+                    "codigo_ibge": str(row['CODIGO_IBGE']).strip() if row.get('CODIGO_IBGE') else None,
+                    "cor": ['#2563eb','#0d9488','#7c3aed','#d97706','#dc2626'][len(result) % 5],
                 }
             )
 

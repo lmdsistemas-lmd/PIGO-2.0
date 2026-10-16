@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import DashboardVendas from "./pages/DashboardVendas";
 import DashboardFinanceiro from "./pages/DashboardFinanceiro";
@@ -16,12 +16,31 @@ import PerformanceInclusoes from "./pages/PerformanceInclusoes";
 import PerformanceAlteracoes from "./pages/PerformanceAlteracoes";
 import PerformanceCancelamentos from "./pages/PerformanceCancelamentos";
 import Login from "./pages/Login";
+import CommercialAnalytics from "./pages/CommercialAnalytics";
+import SalesGoals from "./pages/SalesGoals";
+import Operations from "./pages/Operations";
+import { OPERATIONS } from "./config/operations";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import BottomNavigation from "./components/BottomNavigation";
 
+import Access from "./pages/Access";
+import { useAuth } from "./context/AuthContext";
+import { firstAllowedPath } from "./utils/access";
+import "./styles/reference-layout.css";
+
 function AppLayout() {
+  const { pathname } = useLocation();
+  const { user } = useAuth();
+  const referenceLayout = !pathname.startsWith('/funcionarios') && !pathname.startsWith('/performance');
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(window.innerWidth <= 1200);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('pigo_sidebar_collapsed') === 'true');
+  function toggleSidebarCollapsed() {
+    setSidebarCollapsed((previous) => {
+      localStorage.setItem('pigo_sidebar_collapsed', String(!previous));
+      return !previous;
+    });
+  }
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
 
   useEffect(() => {
@@ -50,6 +69,8 @@ function AppLayout() {
   function handleToggleSidebar() {
     if (isMobileOrTablet) {
       setSidebarOpen((prev) => !prev);
+    } else {
+      toggleSidebarCollapsed();
     }
   }
 
@@ -67,11 +88,13 @@ function AppLayout() {
 
   return (
     <div
-      className={`app-shell notranslate ${isMobileOrTablet ? "mobile-mode" : ""}`}
+      className={`app-shell notranslate ${referenceLayout ? "reference-layout" : ""} ${isMobileOrTablet ? "mobile-mode" : ""} ${sidebarCollapsed ? 'sidebar-is-collapsed' : ''}`}
       translate="no"
     >
       {!isMobileOrTablet && (
         <Sidebar
+          collapsed={sidebarCollapsed}
+          onToggleCollapsed={toggleSidebarCollapsed}
           isMobileOrTablet={isMobileOrTablet}
           isOpen={sidebarOpen}
           onClose={handleCloseSidebar}
@@ -84,7 +107,7 @@ function AppLayout() {
 
       <div className="app-content">
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard/vendas" replace />} />
+          <Route path="/" element={<Navigate to={firstAllowedPath(user)} replace />} />
 
           <Route
             path="/dashboard/consolidado"
@@ -102,7 +125,14 @@ function AppLayout() {
             element={<DashboardEstoque {...sharedLayoutProps} />}
           />
           <Route path="/estoque" element={<Navigate to="/dashboard/estoque" replace />} />
+          <Route path="/dashboard/clientes" element={<CommercialAnalytics mode="clientes" {...sharedLayoutProps} />} />
+          <Route path="/dashboard/curva-abc" element={<CommercialAnalytics mode="abc" {...sharedLayoutProps} />} />
+          <Route path="/dashboard/metas" element={<SalesGoals {...sharedLayoutProps} />} />
+          {OPERATIONS.map((operation) => <Route key={operation.path} path={operation.path} element={<Operations {...operation} {...sharedLayoutProps} />} />)}
 
+          {['usuarios','perfis','permissoes'].map(section => <Route key={section} path={`/acesso/${section}`} element={<Access section={section} {...sharedLayoutProps} />} />)}
+          <Route path="/acesso" element={<Navigate to="/acesso/usuarios" replace />} />
+          <Route path="/sem-acesso" element={<div className="access-denied"><h1>Acesso não atribuído</h1><p>Solicite ao administrador um perfil com permissões no PIGO.</p><a href="/login">Voltar ao login</a></div>} />
           <Route path="/relatorios" element={<Reports {...sharedLayoutProps} />} />
           <Route path="/relatorios/:categoria" element={<Reports {...sharedLayoutProps} />} />
           <Route path="/relatorios/:categoria/novo" element={<Reports {...sharedLayoutProps} />} />
@@ -138,7 +168,7 @@ function AppLayout() {
             element={<PerformanceCancelamentos {...sharedLayoutProps} />}
           />
 
-          <Route path="*" element={<Navigate to="/dashboard/vendas" replace />} />
+          <Route path="*" element={<Navigate to={firstAllowedPath(user)} replace />} />
         </Routes>
       </div>
 

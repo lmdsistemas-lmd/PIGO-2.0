@@ -8,6 +8,9 @@ from app.services.tenant_access_service import get_tenant_by_cnpj, validate_tena
 
 
 LICENSED_PATH_PREFIXES = (
+    "/api/acesso",
+    "/api/operacoes",
+    "/api/erp/cadastros",
     "/api/dashboard",
     "/funcionarios",
     "/performance",
@@ -25,6 +28,11 @@ LICENSED_PATH_PREFIXES = (
 
 async def license_middleware(request, call_next):
     path = request.url.path
+    # Browser navigation loads only the public React shell. Authentication and
+    # licensing still apply to its subsequent API requests, even with HTML Accept.
+    if (request.method in {"GET", "HEAD"} and "text/html" in request.headers.get("accept", "")
+            and path != "/api" and not path.startswith("/api/")):
+        return await call_next(request)
     should_validate = any(path.startswith(prefix) for prefix in LICENSED_PATH_PREFIXES)
 
     if should_validate:

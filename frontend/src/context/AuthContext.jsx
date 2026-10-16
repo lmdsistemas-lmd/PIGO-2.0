@@ -36,8 +36,8 @@ export function AuthProvider({ children }) {
     loadUser();
   }, []);
 
-  async function login(cnpj, login, senha) {
-    const data = await loginRequest(cnpj, login, senha);
+  async function login(cnpj, login, senha, source = 'erp') {
+    const data = await loginRequest(cnpj, login, senha, source);
 
     localStorage.setItem("dashboard_token", data.access_token);
     localStorage.setItem("dashboard_user", JSON.stringify(data.user));

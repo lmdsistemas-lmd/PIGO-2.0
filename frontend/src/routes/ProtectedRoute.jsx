@@ -1,8 +1,10 @@
-import { Navigate } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
+import { allowedPage, firstAllowedPath } from '../utils/access';
 import { useAuth } from "../context/AuthContext";
 
 export default function ProtectedRoute({ children }) {
-  const { isAuthenticated, loadingAuth } = useAuth();
+  const { isAuthenticated, loadingAuth, user } = useAuth();
+  const {pathname}=useLocation();
 
   if (loadingAuth) {
     return (
@@ -26,5 +28,6 @@ export default function ProtectedRoute({ children }) {
     return <Navigate to="/login" replace />;
   }
 
+  if(!allowedPage(user,pathname))return <main style={{padding:'40px'}}><h1>Acesso não permitido</h1><p>Seu perfil não permite abrir esta tela.</p><Link to={firstAllowedPath(user)}>Abrir uma tela permitida</Link></main>;
   return children;
 }

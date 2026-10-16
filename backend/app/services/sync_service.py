@@ -1,4 +1,5 @@
 import logging
+import re
 from datetime import datetime
 from typing import Any, Dict, List
 
@@ -22,6 +23,8 @@ class SyncService:
         "TB_PEDIDO_VENDA_ITEM": ["PEVI_PEDIDO_VENDA", "PEVI_EMPRESA", "PEVI_PRODUTO"],
         "TB_PRODUTO": ["PRD_ID"],
         "TB_PRODUTO_ESTOQUE": ["PRDE_PRODUTO", "PRDE_EMPRESA"],
+        "TB_PROD_CODIGO_BARRAS": ["PRDC_PRODUTO", "PRDC_COD_BARRAS"],
+        "TB_PRODUTO_PRECO": ["PRDP_PRODUTO", "PRDP_EMPRESA"],
         "TB_RECEBIMENTO": ["REC_ID"],
         "TB_PAGAMENTO": ["PAG_ID"],
         "TB_AUDITORIA": ["AUD_TABELA", "AUD_ID_REGISTRO", "AUD_SEQUENCIA"],
@@ -29,8 +32,29 @@ class SyncService:
         "TB_COLABORADOR": ["COL_PESSOA"],
         "TB_PROD_GRUPO": ["PGRU_ID"],
         "TB_PROD_MARCA": ["PMAR_ID"],
+        "TB_FORNECEDOR": ["FOR_PESSOA", "FOR_EMPRESA"],
+        "TB_PROD_DEPARTAMENTO": ["PDEP_ID"],
+        "TB_PROD_SUBGRUPO": ["PSGR_ID"],
+        "TB_PLANO_CONTA": ["PLC_ID"],
+        "TB_FECHAMENTO_CAIXA": ["FCX_ID", "FCX_EMPRESA"],
+        "TB_FECHAMENTO_CAIXA_FORMA": ["FCF_ID", "FCF_EMPRESA"],
+        "TB_FECHAMENTO_CAIXA_ITEM": ["FCXI_EMPRESA", "FCXI_FECHAMENTO", "FCXI_SEQUENCIA"],
+        "TB_FECHAMENTO_CAIXA_VENDA": ["FCXV_EMPRESA", "FCXV_FECHAMENTO", "FCXV_SEQUENCIA"],
+        "TB_MOVIMENTO_CAIXA": ["MOV_EMPRESA", "MOV_ID"],
+        "TB_PIGO_CAIXA_MOVIMENTO": ["FCI_ID", "FCI_EMPRESA"],
+        "TB_CAIXA_SANGRIA": ["SAN_ID", "SAN_EMPRESA"],
+        "TB_CHEQUE_EMITIDO": ["CHQ_ID", "CHQ_EMPRESA"],
         "TB_ESPECIE_MOEDA": ["ESP_ID"],
         "TB_PEDIDO_VENDA_FIN": ["PEVF_PEDIDO_VENDA", "PEVF_EMPRESA", "PEVF_ESPECIE_MOEDA"],
+    }
+    TABLE_KEY_VARIANTS = {
+        "TB_PEDIDO_VENDA": [["PEV_EMPRESA", "PEV_ID"], ["PEV_ID"]],
+        "TB_RECEBIMENTO": [["REC_EMPRESA", "REC_ID"], ["REC_ID"]],
+        "TB_PAGAMENTO": [["PAG_EMPRESA", "PAG_ID"], ["PAG_ID"]],
+        "TB_PRODUTO_ESTOQUE": [["PRDE_PRODUTO", "PRDE_EMPRESA", "PRDE_LOCAL", "PRDE_VARIACAO"], ["PRDE_PRODUTO", "PRDE_EMPRESA"]],
+        "TB_PEDIDO_VENDA_ITEM": [["PEVI_EMPRESA", "PEVI_PEDIDO_VENDA", "PEVI_SEQUENCIA"], ["PEVI_PEDIDO_VENDA", "PEVI_EMPRESA", "PEVI_PRODUTO"]],
+        "TB_PEDIDO_VENDA_FIN": [["PEVF_EMPRESA", "PEVF_PEDIDO_VENDA", "PEVF_SEQUENCIA"], ["PEVF_PEDIDO_VENDA", "PEVF_EMPRESA", "PEVF_ESPECIE_MOEDA"]],
+        "TB_FECHAMENTO_CAIXA_ITEM": [["FCXI_EMPRESA", "FCXI_FECHAMENTO", "FCXI_SEQUENCIA"], ["FCI_ID", "FCI_EMPRESA"]],
     }
 
     @staticmethod
@@ -76,6 +100,10 @@ class SyncService:
             from app.services.report_engine import clear_report_cache
 
             clear_report_cache(str(tenant.id))
+            from app.services.erp_query_service import clear_erp_query_cache
+            from app.services.dashboard_financeiro_service import clear_dashboard_financeiro_cache
+            clear_erp_query_cache()
+            clear_dashboard_financeiro_cache(str(tenant.id))
 
             logger.info(
                 "[SYNC] completed tenant_id=%s tenant_cnpj=%s data_type=%s destination=%s "
@@ -122,6 +150,8 @@ class SyncService:
         rows: List[Dict],
         legacy_pk: List[str] | None = None,
     ) -> Dict:
+        if not isinstance(table_name, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,62}", table_name):
+            raise ValueError("Nome de tabela de sincronização inválido.")
         stats = {
             "success": True,
             "destination_table": table_name,
@@ -146,6 +176,8 @@ class SyncService:
                 continue
             dict_rows.append(row)
             for column in row.keys():
+                if not isinstance(column, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,62}", column):
+                    raise ValueError("Nome de campo de sincronização inválido.")
                 if column not in columns:
                     columns.append(column)
 
@@ -155,7 +187,9 @@ class SyncService:
         if "tenant_id" not in columns:
             columns.append("tenant_id")
 
-        sample_row = dict_rows[0]
+        # Resolve from the complete payload shape. An incomplete first row must
+        # not force a legacy key that collapses later physical positions.
+        sample_row = dict.fromkeys(column for column in columns if column != "tenant_id")
         pks = SyncService._resolve_pk_columns(table_name, sample_row, legacy_pk)
         pks_with_tenant = ["tenant_id"] + pks
         stats["pk_columns"] = pks_with_tenant
@@ -265,6 +299,24 @@ class SyncService:
             column_name = definition.split('"', 2)[1]
             if column_name not in existing_columns:
                 db.execute(text(f'ALTER TABLE public."{table_name}" ADD COLUMN IF NOT EXISTS {definition}'))
+        constraints = db.execute(text('''SELECT tc.constraint_name, kcu.column_name
+            FROM information_schema.table_constraints tc JOIN information_schema.key_column_usage kcu
+            ON tc.constraint_name=kcu.constraint_name AND tc.table_schema=kcu.table_schema AND tc.table_name=kcu.table_name
+            WHERE tc.table_schema='public' AND tc.table_name=:table AND tc.constraint_type='PRIMARY KEY'
+            ORDER BY kcu.ordinal_position'''), {"table": table_name}).all()
+        if constraints and [row[1] for row in constraints] != pk_columns:
+            # Re-key only when the physical key is present on every stored row.
+            # Never invent line sequences, discard old rows or silently merge items.
+            missing = " OR ".join(f'"{column}" IS NULL' for column in pk_columns)
+            if db.execute(text(f'SELECT 1 FROM public."{table_name}" WHERE {missing} LIMIT 1')).first():
+                db.rollback()
+                raise ValueError(f"MIRROR_KEY_MIGRATION_REQUIRED: {table_name} contém registros sem a chave física recebida. Preserve o espelho e homologue a carga com as sequências do ERP antes de migrar.")
+            constraint = constraints[0][0].replace('"', '""')
+            db.execute(text(f'ALTER TABLE public."{table_name}" DROP CONSTRAINT "{constraint}"'))
+            for _, column in constraints:
+                if column not in pk_columns:
+                    db.execute(text(f'ALTER TABLE public."{table_name}" ALTER COLUMN "{column}" DROP NOT NULL'))
+            db.execute(text(f'ALTER TABLE public."{table_name}" ADD PRIMARY KEY ({pk_cols})'))
         db.commit()
 
     @staticmethod
@@ -299,6 +351,15 @@ class SyncService:
 
     @staticmethod
     def _resolve_pk_columns(table_name: str, sample_row: Dict, legacy_pk: List[str] | None = None) -> List[str]:
+        if not legacy_pk and table_name == "TB_PRODUTO_ESTOQUE" and {"PRDE_LOCAL", "PRDE_VARIACAO"} & set(sample_row):
+            physical = SyncService.TABLE_KEY_VARIANTS[table_name][0]
+            if not set(physical) <= set(sample_row):
+                raise ValueError("Chave física incompleta para TB_PRODUTO_ESTOQUE: informe local e variação.")
+        if not legacy_pk and table_name in SyncService.TABLE_KEY_VARIANTS:
+            for candidate in SyncService.TABLE_KEY_VARIANTS[table_name]:
+                if set(candidate) <= set(sample_row):
+                    return candidate
+            raise ValueError(f"Chave física incompleta para {table_name}.")
         configured = legacy_pk or SyncService.TABLE_PK_MAP.get(table_name, ["ID"])
         available = set(sample_row.keys())
         resolved = [pk for pk in configured if pk in available]

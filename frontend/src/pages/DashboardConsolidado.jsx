@@ -1,3 +1,4 @@
+import DashboardWorkspace, { DashboardBlock } from "../components/DashboardWorkspace";
 import { useEffect, useMemo, useState } from "react";
 import {
   Area,
@@ -144,7 +145,7 @@ export default function DashboardConsolidado({ onToggleSidebar, isMobileOrTablet
   }, [data.graficos.vendas_dia_semana]);
 
   return (
-    <div className="dashboard-page">
+    <DashboardWorkspace dashboard="consolidado"><div className="dashboard-page">
       <Topbar
         titulo="Consolidado de Filiais"
         caminho="Dashboard / Consolidado"
@@ -161,30 +162,30 @@ export default function DashboardConsolidado({ onToggleSidebar, isMobileOrTablet
       {error && <div className="status-message error-message">{error}</div>}
 
       <div className="cards-grid">
-        <div className="card-kpi card-kpi-premium">
+        <DashboardBlock id="consolidado-0" title="Faturamento Total" kind="metric"><div className="card-kpi card-kpi-premium">
           <h3>Faturamento Total</h3>
           <p>{formatCurrency(data.cards.faturamento_total)}</p>
           <span>Rede Completa</span>
-        </div>
-        <div className="card-kpi card-kpi-soft" style={{ borderLeft: '4px solid #7c3aed' }}>
+        </div></DashboardBlock>
+        <DashboardBlock id="consolidado-1" title="Total de Vendas" kind="metric"><div className="card-kpi card-kpi-soft" style={{ borderLeft: '4px solid #7c3aed' }}>
           <h3>Total de Vendas</h3>
           <p>{formatNumber(data.cards.total_vendas)}</p>
           <span>Rede Completa</span>
-        </div>
-        <div className="card-kpi card-kpi-soft" style={{ borderLeft: '4px solid #16a34a' }}>
+        </div></DashboardBlock>
+        <DashboardBlock id="consolidado-2" title="Ticket Médio" kind="metric"><div className="card-kpi card-kpi-soft" style={{ borderLeft: '4px solid #16a34a' }}>
           <h3>Ticket Médio</h3>
           <p>{formatCurrency(data.cards.ticket_medio)}</p>
           <span>Média da Rede</span>
-        </div>
-        <div className="card-kpi card-kpi-soft" style={{ borderLeft: '4px solid #f59e0b' }}>
+        </div></DashboardBlock>
+        <DashboardBlock id="consolidado-3" title="Filiais Ativas" kind="metric"><div className="card-kpi card-kpi-soft" style={{ borderLeft: '4px solid #f59e0b' }}>
           <h3>Filiais Ativas</h3>
           <p>{data.cards.filiais_ativas}</p>
           <span>No Período</span>
-        </div>
+        </div></DashboardBlock>
       </div>
 
       <div className="two-columns">
-        <div className="chart-box premium-box vendas-chart-card">
+        <DashboardBlock id="consolidado-4" title="Participação no Faturamento" kind="chart" rows={pieData} labelKey="name" series={[{"key":"value","label":"Valor"}]}><div className="chart-box premium-box vendas-chart-card">
           <div className="vendas-box-header">
             <h3>Participação no Faturamento</h3>
           </div>
@@ -227,9 +228,9 @@ export default function DashboardConsolidado({ onToggleSidebar, isMobileOrTablet
           ) : (
             <div className="empty-state">Nenhuma filial encontrada no período.</div>
           )}
-        </div>
+        </div></DashboardBlock>
 
-        <div className="chart-box premium-box vendas-chart-card">
+        <DashboardBlock id="consolidado-5" title="Ticket Médio por Filial" kind="chart" rows={data.resumo_filiais} labelKey="nome" series={[{"key":"ticket_medio","label":"Ticket Médio"}]}><div className="chart-box premium-box vendas-chart-card">
           <div className="vendas-box-header">
             <h3>Ticket Médio por Filial</h3>
           </div>
@@ -249,10 +250,10 @@ export default function DashboardConsolidado({ onToggleSidebar, isMobileOrTablet
           ) : (
             <div className="empty-state">Sem dados.</div>
           )}
-        </div>
+        </div></DashboardBlock>
       </div>
 
-      <div className="chart-box large premium-box vendas-chart-card">
+      <DashboardBlock id="consolidado-6" title="Vendas por Dia da Semana" kind="wide" rows={data.graficos.vendas_dia_semana} labelKey="name" series={filiaisNomes.map(key=>({key,label:key}))}><div className="chart-box large premium-box vendas-chart-card">
         <div className="vendas-box-header">
           <h3>Vendas por Dia da Semana</h3>
         </div>
@@ -272,9 +273,9 @@ export default function DashboardConsolidado({ onToggleSidebar, isMobileOrTablet
         ) : (
           <div className="empty-state">Sem dados por dia da semana.</div>
         )}
-      </div>
+      </div></DashboardBlock>
 
-      <div className="chart-box large premium-box vendas-chart-card">
+      <DashboardBlock id="consolidado-7" title="Vendas Mensais por Filial" kind="wide" rows={data.graficos.vendas_mensais} labelKey="name" series={filiaisNomes.map(key=>({key,label:key}))}><div className="chart-box large premium-box vendas-chart-card">
         <div className="vendas-box-header">
           <h3>Vendas Mensais por Filial</h3>
         </div>
@@ -301,9 +302,9 @@ export default function DashboardConsolidado({ onToggleSidebar, isMobileOrTablet
         ) : (
           <div className="empty-state">Sem dados mensais.</div>
         )}
-      </div>
+      </div></DashboardBlock>
 
-      <div className="table-box premium-box" style={{ marginTop: '24px' }}>
+      <DashboardBlock id="consolidado-8" title="Indicadores Detalhados por Filial" kind="table" rows={data.resumo_filiais} labelKey="nome" series={[{"key":"faturamento","label":"Valor"}]}><div className="table-box premium-box" style={{ marginTop: '24px' }}>
         <div className="vendas-box-header">
           <h3>Indicadores Detalhados por Filial</h3>
         </div>
@@ -331,7 +332,7 @@ export default function DashboardConsolidado({ onToggleSidebar, isMobileOrTablet
             </tbody>
           </table>
         </div>
-      </div>
-    </div>
+      </div></DashboardBlock>
+    </div></DashboardWorkspace>
   );
 }

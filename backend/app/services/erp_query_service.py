@@ -5,6 +5,7 @@ import hashlib
 import json
 import logging
 import traceback
+import threading
 from typing import Any
 from sqlalchemy import text
 from app.database.erp_connection import get_erp_db, current_cnpj, current_tenant_id
@@ -20,17 +21,43 @@ _saas_mode_cache: dict[str, bool] = {}
 # Cache de resultados de query (SQL + Params -> Resultado)
 # Estrutura: { key: (timestamp, result) }
 _query_result_cache: dict[str, tuple[float, Any]] = {}
-_CACHE_TTL = 300  # 5 minutos de cache para o dashboard
+_CACHE_TTL = 30
+_query_cache_lock = threading.RLock()
+_query_cache_revision = 0
+
+
+def clear_erp_query_cache():
+    """Invalidate after a committed sync; in-flight old reads cannot refill it."""
+    global _query_cache_revision
+    with _query_cache_lock:
+        _query_cache_revision += 1
+        _query_result_cache.clear()
+        _table_exists_cache.clear()
+
 _table_exists_cache: dict[str, bool] = {}
 
 class ERPQueryService:
+    def table_columns(self, table_name: str) -> set[str]:
+        """Read schema metadata without guessing optional synchronized fields."""
+        if not re.fullmatch(r'TB_[A-Z0-9_]+', table_name):
+            raise ValueError('Tabela ERP invalida.')
+        if self._is_saas_mode():
+            with SessionLocal() as db:
+                return set(db.execute(text("SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name=:table"), {'table': table_name}).scalars())
+        db_gen = get_erp_db()
+        db = next(db_gen)
+        try:
+            return {str(name).strip() for name in db.execute(text('SELECT RDB$FIELD_NAME FROM RDB$RELATION_FIELDS WHERE RDB$RELATION_NAME=:table'), {'table': table_name}).scalars()}
+        finally:
+            db_gen.close()
+
     def table_exists(self, table_name: str) -> bool:
         if not self._is_saas_mode():
             return True
 
         cache_key = table_name.upper()
-        if cache_key in _table_exists_cache:
-            return _table_exists_cache[cache_key]
+        if _table_exists_cache.get(cache_key) is True:
+            return True
 
         with SessionLocal() as db:
             exists = db.execute(
@@ -59,7 +86,7 @@ class ERPQueryService:
         missing: list[str] = []
         for table_name in sorted(self._referenced_tables(sql)):
             exists = _table_exists_cache.get(table_name)
-            if exists is None:
+            if exists is not True:
                 exists = bool(
                     db.execute(
                         text(
@@ -350,10 +377,11 @@ class ERPQueryService:
                 cache_key_str = f"{sql}_{json.dumps(params, sort_keys=True, default=str)}"
                 cache_key = hashlib.md5(cache_key_str.encode()).hexdigest()
                 now = time.time()
-                if cache_key in _query_result_cache:
-                    ts, cached_res = _query_result_cache[cache_key]
-                    if now - ts < _CACHE_TTL:
-                        return cached_res
+                with _query_cache_lock:
+                    cache_revision = _query_cache_revision
+                    cached = _query_result_cache.get(cache_key)
+                    if cached and now - cached[0] < _CACHE_TTL:
+                        return cached[1]
             except:
                 cache_key = None
 
@@ -387,7 +415,9 @@ class ERPQueryService:
                 )
 
                 if cache_key:
-                    _query_result_cache[cache_key] = (now, normalized_rows)
+                    with _query_cache_lock:
+                        if cache_revision == _query_cache_revision:
+                            _query_result_cache[cache_key] = (now, normalized_rows)
                 return normalized_rows
             except Exception as e:
                 db.rollback()

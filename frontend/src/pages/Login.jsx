@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { firstAllowedPath } from '../utils/access';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export default function Login() {
 
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
+  const [source, setSource] = useState('erp');
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -22,10 +24,10 @@ export default function Login() {
       setLoading(true);
       setErro("");
 
-      await login(form.cnpj, form.login, form.senha);
+      const currentUser=await login(form.cnpj, form.login, form.senha, source);
 
 
-      navigate("/dashboard/vendas", { replace: true });
+      navigate(firstAllowedPath(currentUser), { replace: true });
     } catch (error) {
       setErro(error.message || "Não foi possível realizar o login.");
     } finally {
@@ -94,11 +96,12 @@ export default function Login() {
               fontSize: "15px",
             }}
           >
-            Entre com seu usuário do ERP para acessar a demonstração.
+            Entre com sua conta do PIGO ou seu usuário autorizado do ERP.
           </p>
         </div>
 
         <form onSubmit={handleSubmit}>
+          <label style={{display:'grid',gap:'8px',marginBottom:'18px',fontSize:'14px'}}>Tipo de conta<select aria-label="Tipo de conta" value={source} onChange={event=>setSource(event.target.value)} style={{padding:'10px',border:'1px solid #cbd5e1',borderRadius:'10px',background:'white',color:'#334155'}}><option value="erp">Usuário autorizado do ERP</option><option value="pigo">Conta do PIGO</option></select></label>
           <div style={{ marginBottom: "16px" }}>
             <label
               htmlFor="cnpj"

@@ -12,7 +12,7 @@ function getMonthStart() {
   return `${year}-${month}-01`;
 }
 
-function DashboardFilters({ onChange }) {
+function DashboardFilters({ onChange, showStatus = true }) {
   const [period, setPeriod] = useState("today");
   const [status, setStatus] = useState("TODOS");
   const [start, setStart] = useState(getMonthStart());
@@ -142,7 +142,7 @@ function DashboardFilters({ onChange }) {
         )}
       </div>
 
-      <div className="filters-right">
+      {showStatus && <div className="filters-right">
         <label htmlFor="status" className="filter-label">
           Status:
         </label>
@@ -159,7 +159,7 @@ function DashboardFilters({ onChange }) {
           <option value="CANCELADO">Cancelados</option>
           <option value="ORCAMENTO">Orçamentos</option>
         </select>
-      </div>
+      </div>}
     </div>
   );
 }

@@ -35,6 +35,8 @@ class TopProdutoVendaItem(BaseModel):
 
 
 class CidadeVendaItem(BaseModel):
+    codigo_ibge: str | None = None
+    uf: str | None = None
     cidade: str
     quantidade: int
 

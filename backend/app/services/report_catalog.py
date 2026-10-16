@@ -167,6 +167,16 @@ READY_TEMPLATES = [
     {"key": "receipts_by_status", "name": "Recebimentos por status", "description": "Valores financeiros agrupados por status.", "definition": {"category": "finance", "source": "receipts", "fields": ["status", "amount"], "filters": [], "group_by": ["status"], "order_by": [{"field": "amount_sum", "direction": "desc"}], "totals": [{"field": "amount", "aggregation": "sum"}], "chart": "cards"}},
 ]
 
+# Additional entry points use the same validated Builder and AI workspace.
+READY_TEMPLATES.extend([
+    {"key": "sales_by_brand", "name": "Vendas por marca", "description": "Compare a participação das marcas nas vendas.", "definition": {"category": "sales", "source": "items", "fields": ["brand", "total"], "filters": [], "group_by": ["brand"], "order_by": [{"field": "total_sum", "direction": "desc"}], "totals": [{"field": "total", "aggregation": "sum"}], "chart": "bar"}},
+    {"key": "sales_by_seller", "name": "Vendas por vendedor", "description": "Faturamento e quantidade de pedidos por código de vendedor.", "definition": {"category": "sales", "source": "orders", "fields": ["seller_id", "number", "total"], "filters": [], "group_by": ["seller_id"], "order_by": [{"field": "total_sum", "direction": "desc"}], "totals": [{"field": "number", "aggregation": "count"}, {"field": "total", "aggregation": "sum"}], "chart": "bar"}},
+    {"key": "daily_sales", "name": "Vendas diárias", "description": "Evolução das vendas por data de emissão.", "definition": {"category": "sales", "source": "orders", "fields": ["date", "total"], "filters": [], "group_by": ["date"], "order_by": [{"field": "date", "direction": "asc"}], "totals": [{"field": "total", "aggregation": "sum"}], "chart": "line"}},
+    {"key": "customers_by_city", "name": "Clientes por cidade", "description": "Distribuição geográfica da carteira de clientes.", "definition": {"category": "sales", "source": "customers", "fields": ["city", "customer_id"], "filters": [], "group_by": ["city"], "order_by": [{"field": "customer_id_count", "direction": "desc"}], "totals": [{"field": "customer_id", "aggregation": "count"}], "chart": "bar"}},
+    {"key": "receipts_by_due_date", "name": "Carteira por vencimento", "description": "Valores nominais em aberto por data de vencimento.", "definition": {"category": "finance", "source": "receipts", "fields": ["due_date", "amount"], "filters": [{"field": "open", "operator": "eq", "value": "S"}], "group_by": ["due_date"], "order_by": [{"field": "due_date", "direction": "asc"}], "totals": [{"field": "amount", "aggregation": "sum"}], "chart": "line"}},
+    {"key": "receipts_by_customer", "name": "Títulos em aberto por cliente", "description": "Valor nominal dos títulos abertos por código de cliente; não desconta baixas parciais.", "definition": {"category": "finance", "source": "receipts", "fields": ["customer_id", "amount"], "filters": [{"field": "open", "operator": "eq", "value": "S"}], "group_by": ["customer_id"], "order_by": [{"field": "amount_sum", "direction": "desc"}], "totals": [{"field": "amount", "aggregation": "sum"}], "chart": "bar"}},
+])
+
 
 class ReportCatalog:
     def sync_metadata(self, db):

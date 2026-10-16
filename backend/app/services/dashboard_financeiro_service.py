@@ -154,6 +154,7 @@ class DashboardFinanceiroService(BaseDashboardService):
             "melhoresClientes": values["clientes"],
             "melhoresFornecedores": values["fornecedores"],
             "estoqueCritico": values["estoque"],
+            "estoqueDisponivel": getattr(self.repository, "stock_requires_rule", False) is not True,
             "cidadesClientes": values["cidades"],
         }
 

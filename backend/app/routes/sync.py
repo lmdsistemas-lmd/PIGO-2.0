@@ -211,6 +211,9 @@ async def receive_sync_data(
                 "timestamp": datetime.now().isoformat(),
             }
 
+        if str(stats.get("error") or "").startswith("MIRROR_KEY_MIGRATION_REQUIRED"):
+            raise HTTPException(409, detail={"code": "MIRROR_KEY_MIGRATION_REQUIRED",
+                "message": "O espelho existente precisa ser migrado com as sequências físicas do ERP antes desta carga. Os registros existentes foram preservados."})
         raise RuntimeError(stats.get("error") or "Falha ao persistir dados no banco de dados")
     except HTTPException:
         raise

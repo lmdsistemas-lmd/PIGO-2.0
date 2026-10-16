@@ -1,6 +1,22 @@
+> **Versão visual aprovada pelo usuário em 16/10/2026.**
+> [Baixar aplicação para instalação paralela](distribuicao/PIGO-aplicacao-aprovada-20261016.zip) → Download raw file.
+> [Primeiro passo na VM e pendências de instalação](docs/INSTALACAO_VERSAO_APROVADA.md).
+> O ZIP contém backend real e painel compilado; não é a prévia de dados fictícios.
+> Instalação em produção e gravações no ERP ainda não foram homologadas.
+> Os fontes de desenvolvimento ficam neste repositório; o alerta anterior do Defender
+> em reportConfig.js permanece sem adjudicação. Mantenha a proteção ativa.
+
 # P.I.G.O Dashboard
 
 Dashboard SaaS multi-tenant para análise de dados sincronizados do ERP do cliente.
+
+Veja as análises adicionadas, os módulos preservados e a validação em [Integração das análises](docs/INTEGRACAO_GEPLUG.md).
+
+A ampliação de Gestão, Financeiro, Caixa e Cadastros está descrita no [comparativo operacional](docs/COMPARATIVO_OPERACIONAL.md). As solicitações de cadastro/edição passam pelo remote sync agent; [o adaptador de negócio do ERP](docs/GRAVACAO_ERP.md) ainda precisa ser configurado e homologado para habilitar gravações reais.
+
+O agente e o desktop atuais estão integrados conforme [AGENTE_ATUAL.md](docs/AGENTE_ATUAL.md), incluindo exportação da estrutura do ERP, contratos físicos do caixa e conservação das sequências de itens/parcelas.
+
+A versão visual aprovada e a instalação paralela na VM Windows Server estão descritas em [Instalação da versão aprovada](docs/INSTALACAO_VERSAO_APROVADA.md). A tarefa existente na porta 4010 e o Caddy com vários domínios devem ser preservados até a conferência da nova instância.
 
 ## Arquitetura Atual
 

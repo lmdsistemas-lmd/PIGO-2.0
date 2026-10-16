@@ -6,13 +6,13 @@ class ResumoEstoque(BaseModel):
     inativos: int
 
 class ValoresEstoque(BaseModel):
-    custoTotal: float
-    vendaTotal: float
+    custoTotal: float | None
+    vendaTotal: float | None
 
 class AlertasEstoque(BaseModel):
-    total: int
-    semEstoque: int
-    abaixoMinimo: int
+    total: int | None
+    semEstoque: int | None
+    abaixoMinimo: int | None
 
 class ComprasResumo(BaseModel):
     quantidade: int
@@ -29,6 +29,7 @@ class ProdutoCritico(BaseModel):
     minimo: float
 
 class DashboardEstoqueResponse(BaseModel):
+    estoqueDisponivel: bool = True
     resumo: ResumoEstoque
     valores: ValoresEstoque
     alertas: AlertasEstoque

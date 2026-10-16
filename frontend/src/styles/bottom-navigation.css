@@ -251,3 +251,5 @@
     display: none;
   }
 }
+
+.bottom-nav-icon svg,.bottom-nav-popup-icon svg{width:22px;height:22px}.bottom-registration-group summary{display:flex;align-items:center;gap:12px;padding:12px;font:600 14px/1.4 'Inter',sans-serif;cursor:pointer}.bottom-registration-group summary svg{width:22px;height:22px}.bottom-registration-group h3{font:600 12px/1.5 'Inter',sans-serif;color:var(--text-muted);padding:10px 16px 0}.bottom-registration-group .bottom-nav-popup-item{padding-left:24px}.bottom-nav-popup-label{font:500 14px/1.4 'Inter',sans-serif;white-space:normal}

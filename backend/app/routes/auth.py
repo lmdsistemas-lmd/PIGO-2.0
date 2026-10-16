@@ -117,7 +117,9 @@ def login(payload: dict, request: Request, db: Session = Depends(get_db)):
     _login_stage(request, "login.validation.started", started_at)
     cnpj_value = _only_digits(payload.get("cnpj") or payload.get("license_cnpj") or "")
     login_value = str(payload.get("login") or payload.get("email") or "").strip()
-    password = str(payload.get("senha") or payload.get("password") or "").strip()
+    password = str(payload.get("senha") or payload.get("password") or "")
+    if payload.get("source", "erp") != "pigo":
+        password = password.strip()
 
     if not cnpj_value or not login_value or not password:
         _login_stage(request, "login.response.sent", started_at, status=400, code="INVALID_LOGIN_PAYLOAD")
@@ -176,6 +178,12 @@ def login(payload: dict, request: Request, db: Session = Depends(get_db)):
         _login_stage(request, "login.authentication.finished", started_at, success=False, code="LICENSE_BLOCKED")
         _login_stage(request, "login.response.sent", started_at, status=403)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=access_message)
+
+    if payload.get('source') == 'pigo':
+        from app.services.pigo_access_service import authenticate_local
+        local_user=authenticate_local(db,tenant,login_value,password)
+        token=create_access_token(local_user)
+        return {'access_token':token,'token_type':'bearer','user':local_user}
 
     _login_stage(request, "login.database.started", started_at, operation="user_lookup")
     try:
@@ -270,16 +278,19 @@ def me(authorization: str = Header(default="")):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token nao informado")
 
     token = authorization.replace("Bearer ", "").strip()
-    payload = decode_access_token(token)
+    payload = get_current_user(authorization)
 
     return {
         "id": payload["sub"],
         "login": payload.get("login"),
         "nome": payload.get("nome"),
         "perfil": payload.get("perfil") or payload.get("role"),
+        "role": payload.get("role"),
         "cnpj": payload.get("cnpj"),
         "tenant_id": payload.get("tenant_id"),
         "empresa": payload.get("empresa", "P.I.G.O Dashboard"),
+        "auth_source":payload.get('auth_source','erp'),
+        "permissions":payload.get('permissions'),
     }
 
 
@@ -289,6 +300,10 @@ def get_current_user(authorization: str = Header(default="")):
 
     token = authorization.replace("Bearer ", "").strip()
     try:
-        return decode_access_token(token)
+        payload=decode_access_token(token)
+        if payload.get('auth_source') == 'pigo':
+            from app.services.pigo_access_service import live_local_payload
+            return live_local_payload(payload)
+        return payload
     except Exception:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Sessao invalida ou expirada")

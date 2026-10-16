@@ -8,45 +8,37 @@ if TYPE_CHECKING:
 class DashboardVendasRepository(BaseDashboardRepository):
     def get_resumo_kpis(self, date_range: DateRange, empresa_id: int | None) -> dict:
         empresa_sql, empresa_params = self._empresa_filter("PV.PEV_EMPRESA", empresa_id)
-        # Filtro duplicado para aplicar nos itens e acelerar o join
-        empresa_sql_item, _ = self._empresa_filter("I.PEVI_EMPRESA", empresa_id)
-        
-        sql = f"""
-            SELECT 
-                CAST(SUM(PV.PEV_VALOR_TOTAL) AS NUMERIC(18,2)) AS FATURAMENTO,
-                COUNT(DISTINCT PV.PEV_ID) AS PEDIDOS,
-                SUM(I.QTD) AS ITENS,
-                SUM(I.CUSTO_TOTAL) AS CUSTO
+        # Keep each query flat so the SaaS adapter can apply tenant guards to
+        # its actual root. Aggregating orders independently also avoids counting
+        # their totals once per item or merging equal IDs in different companies.
+        orders_sql = f"""
+            SELECT CAST(SUM(PV.PEV_VALOR_TOTAL) AS NUMERIC(18,2)) AS FATURAMENTO,
+                   COUNT(*) AS PEDIDOS
             FROM TB_PEDIDO_VENDA PV
-            LEFT JOIN (
-                SELECT 
-                    PEVI_PEDIDO_VENDA, 
-                    PEVI_EMPRESA,
-                    SUM(PEVI_QUANTIDADE) AS QTD,
-                    SUM(PEVI_QUANTIDADE * PEVI_VALOR_CUSTO_UNITARIO) AS CUSTO_TOTAL
-                FROM TB_PEDIDO_VENDA_ITEM I
-                WHERE EXISTS (
-                    SELECT 1 FROM TB_PEDIDO_VENDA V 
-                    WHERE V.PEV_ID = I.PEVI_PEDIDO_VENDA 
-                    AND V.PEV_DT_FATURAMENTO BETWEEN :start_date AND :end_date
-                )
-                {empresa_sql_item}
-                GROUP BY 1, 2
-            ) I ON I.PEVI_PEDIDO_VENDA = PV.PEV_ID AND I.PEVI_EMPRESA = PV.PEV_EMPRESA
+            WHERE PV.PEV_DT_FATURAMENTO BETWEEN :start_date AND :end_date
+              AND PV.PEV_STATUS <> 'C'
+              {empresa_sql}
+        """
+        items_sql = f"""
+            SELECT SUM(I.PEVI_QUANTIDADE) AS ITENS,
+                   SUM(I.PEVI_QUANTIDADE * I.PEVI_VALOR_CUSTO_UNITARIO) AS CUSTO
+            FROM TB_PEDIDO_VENDA_ITEM I
+            INNER JOIN TB_PEDIDO_VENDA PV
+                ON PV.PEV_ID = I.PEVI_PEDIDO_VENDA
+               AND PV.PEV_EMPRESA = I.PEVI_EMPRESA
             WHERE PV.PEV_DT_FATURAMENTO BETWEEN :start_date AND :end_date
               AND PV.PEV_STATUS <> 'C'
               {empresa_sql}
         """
         params = {"start_date": date_range.start, "end_date": date_range.end, **empresa_params}
-        row = self._fetch_one(sql, params)
-        if not row:
-            return {"faturamento": 0.0, "pedidos": 0, "itens": 0.0, "custo": 0.0}
+        row = self._fetch_one(orders_sql, dict(params)) or {}
+        items = self._fetch_one(items_sql, dict(params)) or {}
             
         return {
             "faturamento": self._safe_float(row.get("FATURAMENTO")),
             "pedidos": self._safe_int(row.get("PEDIDOS")),
-            "itens": self._safe_float(row.get("ITENS")),
-            "custo": self._safe_float(row.get("CUSTO"))
+            "itens": self._safe_float(items.get("ITENS")),
+            "custo": self._safe_float(items.get("CUSTO"))
         }
 
     def get_faturamento_total(self, date_range: DateRange, empresa_id: int | None) -> float:
@@ -105,10 +97,13 @@ class DashboardVendasRepository(BaseDashboardRepository):
         return [{"produto": r.get("PRODUTO"), "quantidade": self._safe_float(r.get("QUANTIDADE")), "valor": self._safe_float(r.get("VALOR"))} for r in rows]
 
     def get_vendas_por_cidade(self, date_range: DateRange, empresa_id: int | None) -> list[dict]:
+        city_columns=self.erp.table_columns('TB_CIDADE')
+        code='CID.CID_CODIGO_MUNICIPIO' if 'CID_CODIGO_MUNICIPIO' in city_columns else 'NULL'
+        group_code=', CID.CID_CODIGO_MUNICIPIO' if 'CID_CODIGO_MUNICIPIO' in city_columns else ''
         empresa_sql, empresa_params = self._empresa_filter("PV.PEV_EMPRESA", empresa_id)
         sql = f"""
             SELECT FIRST 10
-                CID.CID_NOME AS CIDADE,
+                CID.CID_NOME AS CIDADE, {code} AS CODIGO_IBGE,
                 COUNT(PV.PEV_ID) AS QTD
             FROM TB_PEDIDO_VENDA PV
             INNER JOIN TB_CLIENTE C ON C.CLI_PESSOA = PV.PEV_CLIENTE
@@ -117,12 +112,12 @@ class DashboardVendasRepository(BaseDashboardRepository):
             WHERE PV.PEV_DT_FATURAMENTO BETWEEN :start_date AND :end_date
               AND PV.PEV_STATUS <> 'C'
               {empresa_sql}
-            GROUP BY 1
-            ORDER BY 2 DESC
+            GROUP BY CID.CID_NOME{group_code}
+            ORDER BY QTD DESC
         """
         params = {"start_date": date_range.start, "end_date": date_range.end, **empresa_params}
         rows = self._fetch_all(sql, params)
-        return [{"cidade": r.get("CIDADE"), "quantidade": self._safe_int(r.get("QTD"))} for r in rows]
+        return [{"codigo_ibge":str(r["CODIGO_IBGE"]).strip() if r.get("CODIGO_IBGE") else None,"cidade": r.get("CIDADE"), "quantidade": self._safe_int(r.get("QTD"))} for r in rows]
 
     def get_vendas_por_vendedor(self, date_range: DateRange, empresa_id: int | None) -> list[dict]:
         empresa_sql, empresa_params = self._empresa_filter("PV.PEV_EMPRESA", empresa_id)

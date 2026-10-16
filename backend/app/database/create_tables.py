@@ -3,6 +3,7 @@ from app.database.base import Base
 
 from app.models.departamento import Departamento
 from app.models.cargo import Cargo
+from app.models.pigo_access import PigoAccessProfile, PigoAccessUser
 from app.models.funcionario import Funcionario
 from app.models.saas import Tenant, LegacyUser, Plan, SyncJob, SyncVenda, SyncFinanceiro, SyncErpUser
 from app.models.official import (
