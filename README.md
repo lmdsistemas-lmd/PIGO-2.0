@@ -4,9 +4,15 @@ Esta branch entrega somente as ferramentas para executar o PIGO atual como servi
 
 ## Baixar
 
-Clique em `PIGO-servico-VM-v1.zip` e depois em **Download raw file**. Outra opção é **Code > Download ZIP**, extrair esse download e então extrair o ZIP do serviço em `C:\Temp`. A pasta final deve ser `C:\Temp\PIGO-servico-VM`.
+Clique em `PIGO-servico-VM-v2.zip` e depois em **Download raw file**. Outra opção é **Code > Download ZIP**, extrair esse download e então extrair o ZIP do serviço em `C:\Temp`. A pasta final deve ser `C:\Temp\PIGO-servico-VM`.
 
 O pacote usa a aplicação existente em `C:\Projetos\P.I.G.O`, sua venv e a porta local 4010. Não troca fontes da aplicação nem a configuração do Caddy. O teste manual 4010 deve permanecer aberto durante a preparação.
+
+## Se o teste 4010 deixou de responder
+
+O timeout interrompe a preparação antes de instalar serviço. Se o navegador também não responde, recupere primeiro a instância manual conforme [Diagnóstico da porta 4010](DIAGNOSTICO-4010.md). Não encerre os processos de produção nem o Caddy.
+
+O ZIP v2 mostra a URL e o status HTTP de cada etapa. A consulta usa conexão direta ao loopback, sem proxy nem redirecionamentos; mantém todos os critérios de saúde, telas e autenticação. O v1 permanece disponível no histórico e nesta branch.
 
 ## Preparar e instalar
 
@@ -36,7 +42,7 @@ A pasta inclui `LEIA-ME.txt`, licença e origem do WinSW e manifesto de hashes. 
 SHA256 do ZIP:
 
 ```text
-62c334e34bf99e7f6c866517e210042b4748a5c6316ca00153abbe4f7021477e
+6957e42686d6a16f6bdb40b0117f59195128b8b1779c9ebd0ddd4a2a3fe12a39
 ```
 
 Gerador, launcher e verificador HTTP foram validados na nuvem. Instalação nativa, permissões LocalService e reinicialização dependem da validação nesta VM.
