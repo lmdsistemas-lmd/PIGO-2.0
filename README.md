@@ -116,3 +116,25 @@ SHA256 do pacote atual:
 ```text
 f572cf98580b178dccd07b772fd34963238f6d19ed73c566af1c0fd8adceb832
 ```
+
+## Após validar a tarefa em segundo plano
+
+O usuário informou que o teste com a tarefa aparentemente está funcionando. Confirme a tarefa e habilite o disparo ao iniciar o Windows no PowerShell administrador:
+
+```powershell
+& {
+    $ErrorActionPreference = 'Stop'
+    & 'C:\ProgramData\PIGO Tasks\PigoDashboardTest\Manage-Task.ps1' -Action Status
+    & 'C:\ProgramData\PIGO Tasks\PigoDashboardTest\Manage-Task.ps1' -Action EnableAutostart
+}
+```
+
+O comando exige tarefa Running e repete a verificação HTTP antes de alterar somente o seu disparo. Isso ainda não migra o Caddy, que permanece em terminal. Mantenha Caddy e processos de produção abertos e não reinicie a VM nesta etapa.
+
+Baixe [Conferir-Caddy-Pigo.ps1](Conferir-Caddy-Pigo.ps1) pelo botão Download raw file e salve em `C:\Temp\PIGO-Windows-fontes`. Depois:
+
+```powershell
+& 'C:\Temp\PIGO-Windows-fontes\Conferir-Caddy-Pigo.ps1'
+```
+
+Esse diagnóstico é somente leitura: consulta a configuração HTTP atual pela API local2019 do Caddy e imprime apenas os destinos loopback do domínio PIGO, se encontrados. Não imprime cabeçalhos, tokens ou configuração completa e não altera arquivos/processos/rotas. Também identifica grupos que compartilham PIGO e outros hosts e imprime somente o hash do Caddyfile já localizado. Ausência de API2019 ou de correspondência exata não prova que o site está fora do ar; exige diagnóstico da configuração efetiva antes de preparar qualquer troca. Envie o resumo para preparar a mudança somente do PIGO.
