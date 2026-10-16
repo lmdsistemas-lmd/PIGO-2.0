@@ -1,7 +1,9 @@
 # PIGO — prévia de execução, revisão 2
 
 Ajustes solicitados: setas SVG para expandir/recolher grupos e estilo único
-na lateral, inclusive Equipe e Performance. Resumo de Inadimplência mais compacto.
+na lateral, inclusive Equipe e Performance. Resumo de Inadimplência mais compacto. Indicadores em faixas próprias, separados
+dos gráficos e tabelas, com distribuição responsiva nos sete painéis de Gestão.
+Tabelas maiores em largura inteira; corrigidos agrupamentos de Metas/Curva ABC.
 Estrutura e funcionalidades internas de Equipe e Performance preservadas.
 
 Extraia a pasta PIGO-PREVIEW-v2 em C:\Projetos, sem substituir a prévia anterior.

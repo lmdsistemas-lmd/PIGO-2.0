@@ -1,0 +1,216 @@
+{
+  "checks": [
+    {
+      "dashboard": "vendas",
+      "width": 1587,
+      "widgets": 21,
+      "status": "passed"
+    },
+    {
+      "dashboard": "vendas",
+      "width": 1280,
+      "widgets": 21,
+      "status": "passed"
+    },
+    {
+      "dashboard": "vendas",
+      "width": 1024,
+      "widgets": 21,
+      "status": "passed"
+    },
+    {
+      "dashboard": "vendas",
+      "width": 768,
+      "widgets": 21,
+      "status": "passed"
+    },
+    {
+      "dashboard": "vendas",
+      "width": 390,
+      "widgets": 21,
+      "status": "passed"
+    },
+    {
+      "dashboard": "financeiro",
+      "width": 1587,
+      "widgets": 12,
+      "status": "passed"
+    },
+    {
+      "dashboard": "financeiro",
+      "width": 1280,
+      "widgets": 12,
+      "status": "passed"
+    },
+    {
+      "dashboard": "financeiro",
+      "width": 1024,
+      "widgets": 12,
+      "status": "passed"
+    },
+    {
+      "dashboard": "financeiro",
+      "width": 768,
+      "widgets": 12,
+      "status": "passed"
+    },
+    {
+      "dashboard": "financeiro",
+      "width": 390,
+      "widgets": 12,
+      "status": "passed"
+    },
+    {
+      "dashboard": "estoque",
+      "width": 1587,
+      "widgets": 8,
+      "status": "passed"
+    },
+    {
+      "dashboard": "estoque",
+      "width": 1280,
+      "widgets": 8,
+      "status": "passed"
+    },
+    {
+      "dashboard": "estoque",
+      "width": 1024,
+      "widgets": 8,
+      "status": "passed"
+    },
+    {
+      "dashboard": "estoque",
+      "width": 768,
+      "widgets": 8,
+      "status": "passed"
+    },
+    {
+      "dashboard": "estoque",
+      "width": 390,
+      "widgets": 8,
+      "status": "passed"
+    },
+    {
+      "dashboard": "consolidado",
+      "width": 1587,
+      "widgets": 9,
+      "status": "passed"
+    },
+    {
+      "dashboard": "consolidado",
+      "width": 1280,
+      "widgets": 9,
+      "status": "passed"
+    },
+    {
+      "dashboard": "consolidado",
+      "width": 1024,
+      "widgets": 9,
+      "status": "passed"
+    },
+    {
+      "dashboard": "consolidado",
+      "width": 768,
+      "widgets": 9,
+      "status": "passed"
+    },
+    {
+      "dashboard": "consolidado",
+      "width": 390,
+      "widgets": 9,
+      "status": "passed"
+    },
+    {
+      "dashboard": "clientes",
+      "width": 1587,
+      "widgets": 8,
+      "status": "passed"
+    },
+    {
+      "dashboard": "clientes",
+      "width": 1280,
+      "widgets": 8,
+      "status": "passed"
+    },
+    {
+      "dashboard": "clientes",
+      "width": 1024,
+      "widgets": 8,
+      "status": "passed"
+    },
+    {
+      "dashboard": "clientes",
+      "width": 768,
+      "widgets": 8,
+      "status": "passed"
+    },
+    {
+      "dashboard": "clientes",
+      "width": 390,
+      "widgets": 8,
+      "status": "passed"
+    },
+    {
+      "dashboard": "curva-abc",
+      "width": 1587,
+      "widgets": 6,
+      "status": "passed"
+    },
+    {
+      "dashboard": "curva-abc",
+      "width": 1280,
+      "widgets": 6,
+      "status": "passed"
+    },
+    {
+      "dashboard": "curva-abc",
+      "width": 1024,
+      "widgets": 6,
+      "status": "passed"
+    },
+    {
+      "dashboard": "curva-abc",
+      "width": 768,
+      "widgets": 6,
+      "status": "passed"
+    },
+    {
+      "dashboard": "curva-abc",
+      "width": 390,
+      "widgets": 6,
+      "status": "passed"
+    },
+    {
+      "dashboard": "metas",
+      "width": 1587,
+      "widgets": 4,
+      "status": "passed"
+    },
+    {
+      "dashboard": "metas",
+      "width": 1280,
+      "widgets": 4,
+      "status": "passed"
+    },
+    {
+      "dashboard": "metas",
+      "width": 1024,
+      "widgets": 4,
+      "status": "passed"
+    },
+    {
+      "dashboard": "metas",
+      "width": 768,
+      "widgets": 4,
+      "status": "passed"
+    },
+    {
+      "dashboard": "metas",
+      "width": 390,
+      "widgets": 4,
+      "status": "passed"
+    }
+  ],
+  "reorder_across_sections": "passed; exact saved order and no tall metric; hide/reload/restore",
+  "js_errors": []
+}

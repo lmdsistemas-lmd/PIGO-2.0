@@ -5,18 +5,25 @@
 - Setas vetoriais para expandir/recolher os grupos, com rotação e foco por teclado.
 - Menu lateral com fonte, tamanho, cores e ícones iguais ao mudar de Gestão para Equipe e Performance.
 - Resumo de Inadimplência mais compacto, com os três indicadores preservados.
+- Sete painéis Gestão com faixas de indicadores separadas de gráficos/tabelas.
+- Estoque: seis indicadores equilibrados, sem esticar junto das tabelas.
+- Tabelas maiores e análise de inadimplência em largura inteira.
+- Corrigida estrutura dos blocos configuráveis em Metas e Curva ABC.
+- Validado em35 combinações de painel/largura, com personalização e ordem preservadas.
 - Sem mudanças na lógica de negócio de Equipe/Performance ou na produção.
 
 ## Imagens sintéticas
 
-[Menu em Equipe](imagens/funcionarios-menu.png) · [Menu em Performance](imagens/performance-menu.png) · [Inadimplência compacta](imagens/inadimplencia-compacta.png)
+[Menu em Equipe](imagens/funcionarios-menu.png) · [Menu em Performance](imagens/performance-menu.png) · [Inadimplência compacta](imagens/inadimplencia-compacta.png) · [Estoque revisado](imagens/estoque-layout-1587.png) · [Financeiro revisado](imagens/financeiro-layout-1587.png)
 
 [Alterações de código para revisão](alteracoes) · [Verificação complementar](verificacao-antivirus.json)
 
 # PIGO — prévia de execução, revisão 2
 
 Ajustes solicitados: setas SVG para expandir/recolher grupos e estilo único
-na lateral, inclusive Equipe e Performance. Resumo de Inadimplência mais compacto.
+na lateral, inclusive Equipe e Performance. Resumo de Inadimplência mais compacto. Indicadores em faixas próprias, separados
+dos gráficos e tabelas, com distribuição responsiva nos sete painéis de Gestão.
+Tabelas maiores em largura inteira; corrigidos agrupamentos de Metas/Curva ABC.
 Estrutura e funcionalidades internas de Equipe e Performance preservadas.
 
 Extraia a pasta PIGO-PREVIEW-v2 em C:\Projetos, sem substituir a prévia anterior.

@@ -1,6 +1,6 @@
 {
   "archive": "PIGO-previa-execucao-v2.zip",
-  "sha256": "8608f5add6a91b56eec70230476e14081579649d53bd8e4cdfa556db1f8ef4b4",
+  "sha256": "d509c1847b7d49207c3c6672642c111471b6980aad551f6b3b3d22a1c6dca731",
   "scanner": "ClamAV1.5.4",
   "daily": "28150",
   "signature_date": "2026-10-11",

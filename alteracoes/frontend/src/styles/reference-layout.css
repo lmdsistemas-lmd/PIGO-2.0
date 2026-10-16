@@ -57,11 +57,7 @@
 .reference-layout .financial-kpi-card:not(.financial-kpi-card--delinquency) .financial-kpi-value{font-size:24px;line-height:1.5;margin:8px 0 0}
 .reference-layout .financial-kpi-card:not(.financial-kpi-card--delinquency) .financial-kpi-description{font-size:11px;line-height:1.4;margin:5px 0 0}
 .reference-layout .financial-kpi-card:not(.financial-kpi-card--delinquency) :is(.financial-kpi-pill,.financial-kpi-footer,.financial-sparkline,.financial-kpi-tag){display:none}
-.reference-layout .dashboard-widget-grid-financeiro{grid-template-columns:repeat(12,minmax(0,1fr))}
-.reference-layout .dashboard-widget-grid-financeiro>.dashboard-widget{grid-column:span 6}
-.reference-layout .dashboard-widget-grid-financeiro>.dashboard-widget-metric{grid-column:span 3}
-.reference-layout .dashboard-widget-grid-financeiro>.dashboard-widget-wide,.reference-layout .dashboard-widget-grid-financeiro>.dashboard-widget-map{grid-column:1/-1}
-@media(max-width:700px){.reference-layout .dashboard-page{padding:14px}.reference-layout .dashboard-widget-grid-financeiro>.dashboard-widget{grid-column:1/-1}.reference-layout .dashboard-widget-grid-financeiro>.dashboard-widget-metric{grid-column:span 6}}
+@media(max-width:700px){.reference-layout .dashboard-page{padding:14px}}
 .reference-layout .financial-filter-top,.reference-layout .financial-filter-help{display:none}
 .reference-layout .financial-kpi-card::before,.reference-layout .financial-kpi-card::after{display:none}
 .reference-layout .financial-chip{font-size:12px;padding:8px 12px;min-height:36px;border-radius:6px;box-shadow:none}
