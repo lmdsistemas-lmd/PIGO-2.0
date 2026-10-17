@@ -95,15 +95,69 @@ real da ACL e a execução no Windows/PostgreSQL 18.4 dependem desta etapa na VM
 
 ### Instalação após confirmar o resultado
 
-Após obter `BACKUP_E_RESTAURACAO_CONFERIDOS`, usar um venv novo e um .env próprio da pasta
-nova, apontando para essa cópia; preservar JWT e parâmetros de integração, sem
-publicar valores. Aplicar as migrações na cópia e iniciar a nova API somente
-em 127.0.0.1 numa porta livre, como 4023 se confirmada.
+O backup/restauração da VM foi confirmado em 17/10/2026: 58 tabelas públicas,
+460 fechamentos, 1.666 itens, 11 usuários, 2 instalações e 5.571 coordenadas.
+O banco de homologação informado é `pigo_homolog_20261017_316ece6fe326`.
 
-Conferir login do ERP, licença, consultas, Equipe, Performance, IA, Acesso e caixa.
+Baixar [instalar_homologacao.py](../deploy/manual/instalar_homologacao.py) pelo
+botão **Download raw file**, mantendo a proteção ativa, e salvar ao lado de
+`preparar_homologacao.py`, na pasta `C:\Projetos\PIGO-VM-CONCILIADO-20261016`.
+Executar na VM:
+
+```powershell
+& 'C:\Projetos\P.I.G.O\backend\venv\Scripts\python.exe' 'C:\Projetos\PIGO-VM-CONCILIADO-20261016\instalar_homologacao.py' --current-root 'C:\Projetos\P.I.G.O' --backup-result 'C:\ProgramData\PIGO Backups\homologacao_20261017T111012Z_b843c854\resultado.json' --start
+```
+
+O instalador confere o manifesto/hashes da entrega e do helper de backup,
+recalcula o SHA256 do backup e exige o resultado de restauração conferida.
+Cria `backend\.venv-homologacao`, instala as dependências com as versões já
+fixadas em `requirements.txt` e executa `pip check`. O Python da instalação
+atual só inicia o instalador; seus pacotes não são alterados.
+
+Aplica somente `012`, `013` e `014` no banco separado, em transação com limites
+de espera, e confere que as contagens restauradas foram preservadas. A configuração
+fica na pasta privada de backup, com JWT e chaves de integração exclusivos para
+esta homologação; o `.env` de produção permanece intacto. `homologacao.json`
+na pasta nova contém apenas os caminhos e hashes necessários ao inicializador.
+Não reutilizar essa configuração de homologação na implantação de produção.
+
+Antes de liberar o início, testa a API em processo temporário próprio, o HTML
+das telas, a exigência de autenticação e o bloqueio das integrações. O processo
+temporário é encerrado pelo próprio instalador. Com `--start`, inicia então a
+instância em primeiro plano exclusivamente em `127.0.0.1:4023`, usando
+`homologacao_entry:app`, sem reload e sem alterar tarefas ou Caddy.
+
+A entrada de homologação recusa banco fora do padrão de cópia, desabilita
+Firebird direto e bloqueia sincronização, ativação/gestão de instalações,
+atualizações internas do LicenseControl e envio de cadastros ao ERP. Consultas
+e alterações próprias do PIGO usam somente a cópia. Não apontar o agente para
+essa instância. A licença continua sendo validada pelos dados restaurados,
+sem estender validade ou simular liberação.
+
+Após aparecer `HOMOLOGACAO_INSTALADA_E_CONFERIDA` e a mensagem do Uvicorn,
+manter o terminal aberto e acessar `http://127.0.0.1:4023/login` no navegador
+**da própria VM**. Usar o usuário habitual, sem credenciais de demonstração.
+Conferir consultas, Equipe, Performance, relatórios, Acesso e caixa. Se alguma
+consulta falhar, compartilhar o status/erro da tela, sem tokens, `.env` ou logs
+privados completos.
+
+Para iniciar novamente depois de encerrar com Ctrl+C:
+
+```powershell
+& 'C:\Projetos\P.I.G.O\backend\venv\Scripts\python.exe' 'C:\Projetos\PIGO-VM-CONCILIADO-20261016\instalar_homologacao.py' --action start
+```
+
+Não repetir `prepare` numa configuração já pronta: o script preserva os
+arquivos existentes e orienta a usar `--action start`. Se houver falha antes
+de concluir, o backup e a produção continuam preservados; revisar o JSON e
+os diagnósticos privados antes de tentar novamente.
+
+### Troca de produção após homologar
+
 A conexão ao LicenseControl externo não foi exercitada com credenciais reais nos
-testes da nuvem; foi simulada. Preservar o agente instalado e não enviar cargas
-reais ao ambiente de teste sem configurar o destino deliberadamente.
+testes da nuvem; foi simulada. Preservar o agente instalado e seu destino atual.
+Na futura configuração de produção, preservar o JWT e os parâmetros de integração
+atuais sem publicar valores; as chaves exclusivas de homologação não serão usadas.
 
 Depois da homologação, planejar a aplicação das novas migrações e a troca do
 backend de produção. Atualizar apenas a rota do domínio PIGO no Caddy, mantendo

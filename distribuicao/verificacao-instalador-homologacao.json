@@ -1,0 +1,33 @@
+{
+  "helper": "deploy/manual/instalar_homologacao.py",
+  "sha256": "91e8c274f8d1d4569cc7bc840bb26dde0a8050512a25975082c48160d8ac9db8",
+  "scope": "Dedicated Python environment, only migrations012-014 on the verified restored copy, local guarded API",
+  "tested": {
+    "checks": 9,
+    "database": "Disposable PostgreSQL17.11, never production",
+    "new_venv_and_pinned_pip_install": "executed",
+    "authenticated_checks": [
+      "ERP login",
+      "tenant",
+      "Acesso",
+      "cash closing"
+    ],
+    "safety_checks": [
+      "snapshot counts preserved",
+      "source schema unchanged",
+      "DDL rollback",
+      "inherited configuration overridden",
+      "entry point rejects source database",
+      "agent/activation/internal sync/writeback blocked",
+      "busy port preserved"
+    ],
+    "windows_postgresql18_4": "pending user execution"
+  },
+  "scan": {
+    "engine": "ClamAV1.5.4",
+    "daily": "28150 (2026-10-11)",
+    "result": "No detections; complementary scan, Defender not adjudicated"
+  },
+  "vm_backup": "User confirmed 58-table PostgreSQL18.4 restore on2026-10-17; no backup data received",
+  "production_deployed": false
+}
