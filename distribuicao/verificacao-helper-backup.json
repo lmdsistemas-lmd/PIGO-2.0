@@ -1,0 +1,17 @@
+{
+  "helper": "deploy/manual/preparar_homologacao.py",
+  "sha256": "b6dfcb2b2dd0d012fcea5fb3a8fb1867141dba81dc6efd4795faf147c230e126",
+  "scope": "Backup of current database and verified restore to a new database only",
+  "tested": {
+    "checks": 8,
+    "database": "Disposable PostgreSQL17.11, never production",
+    "windows_acl": "Arguments and fail-closed behavior mocked; not executed on Windows"
+  },
+  "scan": {
+    "engine": "ClamAV1.5.4",
+    "daily": "28150 (2026-10-11)",
+    "result": "No detections; complementary scan, not Windows Defender adjudication"
+  },
+  "windows_postgresql_18_4": "User execution pending",
+  "production_deployed": false
+}
