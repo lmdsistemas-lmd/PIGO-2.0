@@ -15,7 +15,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import ProxyHandler, Request, build_opener
 
 
-MANIFEST_SHA = "9d485e162c14971a88e5662ec61c3b34ebb7f51d6a55954ea2d686a5dc2791e0"
+MANIFEST_SHA = "d796b327dcd0a2d96cc1d5cac5eb70864965f87650bcc2427c58d6af6661525d"
 BACKUP_HELPER_SHA = "b6dfcb2b2dd0d012fcea5fb3a8fb1867141dba81dc6efd4795faf147c230e126"
 MIGRATIONS = ["012_sales_goals.sql", "013_erp_commands.sql", "014_pigo_access.sql"]
 REQUIRED_TABLES = {"sales_goals", "erp_commands", "erp_agent_capabilities", "pigo_access_profiles", "pigo_access_users"}

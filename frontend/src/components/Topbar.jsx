@@ -36,7 +36,6 @@ export default function Topbar({
   titulo = "Dashboard",
   subtitulo = "",
   caminho = "",
-  onToggleSidebar = () => {},
   isMobileOrTablet = false,
   theme = "light",
   toggleTheme = () => {},
@@ -70,7 +69,6 @@ export default function Topbar({
   return (
     <header className="topbar-shell">
       <div className="topbar-main">
-        <button type="button" className="reference-menu-toggle" onClick={onToggleSidebar} aria-label="Alternar menu lateral"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 6h16M4 12h16M4 18h16" /></svg></button>
         <div className="topbar-title-area">
           <div className="topbar-title-block">
             <div className="topbar-path">

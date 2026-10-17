@@ -132,10 +132,14 @@ function Workspace({ resource, title, group, company, loadingEmpresas, ...layout
   }
   const columns = data?.columns?.filter((col) => col.available && !hidden.includes(col.key)) || [];
   const summaryColumns = data?.columns?.filter((col) => Object.hasOwn(data.summary || {}, col.key)) || [];
+  const syncedAt = data?.last_sync_at ? new Date(data.last_sync_at) : null;
+  const syncLabel = syncedAt && !Number.isNaN(syncedAt.valueOf())
+    ? `${syncedAt.toLocaleDateString("pt-BR")} às ${syncedAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
+    : null;
 
   return <div className="dashboard-page commercial-page operations-page">
     <Topbar titulo={title} caminho={`${group === "Financeiro" ? "Financeiro" : `Cadastros / ${group}`} / ${title}`} {...layout} />
-    <header className="analytics-page-heading"><div><span className="analytics-eyebrow">{group === "Financeiro" ? "CONTROLE FINANCEIRO" : `CADASTROS · ${group.toUpperCase()}`}</span><h1>{title}</h1><p>{forecast ? "Previsão das entradas e saídas por vencimento dos títulos em aberto." : "Consulte os dados do ERP na empresa selecionada."}</p></div><div className="operations-actions"><button className="analytics-button" onClick={() => setVersion((v) => v + 1)} disabled={loading}>Atualizar</button>{editable && commands && <button className="analytics-button primary" onClick={() => beginEdit()} disabled={!company}>Novo cadastro</button>}</div></header>
+    <header className="analytics-page-heading"><div><span className="analytics-eyebrow">{group === "Financeiro" ? "CONTROLE FINANCEIRO" : `CADASTROS · ${group.toUpperCase()}`}</span><h1>{title}</h1><p>{forecast ? "Previsão das entradas e saídas por vencimento dos títulos em aberto." : "Consulte os dados do ERP na empresa selecionada."}</p></div><div className="operations-actions">{syncLabel && <p className="operations-updated" title="Última sincronização deste cadastro com o ERP">Última atualização: <time dateTime={syncedAt.toISOString()}>{syncLabel}</time></p>}<button className="analytics-button" onClick={() => setVersion((v) => v + 1)} disabled={loading}>Atualizar</button>{editable && commands && <button className="analytics-button primary" onClick={() => beginEdit()} disabled={!company}>Novo cadastro</button>}</div></header>
     {!company && <p className="analytics-notice">{loadingEmpresas ? "Carregando empresas…" : "Selecione uma empresa com dados sincronizados."}</p>}
     {notice && <p className="analytics-notice" role="status">{notice}</p>}
     {error && <p className="analytics-notice analytics-error" role="alert">{error}</p>}
@@ -154,8 +158,6 @@ function Workspace({ resource, title, group, company, loadingEmpresas, ...layout
       <section className="analytics-panel"><h2>Previsão diária</h2><Table columns={[{ key: "dia", label: "Data", type: "date" }, ...[["entradas", "Entradas"], ["saidas", "Saídas"], ["resultado", "Resultado"], ["acumulado", "Acumulado"]].map(([key, label]) => ({ key, label, type: "currency" }))]} rows={data.rows} /></section>
     </>}
     {data?.available && !forecast && <>
-      {!!data.missing_fields.length && <p className="analytics-notice">Campos ainda não enviados pelo ERP: {data.missing_fields.join(", ")}. Valores desconhecidos aparecem como “—”.</p>}
-      {resource === "produtos" && <p className="analytics-notice">A quantidade aparece quando há uma única posição de estoque. Para produtos com vários locais ou variações, consulte as posições em Detalhes.</p>}
       {!!summaryColumns.length && <div className="analytics-kpis">{summaryColumns.map((col, index) => <article className={`analytics-kpi tone-${index % 4}`} key={col.key}><span>{col.label} · total filtrado</span><strong>{display(data.summary[col.key], "currency")}</strong></article>)}</div>}
       <section className="analytics-panel"><div className="analytics-panel-heading"><h2>{number(data.total)} registros</h2><div className="operations-actions"><details className="operations-columns"><summary>Colunas</summary><div>{data.columns.filter((col) => col.available).map((col) => <label key={col.key}><input type="checkbox" checked={!hidden.includes(col.key)} onChange={() => setHidden((previous) => previous.includes(col.key) ? previous.filter((key) => key !== col.key) : [...previous, col.key])} />{col.label}</label>)}</div></details><button className="analytics-button" disabled={exporting} onClick={() => exportData("csv")}>Exportar CSV</button><button className="analytics-button" disabled={exporting} onClick={() => exportData("excel")}>Exportar Excel</button></div></div>
         <Table columns={columns} rows={data.rows} sort={sort} onSort={(key) => { setSort({ key, direction: sort.key === key && sort.direction === "asc" ? "desc" : "asc" }); setPage(1); }} action={(row) => <button className="analytics-button" onClick={() => openDetail(row)}>Detalhes</button>} />

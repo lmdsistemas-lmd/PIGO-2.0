@@ -1,0 +1,36 @@
+{
+  "archive": "PIGO-ajustes-interface-20261017.zip",
+  "sha256": "c05d75bdc12997a18b352f7d567c1140172f00833986e408c810cef052fa4e17",
+  "bytes": 601945,
+  "manifest_sha256": "d796b327dcd0a2d96cc1d5cac5eb70864965f87650bcc2427c58d6af6661525d",
+  "changes": [
+    "Remove large missing-field/stock banners",
+    "Real completed tenant/table sync timestamp12px, unknown hidden",
+    "Single sidebar control",
+    "Compact report/topbar heading",
+    "Correct SVG and municipality JSON responses",
+    "Preserve dark theme contrast"
+  ],
+  "validation": {
+    "isolated_database_tests": 9,
+    "browser_groups": [
+      "Large notices removed;12px timestamp uses completed sync and stays unchanged on page refresh; real SVG renders",
+      "Unknown sync time hidden, receivables filters/summary/table preserved",
+      "Single sidebar control survives collapse/reload/expand; report heading not duplicated; compact84px header",
+      "Dark theme and390px navigation preserved without extra menu control or horizontal page overflow"
+    ],
+    "frontend_report_tests": 6,
+    "build": "passed; pre-existing chunk warning",
+    "targeted_lint": "Operations and Topbar passed",
+    "original_homologation_entry_code": "identical; only installer manifest hash changes"
+  },
+  "scan": {
+    "engine": "ClamAV1.5.4",
+    "daily": "28150 (2026-10-11)",
+    "result": "No detections; complementary scan; keep Defender enabled"
+  },
+  "database_migrations": false,
+  "production_deployed": false,
+  "windows_user_application": "pending",
+  "contains_credentials_or_react_source": false
+}

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response
 from openpyxl import Workbook
 from typing import Literal
+from sqlalchemy import text
 
 from app.database.connection import get_db
 from app.routes.auth import get_current_user
@@ -45,7 +46,11 @@ def listing(resource: str, empresa_id: int = Query(gt=0), search: str = Query(""
             sort: str | None = None, direction: Literal["asc", "desc"] = "asc",
             db=Depends(get_db), user=Depends(get_current_user)):
     try:
-        return service_for(resource, db, user).list(resource, empresa_id, search, status, start, end, page, page_size, sort, direction)
+        result = service_for(resource, db, user).list(resource, empresa_id, search, status, start, end, page, page_size, sort, direction)
+        result["last_sync_at"] = db.execute(text("""SELECT MAX(finished_at) FROM sync_jobs
+            WHERE tenant_id=:tenant AND table_name=:table AND status='COMPLETED'"""),
+            {"tenant": tenant(user), "table": SOURCES[resource]["table"]}).scalar()
+        return result
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
 

@@ -1,5 +1,9 @@
 # PIGO conciliado com o backend da VM
 
+> Atualização da interface em 17/10/2026: [aplicar o ajuste compacto](AJUSTES_INTERFACE_20261017.md).
+> Na homologação já instalada, basta aplicar o patch e usar `--action start`.
+> Em instalação nova, aplicar o patch ao ZIP base antes de usar o instalador atual.
+
 Base recebida: ZIP PIGO-backend-VM-20261016-203041-221132.zip, 129 arquivos,
 coletado em WIN-JG1E0O7FSBS. Os fontes do backend em execução foram comparados
 com a main do GitHub e com as alterações do painel aprovado. A ativação do

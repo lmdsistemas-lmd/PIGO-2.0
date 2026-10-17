@@ -157,6 +157,8 @@ FRONTEND_ASSETS_DIR = FRONTEND_DIST_DIR / "assets"
 
 if FRONTEND_ASSETS_DIR.exists():
     app.mount("/assets", StaticFiles(directory=FRONTEND_ASSETS_DIR), name="assets")
+if (FRONTEND_DIST_DIR / "data").is_dir():
+    app.mount("/data", StaticFiles(directory=FRONTEND_DIST_DIR / "data"), name="frontend-data")
 
 
 @app.get("/", include_in_schema=False)
@@ -180,6 +182,10 @@ def serve_frontend_root():
 
 @app.get("/{full_path:path}", include_in_schema=False)
 def serve_frontend_spa(full_path: str):
+    if full_path in {"logo-azul.svg", "logo-comprida.svg", "favicon.svg"}:
+        file = FRONTEND_DIST_DIR / full_path
+        if file.is_file():
+            return FileResponse(file, media_type="image/svg+xml")
     # React owns its URLs, including refreshes on dashboards and team pages.
     # API/doc/static paths must still return real errors instead of index.html.
     if full_path.split("/", 1)[0] in {"api", "docs", "redoc", "openapi.json", "assets", "health"}:
