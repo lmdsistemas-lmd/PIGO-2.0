@@ -158,6 +158,9 @@ os diagnósticos privados antes de tentar novamente.
 
 ### Troca de produção após homologar
 
+A homologação foi aprovada. Seguir [Migração definitiva](MIGRACAO_PRODUCAO_20261017.md),
+que usa o banco real, backup novo, tarefa Windows e troca restrita ao domínio PIGO.
+
 A conexão ao LicenseControl externo não foi exercitada com credenciais reais nos
 testes da nuvem; foi simulada. Preservar o agente instalado e seu destino atual.
 Na futura configuração de produção, preservar o JWT e os parâmetros de integração
