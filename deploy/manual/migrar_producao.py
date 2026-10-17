@@ -23,6 +23,7 @@ DATABASE = "pigo-dashboard"
 PORT = 4024
 TASK = "PigoDashboardProduction"
 CADDY_TASK = "LmdSharedCaddy"
+HELPER_VERSION = "20261017-hide-reference-1"
 SETUP_SHA = "8ec982b0faa8c414628460085d3518bce540d7ed853e47bf21968ce3cca8cbca"
 MIGRATIONS = ["012_sales_goals.sql", "013_erp_commands.sql", "014_pigo_access.sql"]
 ALLOWED_DIALS = {host + ":" + str(port) for host in ["127.0.0.1", "localhost"] for port in [4000, 4010, 5176]}
@@ -194,12 +195,53 @@ def run_private(arguments, log, **kwargs):
         raise MigrationError("Comando interrompido; consulte o diagnostico privado: " + log.name)
 
 
-def adapt(caddy, path):
-    result = subprocess.run([str(caddy), "adapt", "--config", str(path), "--adapter", "caddyfile"],
+def adapt(caddy, path, config_argument=None):
+    result = subprocess.run([str(caddy), "adapt", "--config", config_argument or str(path), "--adapter", "caddyfile"],
                             cwd=path.parent, capture_output=True)
     if result.returncode:
         raise MigrationError("Caddyfile nao passou na adaptacao; nenhuma rota alterada.")
     return json.loads(result.stdout)
+
+
+def matching_config_argument(caddy, path, live):
+    """Match Caddy's source spelling without dropping any file_server.hide rule.
+
+    file_server automatically hides its source Caddyfile. The adapter records
+    the supplied filename, so relative/absolute spellings are not identical
+    JSON. Try only names identifying this same file, then require the complete
+    adapted configuration to match the live configuration exactly.
+    """
+    arguments = [str(path), path.name]
+
+    def collect(node):
+        if isinstance(node, list):
+            for item in node:
+                collect(item)
+        elif isinstance(node, dict):
+            if node.get("handler") == "file_server":
+                for hidden in node.get("hide", []):
+                    if not isinstance(hidden, str) or not hidden or any(c in hidden for c in '*?[]{}\r\n\x00'):
+                        continue
+                    if not any(separator in hidden for separator in ["/", "\\"]):
+                        continue
+                    proposed = Path(hidden)
+                    if not proposed.is_absolute():
+                        proposed = path.parent / proposed
+                    if os.path.normcase(os.path.abspath(proposed)) != os.path.normcase(os.path.abspath(path)):
+                        continue
+                    try:
+                        if proposed.samefile(path):
+                            arguments.append(hidden)
+                    except (OSError, ValueError):
+                        pass
+            for item in node.values():
+                collect(item)
+
+    collect(live)
+    for argument in dict.fromkeys(arguments):
+        if canonical(adapt(caddy, path, argument)) == canonical(live):
+            return argument
+    raise MigrationError("Caddy em execucao diverge do Caddyfile.production; revisar antes de migrar.")
 
 
 def preserve_acl(source, target, directory):
@@ -227,24 +269,36 @@ def replace_from(source, destination, directory):
 def stage_caddy(caddy, config_file, directory, api_url, destination):
     original = config_file.read_bytes()
     live = api_config(api_url)
-    if canonical(adapt(caddy, config_file)) != canonical(live):
-        raise MigrationError("Caddy em execucao diverge do Caddyfile.production; revisar antes de migrar.")
+    config_argument = matching_config_argument(caddy, config_file, live)
     expected, proxies = changed_config(live, destination)
     proposed = candidate_text(original, destination)
     descriptor, name = tempfile.mkstemp(prefix=".pigo-candidate-", suffix=".caddyfile", dir=config_file.parent)
     os.close(descriptor)
     candidate = Path(name)
-    candidate.write_bytes(proposed)
-    preserve_acl(config_file, candidate, directory)
-    if canonical(adapt(caddy, candidate)) != canonical(expected):
-        raise MigrationError("O candidato altera mais que os destinos do PIGO; nenhuma troca aplicada.")
-    run_private([str(caddy), "validate", "--config", str(candidate), "--adapter", "caddyfile"], directory / "caddy-validate.log", cwd=config_file.parent)
+    try:
+        preserve_acl(config_file, candidate, directory)
+        # Adapt both versions under the SAME temporary filename. This preserves
+        # strict JSON comparison, including every auto-generated hide entry.
+        candidate.write_bytes(original)
+        temporary_original = adapt(caddy, candidate)
+        temporary_expected, temporary_proxies = changed_config(temporary_original, destination)
+        candidate.write_bytes(proposed)
+        if temporary_proxies != proxies or canonical(adapt(caddy, candidate)) != canonical(temporary_expected):
+            raise MigrationError("O candidato altera mais que os destinos do PIGO; nenhuma troca aplicada.")
+        if config_file.read_bytes() != original or canonical(api_config(api_url)) != canonical(live):
+            raise MigrationError("Caddy mudou durante a validacao; nenhuma troca aplicada.")
+        if canonical(adapt(caddy, config_file, config_argument)) != canonical(live):
+            raise MigrationError("Caddyfile ou importacao mudou durante a validacao; nenhuma troca aplicada.")
+        run_private([str(caddy), "validate", "--config", str(candidate), "--adapter", "caddyfile"], directory / "caddy-validate.log", cwd=config_file.parent)
+    except Exception:
+        candidate.unlink(missing_ok=True)
+        raise
     (directory / "Caddyfile.original").write_bytes(original)
     save(directory / "caddy-active-original.json", live)
     return {"file": str(config_file), "candidate": str(candidate), "original_sha": sha_bytes(original),
             "candidate_sha": sha_bytes(proposed), "active_original_sha": sha_bytes(canonical(live)),
             "active_candidate_sha": sha_bytes(canonical(expected)), "api_url": api_url,
-            "caddy": str(caddy), "proxy_handlers_changed": proxies}
+            "caddy": str(caddy), "config_argument": config_argument, "proxy_handlers_changed": proxies}
 
 
 def backup_database(url, pg_bin, directory, helper):
@@ -467,7 +521,8 @@ def load_state(root):
 
 
 def reload_caddy(plan, file, directory):
-    run_private([plan["caddy"], "reload", "--config", str(file), "--adapter", "caddyfile", "--address", plan["api_url"].removeprefix("http://")],
+    argument = plan.get("config_argument", str(file)) if str(file) == plan["file"] else str(file)
+    run_private([plan["caddy"], "reload", "--config", argument, "--adapter", "caddyfile", "--address", plan["api_url"].removeprefix("http://")],
                 directory / "caddy-reload.log", cwd=file.parent)
 
 
@@ -484,6 +539,8 @@ def cutover(root, report):
         raise MigrationError("Configuracao Caddy mudou desde o preparo; nenhum dominio alterado.")
     if sha_file(candidate) != plan["candidate_sha"]:
         raise MigrationError("Candidato Caddy alterado; troca cancelada.")
+    if canonical(adapt(Path(plan["caddy"]), source, plan.get("config_argument"))) != canonical(api_config(plan["api_url"])):
+        raise MigrationError("Caddyfile ou importacao diverge antes da troca; nenhum dominio alterado.")
     print("Trocando somente os destinos do dominio PIGO...", flush=True)
     replace_from(candidate, source, directory)
     try:
@@ -547,7 +604,7 @@ def rollback(root, report):
                   observacao="Nenhuma restauracao destrutiva de banco. Tabelas adicionais e API nova preservadas para diagnostico.")
 
 
-CADDY_AUTOSTART = '''param([string]$PigoCaddy,[string]$PigoConfig)
+CADDY_AUTOSTART = '''param([string]$PigoCaddy,[string]$PigoConfig,[string]$PigoConfigArgument)
 $ErrorActionPreference='Stop'
 $pigoCurrentSid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value
 $pigoProcesses=@(Get-CimInstance Win32_Process -Filter "Name='caddy.exe'" | Where-Object { $_.ExecutablePath -eq $PigoCaddy })
@@ -555,7 +612,7 @@ if ($pigoProcesses.Count -ne 1) { throw 'Esperado um unico processo Caddy conhec
 $pigoOwner=Invoke-CimMethod -InputObject $pigoProcesses[0] -MethodName GetOwnerSid
 if ($pigoOwner.Sid -ne $pigoCurrentSid) { throw 'Caddy pertence a outra conta; preservar identidade e certificados antes de automatizar.' }
 if (Get-ScheduledTask -TaskPath '\\' -TaskName 'LmdSharedCaddy' -ErrorAction SilentlyContinue) { throw 'Tarefa Caddy ja existe; nao sera substituida.' }
-$pigoArgument='run --config "'+$PigoConfig+'" --adapter caddyfile'
+$pigoArgument='run --config "'+$PigoConfigArgument+'" --adapter caddyfile'
 $pigoAction=New-ScheduledTaskAction -Execute $PigoCaddy -Argument $pigoArgument -WorkingDirectory ([IO.Path]::GetDirectoryName($PigoConfig))
 $pigoPrincipal=New-ScheduledTaskPrincipal -UserId $pigoCurrentSid -LogonType S4U -RunLevel Highest
 $pigoTrigger=New-ScheduledTaskTrigger -AtStartup
@@ -578,7 +635,7 @@ def enable_caddy_autostart(root, report):
     report["pasta_privada"] = str(directory)
     script = directory / "caddy-autostart.ps1"
     script.write_text(CADDY_AUTOSTART, encoding="utf-8-sig")
-    run_private(["powershell.exe", "-NoProfile", "-NonInteractive", "-File", str(script), plan["caddy"], plan["file"]], directory / "caddy-autostart.log")
+    run_private(["powershell.exe", "-NoProfile", "-NonInteractive", "-File", str(script), plan["caddy"], plan["file"], plan.get("config_argument", plan["file"])], directory / "caddy-autostart.log")
     report.update(status="CADDY_AUTOSTART_CONFIGURADO", tarefa_caddy=CADDY_TASK, processo_atual_preservado=True,
                   observacao="A tarefa usara a mesma conta e configuracao no proximo boot. Mantenha o terminal Caddy atual aberto ate reinicio programado. Reboot nao executado nem testado.")
 
@@ -593,7 +650,7 @@ def main():
     parser.add_argument("--caddy-config", type=Path, default=Path(r"C:\Projetos\caddy\Caddyfile.production"))
     parser.add_argument("--cutover", action="store_true")
     args = parser.parse_args()
-    report = {"computador": os.environ.get("COMPUTERNAME", "nao informado"), "status": "NAO_CONCLUIDO"}
+    report = {"computador": os.environ.get("COMPUTERNAME", "nao informado"), "versao_instalador": HELPER_VERSION, "status": "NAO_CONCLUIDO"}
     try:
         if os.name != "nt" or report["computador"].upper() != "WIN-JG1E0O7FSBS":
             raise MigrationError("Execute somente na VM Windows WIN-JG1E0O7FSBS.")

@@ -1,7 +1,7 @@
 {
   "helper": "deploy/manual/migrar_producao.py",
-  "sha256": "63047e49607348d623347d7a2f83563b2e16b6442bf0d46fe98d0f4dccddca09",
-  "scope": "User-authorized production migration after VM UI approval",
+  "sha256": "e48ed62ce5f0adc342b46bf10270d93d1e90546220f7f5bb8da97726fc0279fc",
+  "scope": "Repair authorized production migration blocked before mutations by Caddy relative/absolute source-file hide spelling",
   "vm_caddy_inspection": {
     "host_groups": 1,
     "shared_host": false,
@@ -13,14 +13,16 @@
     "port4024_occupied": false
   },
   "validation": {
-    "checks": 10,
+    "checks": 12,
     "PostgreSQL": "Real disposable17.11, synthetic data only",
     "Caddy": "Real isolated2.10.2, official pinned image",
     "new_venv_pinned_pip": "executed",
     "authenticated_ERP_login_and_agent_sync": "executed",
     "scoped_config_cutover_other_host_manual_automatic_rollback": "executed",
     "public_frontend_health_and_asset_identity": "via isolated HTTP Caddy; real HTTPS pending VM",
-    "tasks_SYSTEM_S4U": "PowerShell parser only; actual Windows registration/boot pending"
+    "tasks_SYSTEM_S4U": "PowerShell parser only; actual Windows registration/boot pending",
+    "file_server_hide": "Real relative-source Caddy: five hide[0] differences reproduced; full JSON equality restored by same source spelling; explicit hidden file stays404; candidate hide edits rejected",
+    "candidate_validation": "Original and patched content adapted under same temporary filename; every JSON field compared, including all hide entries"
   },
   "behavior": [
     "Fresh consistent private backup",
@@ -35,9 +37,13 @@
   "scan": {
     "engine": "ClamAV1.5.4",
     "daily": "28150 (2026-10-11)",
-    "result": "No detections; complementary scanner; keep Defender active"
+    "result": "No detections on corrected helper; complementary scanner; keep Defender active"
   },
   "production_deployed": false,
-  "vm_execution": "pending user command",
-  "reboot_executed": false
+  "vm_execution": "Initial VM attempt blocked before backup/SQL/task/Caddy changes; corrected helper pending VM execution",
+  "reboot_executed": false,
+  "helper_version": "20261017-hide-reference-1",
+  "upstream_reference": "https://github.com/caddyserver/caddy/blob/v2.10.2/modules/caddyhttp/fileserver/caddyfile.go#L205",
+  "reproduction": "Five synthetic file_server instances: relative run filename versus absolute adapt path; same structural differences as redacted VM reply",
+  "fix": "Do not ignore or normalize hide rules. Only CLI arguments for the exact same source pathname are tried, then entire adapted JSON must match live. Persist matched spelling for reload and startup."
 }

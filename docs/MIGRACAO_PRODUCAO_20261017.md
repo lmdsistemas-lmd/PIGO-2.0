@@ -24,10 +24,17 @@ Não encerrar o Caddy nem a instância atual durante a preparação. O script fa
 1. Confere os hashes da entrega aprovada e dos helpers. Exige pasta nova
    `C:\Projetos\PIGO-Producao-20261017` e porta 4024 livre; nunca substitui uma
    instalação existente ou encerra processos para liberar portas.
-2. Compara o Caddyfile adaptado com a configuração ativa. Exige exatamente
+2. Compara o Caddyfile adaptado com a configuração ativa. Mantém a mesma
+   referência relativa ou absoluta ao arquivo usada pelo processo atual:
+   o `file_server` inclui automaticamente essa referência nas regras `hide`.
+   Só tenta referências que apontam para o próprio arquivo e exige igualdade
+   completa do JSON; nenhuma regra `hide` é removida ou ignorada. Exige exatamente
    um grupo dedicado ao host PIGO e proxies para as portas já conhecidas.
    Prepara e valida candidato alterando somente os destinos dentro desse bloco.
    A configuração completa adaptada deve diferir apenas nesses destinos.
+   A versão original e a candidata são adaptadas sob o mesmo nome temporário,
+   evitando que o nome desse arquivo produza outra diferença artificial em
+   `hide`. Na recarga e na tarefa automática permanece a referência original.
 3. Cria um backup PostgreSQL custom **novo**, com snapshot somente de leitura,
    índice conferido e SHA256, na pasta privada `C:\ProgramData\PIGO Production`.
    Usa pg_dump/pg_restore 18 já instalados. Não cria nem promove outra cópia do banco.
@@ -117,3 +124,14 @@ Scripts das tarefas foram analisados pelo parser PowerShell, mas o registro
 no Windows, as contas SYSTEM/S4U e o boot não podem ser executados na nuvem Linux.
 A varredura complementar não substitui o Defender. Produção só será considerada
 migrada após o JSON e a conferência real retornados pela VM.
+
+### Correção da comparação de `hide`
+
+A primeira execução na VM foi interrompida antes de backup, SQL ou tarefas:
+cinco diferenças ocorreram exclusivamente em `file_server.hide[0]`. O caso
+foi reproduzido com Caddy 2.10.2 real iniciado com `--config Caddyfile.production`
+e comparado com a adaptação pelo caminho absoluto. A correção preserva a
+igualdade completa da configuração e a forma de referência usada pelo processo.
+Mudanças reais nas proteções de arquivos ou em outras regras continuam bloqueadas.
+O teste também confere que um arquivo explicitamente ocultado continua com HTTP 404
+e que os demais hosts permanecem iguais antes, depois e após o retorno.
