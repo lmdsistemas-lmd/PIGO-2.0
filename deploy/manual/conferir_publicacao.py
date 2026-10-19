@@ -16,6 +16,7 @@ from urllib.request import ProxyHandler, Request, build_opener
 DOMAIN = 'pigo.lmdsistemasdev.qzz.io'
 ROOT = Path(r'C:\Projetos\PIGO-Producao-20261017')
 OPENER = build_opener(ProxyHandler({}))
+USER_AGENT = dict(OPENER.addheaders).get('User-agent', 'PIGO-Publication-Diagnostic/1')
 LIMIT = 512 * 1024
 
 
@@ -128,7 +129,7 @@ def response_summary(response, body, deployment, index_sha=None):
 
 
 def probe(url, deployment, index_sha=None, opener=None):
-    request = Request(url, headers={'Accept': 'text/html' if index_sha else 'application/json', 'Accept-Encoding': 'identity'})
+    request = Request(url, headers={'Accept': 'text/html' if index_sha else 'application/json', 'Accept-Encoding': 'identity', 'User-Agent': USER_AGENT})
     try:
         with (opener or OPENER).open(request, timeout=10) as response:
             return response_summary(response, response.read(LIMIT + 1), deployment, index_sha)
@@ -152,7 +153,7 @@ class LoopbackHTTPS(http.client.HTTPSConnection):
 def probe_local_caddy(path, deployment, index_sha=None, context=None, port=443):
     connection = LoopbackHTTPS(DOMAIN, port=port, timeout=10, context=context or ssl.create_default_context())
     try:
-        connection.request('GET', path, headers={'Host': DOMAIN, 'Accept': 'text/html' if index_sha else 'application/json', 'Accept-Encoding': 'identity'})
+        connection.request('GET', path, headers={'Host': DOMAIN, 'Accept': 'text/html' if index_sha else 'application/json', 'Accept-Encoding': 'identity', 'User-Agent': USER_AGENT})
         response = connection.getresponse()
         return response_summary(response, response.read(LIMIT + 1), deployment, index_sha)
     except (OSError, http.client.HTTPException) as error:

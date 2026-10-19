@@ -2,7 +2,7 @@
   "scope": "User-authorized continuation after production preparation and failed domain publication",
   "helper_version": "20261019-cutover-diagnostics-1",
   "sha256": {
-    "deploy/manual/conferir_publicacao.py": "e02fde47809d93b5171ba99a953b257cc44f7f8cab0c5909a886d8804f59d013",
+    "deploy/manual/conferir_publicacao.py": "f4de3f7ec6d6dc6872e992a5656446a4341c81489c36fe8f6ab4bbc2e9d39bf6",
     "deploy/manual/migrar_producao.py": "a7ea5094d02ba19493077d4e4b2fbc546244acbf8cbe1dd3914599e0eaec9154"
   },
   "production_state": {
