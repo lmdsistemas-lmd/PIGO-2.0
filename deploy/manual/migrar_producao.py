@@ -10,6 +10,7 @@ from pathlib import Path
 import re
 import shutil
 import socket
+import ssl
 import subprocess
 import sys
 import tempfile
@@ -23,7 +24,7 @@ DATABASE = "pigo-dashboard"
 PORT = 4024
 TASK = "PigoDashboardProduction"
 CADDY_TASK = "LmdSharedCaddy"
-HELPER_VERSION = "20261017-hide-reference-1"
+HELPER_VERSION = "20261019-cutover-diagnostics-1"
 SETUP_SHA = "8ec982b0faa8c414628460085d3518bce540d7ed853e47bf21968ce3cca8cbca"
 MIGRATIONS = ["012_sales_goals.sql", "013_erp_commands.sql", "014_pigo_access.sql"]
 ALLOWED_DIALS = {host + ":" + str(port) for host in ["127.0.0.1", "localhost"] for port in [4000, 4010, 5176]}
@@ -528,6 +529,7 @@ def reload_caddy(plan, file, directory):
 
 def cutover(root, report):
     state = load_state(root)
+    report["pasta_privada"] = state["pasta_privada"]
     report["verificacoes_http"] = health(state["porta"], state["deployment_id"])
     plan = state["caddy"]
     directory = Path(state["pasta_privada"])
@@ -543,17 +545,21 @@ def cutover(root, report):
         raise MigrationError("Caddyfile ou importacao diverge antes da troca; nenhum dominio alterado.")
     print("Trocando somente os destinos do dominio PIGO...", flush=True)
     replace_from(candidate, source, directory)
+    phase = "recarregar_caddy"
     try:
         reload_caddy(plan, source, directory)
+        phase = "conferir_configuracao_ativa"
         if sha_bytes(canonical(api_config(plan["api_url"]))) != plan["active_candidate_sha"]:
             raise MigrationError("Configuracao ativa apos reload divergiu.")
         # The new, unprotected health endpoint must be reachable through HTTPS.
+        phase = "https_publico_health"
         with OPENER.open("https://" + DOMAIN + "/api/health", timeout=15) as response:
             if response.status != 200 or json.load(response).get("service") != "pigo":
                 raise MigrationError("Conferencia publica do PIGO falhou.")
             if response.headers.get("X-Pigo-Deployment") != state["deployment_id"]:
                 raise MigrationError("O dominio publico respondeu por outra instancia.")
         request = Request("https://" + DOMAIN + "/login", headers={"Accept": "text/html"})
+        phase = "https_publico_login"
         with OPENER.open(request, timeout=15) as response:
             index = response.read()
             if response.status != 200 or sha_bytes(index) != sha_file(root / "frontend/dist/index.html"):
@@ -562,11 +568,20 @@ def cutover(root, report):
         if not assets:
             raise MigrationError("Assets do painel compilado nao identificados.")
         for asset in assets:
+            phase = "https_publico_assets"
             file = root / "frontend/dist" / asset.lstrip("/")
             with OPENER.open("https://" + DOMAIN + asset, timeout=15) as response:
                 if response.status != 200 or sha_bytes(response.read()) != sha_file(file):
                     raise MigrationError("O dominio publico nao entregou os novos assets do painel.")
-    except Exception:
+    except Exception as error:
+        reason = error.reason if isinstance(error, URLError) else error
+        report["falha_troca"] = {"etapa": phase, "tipo_erro": type(error).__name__}
+        if isinstance(error, HTTPError):
+            report["falha_troca"]["http"] = error.code
+        if isinstance(reason, ssl.SSLCertVerificationError):
+            report["falha_troca"]["codigo_tls"] = reason.verify_code
+        if isinstance(error, MigrationError):
+            report["falha_troca"]["motivo"] = str(error)
         if sha_file(source) != plan["candidate_sha"]:
             raise MigrationError("Caddyfile recebeu outra alteracao; retorno automatico suspenso para preservar os demais dominios.") from None
         try:
@@ -578,6 +593,10 @@ def cutover(root, report):
             raise MigrationError("Caddy recebeu outra alteracao concorrente; retorno automatico suspenso para preservar os demais dominios.") from None
         replace_from(directory / "Caddyfile.original", source, directory)
         reload_caddy(plan, source, directory)
+        report["retorno_caddy_confirmado"] = sha_bytes(canonical(api_config(plan["api_url"]))) == plan["active_original_sha"]
+        if not report["retorno_caddy_confirmado"]:
+            raise MigrationError("Arquivo anterior restaurado, mas configuracao ativa apos retorno divergiu; confira o diagnostico antes de outra troca.") from None
+        report["caddy_alterado"] = False
         raise MigrationError("Verificacao da troca falhou; Caddy retornou a configuracao anterior. Banco e API nova preservados.") from None
     state["phase"] = "live"
     save(root / "producao.json", state)

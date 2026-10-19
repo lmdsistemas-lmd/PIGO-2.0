@@ -135,3 +135,37 @@ igualdade completa da configuração e a forma de referência usada pelo process
 Mudanças reais nas proteções de arquivos ou em outras regras continuam bloqueadas.
 O teste também confere que um arquivo explicitamente ocultado continua com HTTP 404
 e que os demais hosts permanecem iguais antes, depois e após o retorno.
+
+### Instalação preparada e publicação interrompida
+
+A VM já concluiu backup, migrações 012–014 e instalação da tarefa
+`PigoDashboardProduction`. A API 4024 respondeu com o identificador da nova
+instância. A primeira publicação falhou na conferência e tentou retornar a rota.
+Na conferência posterior, o Caddy ativo já diferia do plano anterior e o domínio
+respondeu HTTP 403. A fase continua `prepared`; isso não significa que o banco
+ou a instalação precisem ser refeitos.
+
+Antes de outra troca, baixar `deploy/manual/conferir_publicacao.py` pelo botão
+**Download raw file**, salvar em
+`C:\Projetos\PIGO-Producao-20261017\conferir_publicacao.py` e executar na VM:
+
+```powershell
+& 'C:\Projetos\P.I.G.O\backend\venv\Scripts\python.exe' 'C:\Projetos\PIGO-Producao-20261017\conferir_publicacao.py'
+```
+
+É somente leitura: valida hashes, compara o estado atual do Caddy com os planos
+salvos e mostra caminhos de diferenças, sem valores da configuração. Confere
+API local, HTTPS do Caddy em loopback e HTTPS público. O teste em loopback mantém
+o domínio real no Host e no SNI e exige certificado válido para esse domínio;
+apenas a conexão TCP vai diretamente para 127.0.0.1, para distinguir a resposta
+do Caddy local daquela recebida pelo caminho público. Não altera DNS, certificados,
+autenticação, licença, regras, tarefas, banco ou arquivos. Não faz nova ativação.
+
+Compartilhar somente o JSON. A retomada precisa usar a instalação existente e
+uma configuração Caddy atual conferida; o comando de preparação original não
+deve ser repetido sobre a pasta já instalada.
+
+O helper atualizado também informa a etapa da falha, HTTP e código TLS quando
+aplicável, e confere o JSON ativo depois do retorno antes de afirmar que a rota
+anterior foi restaurada. Essa melhoria não torna um 403 aceitável nem substitui
+a conferência do domínio.

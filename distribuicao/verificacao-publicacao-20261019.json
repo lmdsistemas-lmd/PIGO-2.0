@@ -1,0 +1,47 @@
+{
+  "scope": "User-authorized continuation after production preparation and failed domain publication",
+  "helper_version": "20261019-cutover-diagnostics-1",
+  "sha256": {
+    "deploy/manual/conferir_publicacao.py": "e02fde47809d93b5171ba99a953b257cc44f7f8cab0c5909a886d8804f59d013",
+    "deploy/manual/migrar_producao.py": "a7ea5094d02ba19493077d4e4b2fbc546244acbf8cbe1dd3914599e0eaec9154"
+  },
+  "production_state": {
+    "prepared": true,
+    "database_migrations_applied_on_VM": true,
+    "new_API4024_healthy": true,
+    "public_domain_status": 403,
+    "active_Caddy_equals_previous_plan": false,
+    "current_routes": "Awaiting read-only diagnostic",
+    "publication_complete": false,
+    "Caddy_autostart_configured": false
+  },
+  "read_only_diagnostic": [
+    "Installed file integrity",
+    "Current/previous/candidate Caddy identities",
+    "Only structural difference paths, not config values",
+    "Only PIGO loopback destinations",
+    "Real local HTTPS with domain Host and SNI and certificate verification",
+    "Public HTTPS without proxy or credentials",
+    "No database/task/DNS/Caddy/file changes"
+  ],
+  "improved_cutover_diagnostics": [
+    "Failure stage/HTTP/TLS code with private exception text excluded",
+    "Verify full live configuration after rollback before reporting success",
+    "Original configuration comparison and hide protections unchanged"
+  ],
+  "tests": {
+    "publication_diagnostic": 6,
+    "production_integration": 14,
+    "TLS": "Actual local synthetic certificate: trusted hostname/SNI accepted, untrusted certificate rejected",
+    "HTTP403": "Actual local403 metadata redacted; simulated public403 triggers real isolated Caddy rollback with precise stage and confirmation",
+    "Windows": "Actual VM production task already responds; new diagnostic execution and public TLS pending VM; boot not tested"
+  },
+  "scan": {
+    "engine": "ClamAV1.5.4",
+    "daily": "28150 (2026-10-11)",
+    "files": 2,
+    "detections": 0,
+    "limitation": "Complementary signatures are eight days old; no Defender readiness claim; keep Defender active"
+  },
+  "no_application_runtime_or_database_package_changes": true
+}
