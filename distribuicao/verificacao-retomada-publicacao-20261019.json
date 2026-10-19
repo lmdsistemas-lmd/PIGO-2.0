@@ -1,0 +1,49 @@
+{
+  "helper_version": "20261019-prepare-publication-1",
+  "scope": "User-authorized continuation reusing prepared production installation and preserving newer shared Caddy routes",
+  "sha256": {
+    "deploy/manual/migrar_producao.py": "e03efe1fa646574323b4fccfd3e656e160fcdaf64a21ff04af31b70891d305b2",
+    "deploy/manual/conferir_publicacao.py": "5f17766156fd17add8e8a84abfd2b092113eac49ef539333f757100baf3bb89a"
+  },
+  "VM_evidence": {
+    "installation": "prepared, newAPI4024 identity verified",
+    "Caddy_local_TLS": "health200 PIGO oldAPI, login200 oldHTML",
+    "PIGO_upstreams": [
+      "127.0.0.1:4000",
+      "127.0.0.1:5176"
+    ],
+    "current_Caddy_changed_since_old_plan": true,
+    "new_delivery_routes_present": true,
+    "public_via_Cloudflare": "health403/login403",
+    "block_origin_or_rule": "Pending Cloudflare event; CF header alone is not proof of blocker origin",
+    "user_Cloudflare_access": true
+  },
+  "new_action": "prepare-publication",
+  "behavior": [
+    "Validate installed hashes, deployment identity and unchanged source environment",
+    "Match full current live Caddy and current file",
+    "New private Caddy backup/plan based on current configuration",
+    "Change only known PIGO proxies in candidate",
+    "Preserve original database backup, production environment, runner, deployment identity and running API",
+    "Atomic plan update, no route reload",
+    "No SQL, dependency install, task registration or database copy",
+    "Report HTTP status, Cloudflare challenge header and Ray ID without response bodies",
+    "Future cutover still requires successful publicHTTPS checks and rolls back to NEW preserved baseline if needed"
+  ],
+  "validation": {
+    "production_integration_tests": 17,
+    "read_only_diagnostic_tests": 6,
+    "new_delivery_routes": "Real isolated Caddy: add two hosts after old plan, re-stage without SQL/reload, publish only PIGO, rollback preserves both new hosts",
+    "unsaved_file_difference": "Rejected before updating state",
+    "Cloudflare_metadata": "403 challenge/Ray only, sensitive error text not printed",
+    "Windows_new_action": "Pending VM execution; ACL pattern uses existing Get-Acl/Set-Acl; no boot executed"
+  },
+  "scan": {
+    "engine": "ClamAV1.5.4",
+    "daily": "28150 (2026-10-11)",
+    "detections": 0,
+    "files": 2,
+    "limitation": "Complementary older signatures; not a Defender result; keep Defender active"
+  },
+  "production_publication_complete": false
+}

@@ -24,7 +24,7 @@ DATABASE = "pigo-dashboard"
 PORT = 4024
 TASK = "PigoDashboardProduction"
 CADDY_TASK = "LmdSharedCaddy"
-HELPER_VERSION = "20261019-cutover-diagnostics-1"
+HELPER_VERSION = "20261019-prepare-publication-1"
 SETUP_SHA = "8ec982b0faa8c414628460085d3518bce540d7ed853e47bf21968ce3cca8cbca"
 MIGRATIONS = ["012_sales_goals.sql", "013_erp_commands.sql", "014_pigo_access.sql"]
 ALLOWED_DIALS = {host + ":" + str(port) for host in ["127.0.0.1", "localhost"] for port in [4000, 4010, 5176]}
@@ -299,7 +299,7 @@ def stage_caddy(caddy, config_file, directory, api_url, destination):
     return {"file": str(config_file), "candidate": str(candidate), "original_sha": sha_bytes(original),
             "candidate_sha": sha_bytes(proposed), "active_original_sha": sha_bytes(canonical(live)),
             "active_candidate_sha": sha_bytes(canonical(expected)), "api_url": api_url,
-            "caddy": str(caddy), "config_argument": config_argument, "proxy_handlers_changed": proxies}
+            "caddy": str(caddy), "config_argument": config_argument, "directory": str(directory), "proxy_handlers_changed": proxies}
 
 
 def backup_database(url, pg_bin, directory, helper):
@@ -521,6 +521,63 @@ def load_state(root):
     return state
 
 
+def public_status():
+    """Non-authenticated metadata useful for locating a Cloudflare event."""
+    result = {}
+    for route in ["/api/health", "/login"]:
+        request = Request("https://" + DOMAIN + route, headers={"Accept": "application/json" if route.startswith("/api/") else "text/html"})
+        response = None
+        try:
+            try:
+                response = OPENER.open(request, timeout=10)
+            except HTTPError as error:
+                response = error
+            ray = response.headers.get("CF-Ray", "")
+            result[route] = {"http": response.status, "cloudflare": bool(ray),
+                             "desafio_cloudflare": response.headers.get("CF-Mitigated", "").lower() == "challenge"}
+            if re.fullmatch(r"[a-fA-F0-9]{16,32}(?:-[A-Za-z]{3})?", ray):
+                result[route]["ray_id"] = ray
+        except (URLError, OSError) as error:
+            reason = error.reason if isinstance(error, URLError) else error
+            result[route] = {"tipo_erro": type(reason).__name__}
+            if isinstance(reason, ssl.SSLCertVerificationError):
+                result[route]["codigo_tls"] = reason.verify_code
+        finally:
+            if response is not None:
+                response.close()
+    return result
+
+
+def prepare_publication(root, report):
+    """Re-stage current Caddy only. Reuse the already installed API/database."""
+    state = load_state(root)
+    if state["phase"] not in {"prepared", "rolled_back"}:
+        raise MigrationError("Preparacao de publicacao exige instalacao existente ainda nao publicada.")
+    original_state_sha = sha_file(root / "producao.json")
+    if sha_file(Path(state["source_env"])) != state["source_env_sha256"]:
+        raise MigrationError("Configuracao original mudou; revisar antes de preparar a publicacao.")
+    report["verificacoes_http"] = health(state["porta"], state["deployment_id"])
+    parent = Path(state["pasta_privada"])
+    report["pasta_privada"] = str(parent)
+    directory = parent / ("publicacao_" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ_") + uuid.uuid4().hex[:8])
+    directory.mkdir(mode=0o700)
+    preserve_acl(parent, directory, directory)
+    save(directory / "producao-state-before.json", state)
+    old = state["caddy"]
+    print("Preparando somente a publicacao a partir do Caddy atual, sem reinstalar ou migrar o banco...", flush=True)
+    plan = stage_caddy(Path(old["caddy"]), Path(old["file"]), directory, old["api_url"], "127.0.0.1:" + str(state["porta"]))
+    if sha_file(root / "producao.json") != original_state_sha or sha_file(Path(state["source_env"])) != state["source_env_sha256"]:
+        raise MigrationError("Estado ou configuracao mudou durante a preparacao; plano anterior preservado.")
+    state["caddy"] = plan
+    state["phase"] = "prepared"
+    save(directory / "producao-state.json", state)
+    replace_from(directory / "producao-state.json", root / "producao.json", directory)
+    report.update(status="PUBLICACAO_PREPARADA", pasta_producao=str(root), pasta_caddy=str(directory),
+                  banco_alterado=False, migracoes_executadas=False, reinstalacao=False, caddy_alterado=False,
+                  outros_dominios_preservados=True, verificacao_publica=public_status(),
+                  observacao="Plano atualizado com a configuracao Caddy atual. Nenhuma rota recarregada. Resolver o acesso publico antes de executar --action cutover.")
+
+
 def reload_caddy(plan, file, directory):
     argument = plan.get("config_argument", str(file)) if str(file) == plan["file"] else str(file)
     run_private([plan["caddy"], "reload", "--config", argument, "--adapter", "caddyfile", "--address", plan["api_url"].removeprefix("http://")],
@@ -532,7 +589,8 @@ def cutover(root, report):
     report["pasta_privada"] = state["pasta_privada"]
     report["verificacoes_http"] = health(state["porta"], state["deployment_id"])
     plan = state["caddy"]
-    directory = Path(state["pasta_privada"])
+    directory = Path(plan.get("directory", state["pasta_privada"]))
+    report["pasta_caddy"] = str(directory)
     source = Path(plan["file"])
     candidate = Path(plan["candidate"])
     if sha_file(Path(state["source_env"])) != state["source_env_sha256"]:
@@ -609,7 +667,7 @@ def cutover(root, report):
 def rollback(root, report):
     state = load_state(root)
     plan = state["caddy"]
-    directory = Path(state["pasta_privada"])
+    directory = Path(plan.get("directory", state["pasta_privada"]))
     source = Path(plan["file"])
     if sha_file(source) != plan["candidate_sha"] or sha_bytes(canonical(api_config(plan["api_url"]))) != plan["active_candidate_sha"]:
         raise MigrationError("Configuracao mudou depois da troca; retorno exige revisao para preservar outros dominios.")
@@ -650,7 +708,7 @@ def enable_caddy_autostart(root, report):
     plan = state["caddy"]
     if sha_file(Path(plan["file"])) != plan["candidate_sha"]:
         raise MigrationError("Caddyfile mudou; revisar a inicializacao automatica.")
-    directory = Path(state["pasta_privada"])
+    directory = Path(plan.get("directory", state["pasta_privada"]))
     report["pasta_privada"] = str(directory)
     script = directory / "caddy-autostart.ps1"
     script.write_text(CADDY_AUTOSTART, encoding="utf-8-sig")
@@ -661,7 +719,7 @@ def enable_caddy_autostart(root, report):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--action", choices=["prepare", "cutover", "status", "rollback", "enable-caddy-autostart"], default="prepare")
+    parser.add_argument("--action", choices=["prepare", "prepare-publication", "cutover", "status", "rollback", "enable-caddy-autostart"], default="prepare")
     parser.add_argument("--current-root", type=Path, default=Path(r"C:\Projetos\P.I.G.O"))
     parser.add_argument("--production-root", type=Path, default=Path(r"C:\Projetos\PIGO-Producao-20261017"))
     parser.add_argument("--pg-bin", type=Path, default=Path(r"C:\Program Files\PostgreSQL\18\bin"))
@@ -683,6 +741,8 @@ def main():
                 cutover(args.production_root, report)
         elif args.action == "cutover":
             cutover(args.production_root, report)
+        elif args.action == "prepare-publication":
+            prepare_publication(args.production_root, report)
         elif args.action == "rollback":
             rollback(args.production_root, report)
         elif args.action == "enable-caddy-autostart":

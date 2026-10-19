@@ -189,7 +189,7 @@ def inspect(root):
                              'rota_pigo': route_summary(active)}
     source_sha = digest(Path(plan['file']).read_bytes())
     report['caddy_arquivo'] = {'igual_anterior': source_sha == plan['original_sha'], 'igual_candidato': source_sha == plan['candidate_sha']}
-    before = read_json(Path(state['pasta_privada']) / 'caddy-active-original.json')
+    before = read_json(Path(plan.get('directory', state['pasta_privada'])) / 'caddy-active-original.json')
     diff = differences(before, active)
     report['diferencas_ativo_anterior'] = {'total': len(diff), 'caminhos': diff[:40]}
     try:

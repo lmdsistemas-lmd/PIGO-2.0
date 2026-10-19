@@ -169,3 +169,39 @@ O helper atualizado também informa a etapa da falha, HTTP e código TLS quando
 aplicável, e confere o JSON ativo depois do retorno antes de afirmar que a rota
 anterior foi restaurada. Essa melhoria não torna um 403 aceitável nem substitui
 a conferência do domínio.
+
+### Preparar a retomada com a configuração atual
+
+A conferência da VM mostrou a API nova saudável, o Caddy local servindo a versão
+antiga nas portas 4000/5176 e HTTP 403 no caminho público com Cloudflare. Há
+também alterações reais de configuração e rotas novas de Delivery desde o plano
+anterior. O cabeçalho Cloudflare confirma a passagem pelo proxy; sozinho não
+identifica a regra ou prova quem gerou o 403. Conferir o evento correspondente
+no Cloudflare antes de alterar suas regras.
+
+Baixar o `migrar_producao.py` atualizado e substituir somente esse helper em
+`C:\Projetos\PIGO-Producao-20261017`. Na VM, PowerShell como Administrador:
+
+```powershell
+& 'C:\Projetos\P.I.G.O\backend\venv\Scripts\python.exe' 'C:\Projetos\PIGO-Producao-20261017\migrar_producao.py' --action prepare-publication
+```
+
+Esse comando reaproveita integralmente a instalação, o identificador da API,
+configuração privada, backup e banco. Não instala dependências, não registra
+tarefas e não executa SQL. Confere novamente o Caddyfile atual contra o Caddy
+ativo e prepara um candidato alterando apenas os proxies do host PIGO para 4024.
+Guarda a configuração atual e o plano anterior em uma nova subpasta privada,
+preservando as rotas de Delivery e demais alterações. Atualiza somente o plano
+da instalação de forma atômica; **não recarrega nem altera as rotas em execução**.
+
+Resultado: `PUBLICACAO_PREPARADA`, com o status público, indicação de desafio
+quando o Cloudflare fornecer `CF-Mitigated: challenge` e Ray ID quando disponível.
+Não publica conteúdo da resposta, configuração, senha ou token. Compartilhar o
+JSON e os dados do evento Cloudflare: ação, serviço/origem e nome/ID da regra.
+Não é necessário enviar credenciais de acesso ao painel.
+
+Após resolver a causa do 403 e conferir o domínio, a próxima etapa é
+`--action cutover`, usando a instalação já pronta e esse novo plano. A validação
+HTTPS pública continua obrigatória; um 403 ainda impede a conclusão e aciona
+retorno à configuração atual preservada, incluindo as rotas novas de Delivery.
+Não executar novamente a preparação completa inicial com `--cutover` sem action.
