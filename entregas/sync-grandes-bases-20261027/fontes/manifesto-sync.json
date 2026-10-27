@@ -1,0 +1,47 @@
+{
+  "version": "2026.10.27-sync-v2",
+  "agent": {
+    "sync_contract.json": {
+      "source": "remote-sync-agent/sync_contract.json",
+      "old_sha256": null,
+      "new_sha256": "f895c90f38738f38a24ecf492dea41e52b243d26b66e243ed3b0eab7ece92993"
+    },
+    "sync_engine.py": {
+      "source": "remote-sync-agent/sync_engine.py",
+      "old_sha256": null,
+      "new_sha256": "5729257cc9a26380fe52f7096137f1c9e902668b39d4aebe3901b70a35349dc7"
+    },
+    "operational_sync.py": {
+      "source": "remote-sync-agent/operational_sync.py",
+      "old_sha256": "9fd284f0e9f1e906b560247b7e0f8f1e8ba0a8024cca817bb61332d80723a42f",
+      "new_sha256": "85db68bbea55b2267eb6224b6ce04d7cf82b60d242e37433ed1f0039188a8f87"
+    },
+    "owner.py": {
+      "source": "remote-sync-agent/owner.py",
+      "old_sha256": "1a2d993d1aa2f94be248b2de9124f906f5defe91951d446ec8cd4b917c28554a",
+      "new_sha256": "0633c4c5fd992961662740853bc0d595e0147b8c1462ea27b26cc18d823cebf5"
+    },
+    "agent.py": {
+      "source": "remote-sync-agent/agent.py",
+      "old_sha256": "ca9d4adf5f748bf3c43ee03937cee362c46dbf724fb39089ef043d96a1edd402",
+      "new_sha256": "781e6a5754f9a9312b33b05e954580765900ee97047bdb7886429f90c0d57e80"
+    }
+  },
+  "backend": {
+    "app/services/sync_batch.py": {
+      "source": "backend/app/services/sync_batch.py",
+      "old_sha256": null,
+      "new_sha256": "38dbe6f8ad3af816a70553f34f5327dc9904d8c3028f0f0c6d751b7e658733d7"
+    },
+    "app/services/sync_service.py": {
+      "source": "backend/app/services/sync_service.py",
+      "old_sha256": "cb9c97b9be0f8363f91630d7d068913deef7bf33054167ffbf1fc6702940aed6",
+      "new_sha256": "28d3d6a2c9c0cbe57e412708b142ec3472cc82acca299be5b0b1447f0ed99d42"
+    },
+    "app/routes/sync.py": {
+      "source": "backend/app/routes/sync.py",
+      "old_sha256": "f9b0723d4810c4142be41fa9e785a8b727cd785d385ce9218c8715f7dc0c0f1e",
+      "new_sha256": "2c296327acbb2d8d54b7651246cf1892e28351a1e8c500dc03929d16aebf0cf5"
+    }
+  }
+}

@@ -1,0 +1,173 @@
+PIGO — sincronizacao em lotes com retomada — 27/10/2026
+
+Esta atualizacao foi preparada sobre os dois ZIPs de fontes fornecidos nesta
+conversa. Nao substitui o projeto inteiro. Preserva a configuracao, o cofre,
+os tokens, o License Control, o Caddy e a gravacao no ERP desligada.
+
+COMPORTAMENTO
+
+- Carga inicial de todas as linhas das tabelas suportadas, sem corte em 2025.
+- Ate 500 registros e aproximadamente 750 KB de conteudo por lote.
+- Paginas Firebird pela chave primaria, sem OFFSET, usando FIRST/fetchmany.
+  Libera a transacao de leitura antes de aguardar cada envio HTTP. Tabelas sem
+  PK declarada usam cursor limitado e verificacao de chaves duplicadas em disco.
+- Confirmacao por lote com identificador persistente e resumo criptografico.
+- Um lote so avanca se todos os registros forem persistidos, sem ignorados.
+- Linhas, recibo e job gravados na mesma transacao PostgreSQL.
+- Repetir um lote confirmado devolve o recibo e nao sobrescreve dados mais novos.
+- Checkpoint SQLite local por origem, destino, CNPJ, tenant, tabela e chave fisica.
+  O conteudo comercial de um lote pendente e protegido por DPAPI no Windows,
+  separado do cofre existente de credenciais.
+- Se a resposta for perdida, o lote pendente e reutilizado com o mesmo ID.
+- Tabelas ja concluidas da carga inicial nao sao reenviadas ao retomar.
+- Ciclo unico, inclusive contra --sync manual. O intervalo conta apos terminar.
+- Pausa entre lotes; resultados ja confirmados sao preservados.
+- Tres empresas no mesmo acesso: dados preservam suas chaves de empresa.
+- A API de recebimento passa a executar o SQL sincrono no pool de threads,
+  liberando o event loop para as demais requisicoes.
+- Consultas de existencia agrupadas, substituindo uma consulta por registro.
+
+INCREMENTAL: O ENVIO E INCREMENTAL; A LEITURA AINDA E UMA VARREDURA.
+
+O agente compara assinaturas dos registros com as assinaturas confirmadas
+localmente e transmite somente inclusoes e alteracoes. Assim detecta tambem
+uma alteracao de valor, estoque ou status em registros antigos.
+Nao depende de data de emissao ou de IDs crescentes para detectar edicoes.
+Ainda precisa ler as tabelas para comparar os valores. Reduzir essa leitura
+exige validar um campo confiavel de ultima modificacao ou um mecanismo de
+captura de alteracoes do ERP. Esta entrega nao cria triggers no Firebird.
+Exclusoes fisicas do ERP nao removem automaticamente dados do espelho.
+
+O arquivo sync_state.json antigo nao e usado como prova de carga completa,
+pois permitia historico truncado. A primeira execucao v2 confere e envia
+novamente todo o historico suportado. O envio e em lotes, com upsert; nao
+apaga as tabelas do PIGO.
+
+INSTALACAO — USE O MESMO PACOTE EXTRAIDO NOS DOIS COMPUTADORES
+
+Extraia o ZIP em C:\Temp\PIGO-Sync-20261027. Nesta pasta devem ficar
+atualizar_sync.py, manifesto-sync.json, backend e remote-sync-agent.
+
+1. NO CLIENTE WIN-F6NF7R6I6PJ, antes de fechar o aplicativo, abra PowerShell
+   como Administrador e execute o bloco abaixo. Mantenha este terminal aberto.
+
+   if ($env:COMPUTERNAME -ne 'WIN-F6NF7R6I6PJ') { throw 'Execute no cliente WIN-F6NF7R6I6PJ.' }
+   $pigoExecutaveis = @(Get-Process -Name '*PIGO*' -ErrorAction SilentlyContinue |
+       Where-Object { $_.Path } | Select-Object -ExpandProperty Path -Unique)
+   $pigoExecutaveis = @($pigoExecutaveis | Where-Object {
+       Test-Path -LiteralPath (Join-Path (Split-Path $_ -Parent) 'resources\agent\agent.py')
+   })
+   if ($pigoExecutaveis.Count -ne 1) { throw 'Abra somente a instalacao atual do Remote Sync e tente novamente.' }
+   $pigoExe = $pigoExecutaveis[0]
+   $pigoResources = Join-Path (Split-Path $pigoExe -Parent) 'resources'
+   $pigoAgente = Join-Path $pigoResources 'agent'
+   $pigoPythonCliente = Join-Path $pigoResources 'runtime\python-x64\python.exe'
+   if (-not (Test-Path -LiteralPath $pigoPythonCliente)) { throw 'Runtime x64 nao localizado; envie esta saida.' }
+   "Instalacao encontrada: $pigoAgente"
+
+   No aplicativo clique em Pausar. Depois use o icone do PIGO perto do relogio
+   do Windows > botao direito > Sair. O X da janela pode apenas ocultar o app.
+   Nao reinicie o aplicativo enquanto atualiza o backend.
+
+2. NA VM WIN-JG1E0O7FSBS, abra PowerShell como Administrador:
+
+   & {
+       $ErrorActionPreference = 'Stop'
+       $pigoPythonServidor = 'C:\Projetos\PIGO-Producao-20261017\backend\.venv-producao\Scripts\python.exe'
+       $pigoAtualizador = 'C:\Temp\PIGO-Sync-20261027\atualizar_sync.py'
+       & $pigoPythonServidor $pigoAtualizador backend --check
+       if ($LASTEXITCODE -ne 0) { throw 'Conferencia interrompida. Envie o JSON.' }
+       & $pigoPythonServidor $pigoAtualizador backend --apply
+       if ($LASTEXITCODE -ne 0) { throw 'Atualizacao interrompida. Envie o JSON.' }
+   }
+
+   O atualizador confere os hashes das fontes fornecidas, a configuracao atual
+   e a tarefa de producao. Faz backup novo do PostgreSQL com pg_dump e copia
+   das fontes anteriores. Reinicia SOMENTE PigoDashboardProduction e valida
+   health e capacidades v2. Nao para nem altera Caddy, License Control ou outros
+   processos Python. Se a API atualizada nao iniciar, tenta retornar as fontes
+   anteriores e iniciar novamente a mesma tarefa. Nao restaura o banco.
+   O backend cria uma tabela pequena de recibos no primeiro lote v2.
+
+3. NO CLIENTE, no mesmo terminal do passo 1, com o aplicativo encerrado:
+
+   & {
+       if (-not $pigoPythonCliente -or -not $pigoAgente) { throw 'Execute primeiro o passo1 neste terminal.' }
+       & $pigoPythonCliente 'C:\Temp\PIGO-Sync-20261027\atualizar_sync.py' agent --agent-dir $pigoAgente --apply
+       if ($LASTEXITCODE -ne 0) { throw 'Atualizacao do agente interrompida. Envie o JSON.' }
+       Start-Process -FilePath $pigoExe
+   }
+
+   O atualizador testa a autenticacao atual, exige protocolo 2 no servidor e
+   le apenas a estrutura e a quantidade de empresas do Firebird. Nao coleta
+   registros comerciais durante essa conferencia. So substitui os arquivos
+   depois dessas verificacoes e de conferir que o owner esta encerrado.
+   Nao instala dependencias, nao muda a licenca e nao gera outro token.
+
+   A deteccao do runtime acima usa x64, confirmado nos testes deste computador.
+   Para outro cliente x86, use o python-x86 instalado e confira a arquitetura
+   da DLL antes de executar o atualizador. Nao misture DLL e Python.
+
+4. NO APLICATIVO, abra Conclusao e clique Sincronizar agora uma unica vez.
+   Para visualizar o progresso no navegador, abra:
+
+   Start-Process (Join-Path $env:PROGRAMDATA 'PIGO Remote Sync\progresso.html')
+
+   O arquivo aparece quando a primeira execucao comeca a contar as tabelas.
+   Se PIGO_REMOTE_SYNC_DATA_DIR estiver configurado, use essa pasta no lugar
+   de ProgramData\PIGO Remote Sync; informe tambem --data-dir ao atualizador.
+   O painel atualiza a cada 3 segundos: fase, tabela, empresas, total previsto,
+   percentual da conferencia, enviados/confirmados e registros sem alteracao.
+   Nesta entrega o percentual fica nesse painel local e no status IPC; o
+   instalador Electron antigo nao e substituido nem recompilado.
+
+VALIDACAO NO CLIENTE REAL
+
+Primeiro ciclo: aguarde 100% e Sincronizacao concluida. Enquanto a carga esta
+em andamento, o site pode apresentar os dados que ja foram confirmados.
+O total e previsto: o ERP pode continuar recebendo alteracoes durante a leitura.
+Pausar ou uma falha de rede nao considera a carga concluida.
+
+Segundo ciclo sem alteracoes: deve confirmar os registros sem reenviar linhas.
+Altere legitimamente um registro de teste no ERP, inclusive antigo: apenas
+esse registro alterado deve ser transmitido. Nao edite diretamente o banco
+Firebird para testar. Confira as tres empresas no seletor do PIGO.
+
+Nao apague sync-v2-*.sqlite3, os arquivos WAL/SHM ou o cofre durante a carga.
+Eles permitem retomada correta. O estado local fica em ProgramData, separado
+da instalacao, e sobrevive ao fechamento do aplicativo e ao reinicio do PC.
+
+SE INTERROMPER
+
+ARQUIVO_ATUAL_DIVERGENTE: as fontes mudaram depois do ZIP enviado. Pare e envie
+o JSON; o atualizador nao substitui uma versao desconhecida.
+
+MIRROR_KEY_MIGRATION_REQUIRED: ha linhas antigas sem os campos da chave fisica,
+ou a chave solicitada reduziria a existente. O lote e revertido e preservado
+localmente. Nao apague o espelho nem execute reset_sync_tables.py. Precisamos
+conciliar essa tabela a partir da fonte antes de alterar sua chave.
+
+FECHE_O_REMOTE_SYNC: ainda ha um owner/ciclo ativo. Encerre pelo menu Sair.
+
+Os backups de codigo e banco ficam no caminho informado pelo JSON. Se precisar
+retornar a API apos iniciar sincronizacoes v2, revise as chaves novas antes;
+nao restaure automaticamente um dump antigo sobre dados atuais.
+
+TESTES EXECUTADOS NO AMBIENTE DE DESENVOLVIMENTO
+
+- Testes de carga inicial, dados de 2001/2010, retomada apos perda de resposta,
+  falha antes do checkpoint local, confirmacao parcial rejeitada, mudanca e
+  reversao de valor, pausa e bloqueio entre processos.
+- Teste de cursor com 100000 registros sem fetchall de dados comerciais.
+- PostgreSQL 17.11 isolado: transacao atomica, recibo idempotente, rollback,
+  chaves de tres empresas e consultas de existencia agrupadas.
+- Carga ponta a ponta de 12000 registros em 24 lotes; ciclo sem mudanca enviou 0;
+  uma alteracao antiga e tres inclusoes geraram somente 4 envios.
+- API: autenticacao, CNPJ e instalacao preservados; recebimento demorado
+  nao bloqueou uma consulta concorrente de health.
+- Regressao do agente: 45 testes, com credenciais sinteticas e correcao de uma
+  fixture antiga que retornava False para sync mas esperava timestamp de sucesso.
+
+Ainda nao executado: base Firebird real de 6 GB, Windows real, PostgreSQL 18.4
+da VM, rede do cliente e visualizacao final no site. As verificacoes de
+instalacao e os primeiros ciclos reais concluem essa homologacao.
