@@ -1,0 +1,86 @@
+PIGO SYNC R3 — AUD_ID_REGISTRO VAZIO NO ERP — 27/10/2026
+
+CORRECAO
+O cliente confirmou que AUD_ID_REGISTRO de TB_AUDITORIA pode conter texto
+vazio, nao nulo. As validacoes R1/R2 rejeitavam esse valor antes do envio.
+A R3 preserva esse texto exatamente como recebido, sem substituir por NULL,
+zero ou ID inventado. A chave completa continua incluindo tabela, registro,
+sequencia e a empresa quando presente no esquema real.
+A excecao vale somente para AUD_ID_REGISTRO de TB_AUDITORIA. Nulos, ausencia
+real de chave, duplicidades e chaves vazias de outros campos continuam rejeitados.
+O servidor anuncia a capacidade em /api/sync/capabilities; o atualizador do
+cliente exige essa capacidade antes de copiar arquivos.
+
+ORDEM — SERVIDOR PRIMEIRO, CLIENTE DEPOIS
+1. No cliente WIN-F6NF7R6I6PJ, encerre o Remote Sync pela opcao Sair da bandeja.
+   Mantenha encerrado ate terminar o passo 2. Nao apague checkpoints/cofre/config.
+2. Extraia este ZIP em C:\Temp\PIGO-Sync-20261027-r3 na VM WIN-JG1E0O7FSBS.
+   No PowerShell como Administrador:
+
+& {
+    $ErrorActionPreference = 'Stop'
+    if ($env:COMPUTERNAME -ne 'WIN-JG1E0O7FSBS') { throw 'Execute na VM do servidor.' }
+    $pigoPython = 'C:\Projetos\PIGO-Producao-20261017\backend\.venv-producao\Scripts\python.exe'
+    & $pigoPython 'C:\Temp\PIGO-Sync-20261027-r3\atualizar_sync.py' backend --apply
+    if ($LASTEXITCODE -ne 0) { throw 'Interrompido. Envie o JSON; nao avance ao cliente.' }
+}
+
+   O atualizador confere fontes conhecidas, configuracao e a tarefa correta.
+   Cria backup novo consistente do PostgreSQL e backup dos fontes antes de
+   reiniciar somente PigoDashboardProduction. O Caddy e o License Control
+   continuam em execucao. Nao reinstala dependencias nem refaz migracoes.
+   Se o health/capacidade nova falhar, tenta retornar os fontes anteriores e
+   iniciar a mesma tarefa. Nao restaura banco nem apaga dados.
+   Continue somente com BACKEND_ATUALIZADO ou BACKEND_JA_ATUALIZADO.
+
+3. Extraia o mesmo ZIP em C:\Temp\PIGO-Sync-20261027-r3 no cliente
+   WIN-F6NF7R6I6PJ. No PowerShell como Administrador:
+
+& {
+    $ErrorActionPreference = 'Stop'
+    if ($env:COMPUTERNAME -ne 'WIN-F6NF7R6I6PJ') { throw 'Execute no cliente correto.' }
+    $pigoCliente = 'C:\PIGO Remote Sync'
+    $pigoPython = Join-Path $pigoCliente 'resources\runtime\python-x64\python.exe'
+    $pigoAgente = Join-Path $pigoCliente 'resources\agent'
+    & $pigoPython 'C:\Temp\PIGO-Sync-20261027-r3\atualizar_sync.py' agent --agent-dir $pigoAgente --apply
+    if ($LASTEXITCODE -ne 0) { throw 'Interrompido. Envie o JSON retornado.' }
+    Start-Process (Join-Path $pigoCliente 'PIGO Remote Sync.exe')
+}
+
+4. Acompanhe C:\ProgramData\PIGO Remote Sync\progresso.html.
+   Se nao houver ciclo ativo, inicie uma unica sincronizacao no aplicativo.
+   As tabelas concluidas da carga inicial sao preservadas. Na tabela ainda
+   pendente, registros ja confirmados sao conferidos pelas assinaturas locais,
+   sem reenviar dados iguais. O percentual pode voltar enquanto confere esses
+   registros; isso nao significa apagar a carga ou iniciar ciclo concorrente.
+   Envie o JSON de instalacao e o resultado da retomada.
+
+VALIDACAO
+56 testes passaram nesta revisao: 17 de PostgreSQL/recibos/auditoria,
+20 do motor, 7 de variantes do esquema, 6 do atualizador, 4 das rotas e
+2 da capacidade anunciada/exigida pelo atualizador. Incluem texto vazio e
+espacos preservados; tres empresas; sequencias distintas; nulos rejeitados;
+repeticao de lote sem sobrescrever edicao nova; retomada de checkpoint R2;
+perda de resposta com lote pendente; incremental sem reenviar dados iguais.
+A execucao nativa no Windows e a carga real de 6 GB dependem da validacao local.
+
+LIMITES QUE CONTINUAM
+A carga inicial usa todo o historico dos recursos compativeis, em lotes de
+ate 500 registros e aproximadamente 750 KB. Campos/tabelas opcionais ausentes
+nao bloqueiam recursos disponiveis; indisponiveis ficam listados no painel.
+Falhas reais de envio/persistencia interrompem o lote com retomada, sem falso
+sucesso. 100% representa os recursos disponiveis, com lacunas informadas.
+O envio incremental transmite apenas novos/alterados; a leitura ainda varre
+registros para comparar assinaturas. Exclusoes fisicas nao sao propagadas.
+Nao altera gravacao no ERP, licencas, tokens, protocolo IPC ou interface Electron.
+A mensagem de GPU do Chromium nao foi usada como diagnostico da interrupcao;
+a falha de chave foi confirmada por leitura do Firebird.
+
+FONTES E BACKUPS
+Manifesto inclui hashes conhecidos dos fontes originais/R1/R2 e da R3. Arquivo
+atual desconhecido interrompe a atualizacao; nao e sobrescrito automaticamente.
+Backend: backup de fontes e pg_dump em pasta privada da producao informada no JSON.
+Cliente: backup de fontes em C:\ProgramData\PIGO Remote Sync\updates.
+Checkpoint e outbox existentes sao mantidos no mesmo escopo e formato.
+Nenhum arquivo de credenciais, configuracao de cliente ou estrutura privada do
+ERP e incluido neste pacote. O ipc_contract.json instalado permanece intacto.

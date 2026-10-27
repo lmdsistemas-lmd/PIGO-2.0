@@ -1,0 +1,201 @@
+{
+  "TABLE_PK_MAP": {
+    "TB_EMPRESA": [
+      "EMP_ID"
+    ],
+    "TB_PESSOA": [
+      "PES_ID"
+    ],
+    "TB_CLIENTE": [
+      "CLI_PESSOA"
+    ],
+    "TB_VENDEDOR": [
+      "VDR_PESSOA"
+    ],
+    "TB_CIDADE": [
+      "CID_ID"
+    ],
+    "TB_PEDIDO_VENDA": [
+      "PEV_ID"
+    ],
+    "TB_PEDIDO_VENDA_ITEM": [
+      "PEVI_EMPRESA",
+      "PEVI_PEDIDO_VENDA",
+      "PEVI_SEQUENCIA"
+    ],
+    "TB_PRODUTO": [
+      "PRD_ID"
+    ],
+    "TB_PRODUTO_ESTOQUE": [
+      "PRDE_PRODUTO",
+      "PRDE_EMPRESA"
+    ],
+    "TB_PROD_CODIGO_BARRAS": [
+      "PRDC_PRODUTO",
+      "PRDC_COD_BARRAS"
+    ],
+    "TB_PRODUTO_PRECO": [
+      "PRDP_PRODUTO",
+      "PRDP_EMPRESA"
+    ],
+    "TB_RECEBIMENTO": [
+      "REC_ID"
+    ],
+    "TB_PAGAMENTO": [
+      "PAG_ID"
+    ],
+    "TB_AUDITORIA": [
+      "AUD_TABELA",
+      "AUD_ID_REGISTRO",
+      "AUD_SEQUENCIA"
+    ],
+    "TB_USUARIO": [
+      "USU_ID"
+    ],
+    "TB_COLABORADOR": [
+      "COL_PESSOA"
+    ],
+    "TB_PROD_GRUPO": [
+      "PGRU_ID"
+    ],
+    "TB_PROD_MARCA": [
+      "PMAR_ID"
+    ],
+    "TB_FORNECEDOR": [
+      "FOR_PESSOA",
+      "FOR_EMPRESA"
+    ],
+    "TB_PROD_DEPARTAMENTO": [
+      "PDEP_ID"
+    ],
+    "TB_PROD_SUBGRUPO": [
+      "PSGR_ID"
+    ],
+    "TB_PLANO_CONTA": [
+      "PLC_ID"
+    ],
+    "TB_FECHAMENTO_CAIXA_FORMA": [
+      "FCF_ID",
+      "FCF_EMPRESA"
+    ],
+    "TB_PIGO_CAIXA_MOVIMENTO": [
+      "FCI_ID",
+      "FCI_EMPRESA"
+    ],
+    "TB_CAIXA_SANGRIA": [
+      "SAN_ID",
+      "SAN_EMPRESA"
+    ],
+    "TB_CHEQUE_EMITIDO": [
+      "CHQ_ID",
+      "CHQ_EMPRESA"
+    ],
+    "TB_ESPECIE_MOEDA": [
+      "ESP_ID"
+    ],
+    "TB_PEDIDO_VENDA_FIN": [
+      "PEVF_EMPRESA",
+      "PEVF_PEDIDO_VENDA",
+      "PEVF_SEQUENCIA"
+    ],
+    "TB_FECHAMENTO_CAIXA": [
+      "erp_company_id",
+      "FCX_ID"
+    ],
+    "TB_FECHAMENTO_CAIXA_ITEM": [
+      "erp_company_id",
+      "FCXI_FECHAMENTO",
+      "FCXI_SEQUENCIA"
+    ],
+    "TB_FECHAMENTO_CAIXA_VENDA": [
+      "erp_company_id",
+      "FCXV_FECHAMENTO",
+      "FCXV_SEQUENCIA"
+    ],
+    "TB_MOVIMENTO_CAIXA": [
+      "erp_company_id",
+      "MOV_ID"
+    ]
+  },
+  "TABLE_KEY_VARIANTS": {
+    "TB_PEDIDO_VENDA": [
+      [
+        "PEV_EMPRESA",
+        "PEV_ID"
+      ],
+      [
+        "PEV_ID"
+      ]
+    ],
+    "TB_RECEBIMENTO": [
+      [
+        "REC_EMPRESA",
+        "REC_ID"
+      ],
+      [
+        "REC_ID"
+      ]
+    ],
+    "TB_PAGAMENTO": [
+      [
+        "PAG_EMPRESA",
+        "PAG_ID"
+      ],
+      [
+        "PAG_ID"
+      ]
+    ],
+    "TB_PRODUTO_ESTOQUE": [
+      [
+        "PRDE_PRODUTO",
+        "PRDE_EMPRESA",
+        "PRDE_LOCAL",
+        "PRDE_VARIACAO"
+      ],
+      [
+        "PRDE_PRODUTO",
+        "PRDE_EMPRESA"
+      ]
+    ],
+    "TB_PEDIDO_VENDA_ITEM": [
+      [
+        "PEVI_EMPRESA",
+        "PEVI_PEDIDO_VENDA",
+        "PEVI_SEQUENCIA"
+      ],
+      [
+        "PEVI_PEDIDO_VENDA",
+        "PEVI_EMPRESA",
+        "PEVI_PRODUTO"
+      ]
+    ],
+    "TB_PEDIDO_VENDA_FIN": [
+      [
+        "PEVF_EMPRESA",
+        "PEVF_PEDIDO_VENDA",
+        "PEVF_SEQUENCIA"
+      ],
+      [
+        "PEVF_PEDIDO_VENDA",
+        "PEVF_EMPRESA",
+        "PEVF_ESPECIE_MOEDA"
+      ]
+    ],
+    "TB_FECHAMENTO_CAIXA_ITEM": [
+      [
+        "FCXI_EMPRESA",
+        "FCXI_FECHAMENTO",
+        "FCXI_SEQUENCIA"
+      ],
+      [
+        "FCI_ID",
+        "FCI_EMPRESA"
+      ]
+    ]
+  },
+  "EMPTY_TEXT_PRIMARY_KEYS": {
+    "TB_AUDITORIA": [
+      "AUD_ID_REGISTRO"
+    ]
+  }
+}
